@@ -46,3 +46,16 @@
   - fold-wise clinical mutual-information reports,
   - fold-wise OCTA layer normalization statistics.
 - Implemented `RastaPhase2Dataset` returning the planned sample dictionary with synchronized Sup/Deep/CC augmentation and zero placeholder masks when segmentation masks are unavailable.
+
+### Phase 3 progress
+- Added a new **Phase 3 — OCTA-SimCLR Pretraining** section to `main.ipynb`.
+- Implemented layer-specific SimCLR pretraining components entirely inside notebook cells:
+  - OD/OS bilateral natural-positive pair dataset with unilateral same-image augmented fallback,
+  - conservative OCTA augmentations: horizontal flip, mild rotation, random resized crop, Gaussian blur, and mild intensity jitter,
+  - 1-channel ConvNeXt-Tiny backbone initialized from ImageNet when available,
+  - 2-layer projection head (768 → 256 → 128),
+  - NT-Xent loss with temperature 0.07,
+  - independent Sup/Deep/CC training loop with SGD, momentum, weight decay, cosine LR, AMP, gradient accumulation, checkpointing, and backbone-only export.
+- Added Phase 3 pair-summary/audit outputs and a backbone registry for later Phase 4 loading.
+- Gated expensive CUDA pretraining behind `RUN_PHASE3_PRETRAINING = False`; set it to `True` on the CUDA-enabled GPU machine to launch training.
+- Added `PHASE3_REQUIRE_CUDA = True` so Phase 3 fails fast if accidentally launched in a non-CUDA runtime.
