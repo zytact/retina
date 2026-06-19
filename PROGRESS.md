@@ -19,3 +19,8 @@
 ### Notes
 - The notebook was **not run**, per project instruction and because the dataset is not present on this machine.
 - Current implementation scope is Phase 1 only; later phases should be added incrementally after reviewing Phase 1 outputs on the dataset/GPU machine.
+
+### Adjustment
+- Made `main.ipynb` fully self-contained and removed all dependency on helper Python files under `src/`.
+- Future work will keep implementation inside notebook cells only, phase-by-phase.
+- Updated the notebook configuration cell to make Windows dataset/clinical paths easy to edit via `DATA_ROOT_STR` and `CLINICAL_PATH_STR`.
