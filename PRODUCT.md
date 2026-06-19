@@ -25,6 +25,8 @@ Do not make this feel like a salesy SaaS landing page, a busy dashboard, or a pl
 - Diagram nodes rendered as uniform rounded UI cards by default. In this project, flow diagrams should read like structure and sequence first, not like a dashboard of widgets.
 - If a section can be summarized as “three cards,” “two compare cards,” or “a big card containing smaller cards,” stop and rewrite it with rhythm, rules, columns, and spacing instead.
 - Nested containers whose only job is decoration rather than structure.
+- Diffuse blue atmospheric background washes behind the hero or major sections. They read like generic sci-fi AI wallpaper, compete with the typography, and shift the tone from clinical briefing to tech mood-board.
+- Pill-shaped chips used as default UI grammar for navigation, labels, filters, or status notes. They make the explainer feel productized and dashboard-like instead of calm, editorial, and structural.
 - Any visual treatment that makes roadmap items feel as concrete or proven as implemented evidence.
 
 ## Design Principles
