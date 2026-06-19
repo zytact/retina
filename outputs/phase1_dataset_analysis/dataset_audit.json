@@ -1,0 +1,100 @@
+{
+  "bilateral_availability": {
+    "OD": 35,
+    "OD+OS": 211,
+    "OS": 19
+  },
+  "class_counts_eye": {
+    "FAMILIPO": 156,
+    "MRCC": 34,
+    "ORNET": 150,
+    "RETINORM": 136
+  },
+  "class_counts_patient": {
+    "FAMILIPO": 81,
+    "MRCC": 32,
+    "ORNET": 77,
+    "RETINORM": 75
+  },
+  "class_imbalance_ratio_patient": 2.53125,
+  "clinical_missing_by_cohort": {
+    "FAMILIPO": {
+      "Age": 0,
+      "Body mass index": 6,
+      "CHA2DS2-VASc": 0,
+      "Congestive heart failure": 0,
+      "Diabetes mellitus": 0,
+      "Dyslipidemia": 0,
+      "Hypertension": 0,
+      "Obstructive sleep apnea syndrom": 0,
+      "Sex": 0,
+      "Smoking": 0,
+      "Stroke": 0,
+      "Vascular disease": 0
+    },
+    "MRCC": {
+      "Age": 0,
+      "Body mass index": 0,
+      "CHA2DS2-VASc": 0,
+      "Congestive heart failure": 0,
+      "Diabetes mellitus": 0,
+      "Dyslipidemia": 0,
+      "Hypertension": 0,
+      "Obstructive sleep apnea syndrom": 0,
+      "Sex": 0,
+      "Smoking": 0,
+      "Stroke": 0,
+      "Vascular disease": 0
+    },
+    "ORNET": {
+      "Age": 0,
+      "Body mass index": 0,
+      "CHA2DS2-VASc": 0,
+      "Congestive heart failure": 0,
+      "Diabetes mellitus": 0,
+      "Dyslipidemia": 0,
+      "Hypertension": 0,
+      "Obstructive sleep apnea syndrom": 0,
+      "Sex": 0,
+      "Smoking": 0,
+      "Stroke": 0,
+      "Vascular disease": 0
+    },
+    "RETINORM": {
+      "Age": 0,
+      "Body mass index": 38,
+      "CHA2DS2-VASc": 0,
+      "Congestive heart failure": 0,
+      "Diabetes mellitus": 0,
+      "Dyslipidemia": 2,
+      "Hypertension": 0,
+      "Obstructive sleep apnea syndrom": 0,
+      "Sex": 0,
+      "Smoking": 0,
+      "Stroke": 0,
+      "Vascular disease": 0
+    }
+  },
+  "clinical_missing_counts": {
+    "Age": 0,
+    "Body mass index": 44,
+    "CHA2DS2-VASc": 0,
+    "Congestive heart failure": 0,
+    "Diabetes mellitus": 0,
+    "Dyslipidemia": 2,
+    "Hypertension": 0,
+    "Obstructive sleep apnea syndrom": 0,
+    "Sex": 0,
+    "Smoking": 0,
+    "Stroke": 0,
+    "Vascular disease": 0
+  },
+  "layer_missing_counts": {
+    "cc_path": 0,
+    "deep_path": 0,
+    "sup_path": 0
+  },
+  "n_eye_samples": 476,
+  "n_patients": 265,
+  "patients_in_multiple_cohorts": []
+}
