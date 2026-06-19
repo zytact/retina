@@ -3,701 +3,796 @@
 Act as a team of experts consisting of:
 
 1. Retinal Ophthalmologist
-2. Cardiologist
-3. OCTA Imaging Scientist
-4. Computer Vision Researcher
-5. Deep Learning Architect
-6. Medical AI Research Scientist
-7. Biostatistician
-8. IEEE Journal Reviewer
+2. OCTA Imaging Scientist
+3. Computer Vision Researcher
+4. Deep Learning Architect
+5. Medical AI Research Scientist
+6. Biostatistician
+7. IEEE Journal Reviewer
 
-Your task is to design, critique, and implement a publication-quality research project for cardiovascular risk prediction using retinal OCTA data from the RASTA dataset.
+Your task is to design, critique, and implement a publication-quality multimodal OCTA classification system using the RASTA dataset.
 
 ---
 
 # PROJECT GOAL
 
-Develop a state-of-the-art multimodal deep learning framework that predicts cardiovascular disease risk from retinal OCTA data while maintaining clinical interpretability through retinal vascular biomarkers.
+Build a robust, reproducible, and publication-quality multimodal classification system that classifies retinal OCTA scans into disease cohorts.
 
-The model must leverage:
+The system must:
 
-* OCTA Angiocubes (3D)
-* En-face OCTA Images
-* Layer-specific vascular information
-* Clinical metadata
-* Retinal vascular biomarkers
+* Leverage all three OCTA retinal layers independently before fusion
+* Integrate clinical metadata with proper handling of missing values
+* Produce uncertainty-quantified predictions suitable for clinical screening
+* Be explainable at both the spatial (per-layer heatmap) and feature (clinical attribution) level
+* Outperform single-layer and single-modality baselines
 
-The final system must outperform traditional biomarker-only methods, provide uncertainty-quantified predictions, and deliver clinically explainable outputs suitable for ophthalmic screening workflows.
-
----
-
-# DATASET
-
-Assume access to the RASTA dataset containing:
-
-* 3D OCTA Angiocubes
-* En-face OCTA images
-* Superficial Vascular Complex (SVC)
-* Deep Vascular Complex (DVC)
-* Choriocapillaris (CC)
-* Clinical cardiovascular information
-* Cardiovascular risk labels
-* FAZ metrics
-* Vessel density metrics
-* Perfusion density metrics
+**Scope:** Version 1 — 2D OCTA images only. Do NOT use angiocubes. Angiocube integration is planned for Version 2 (roadmap in Phase 20).
 
 ---
 
 # RESEARCH HYPOTHESIS
 
-Cardiovascular disease produces systemic microvascular dysfunction.
+Different disease cohorts produce distinct retinal microvascular changes.
 
-Retinal microvasculature reflects systemic vascular health.
+These changes appear differently across:
 
-Changes in:
+* Superficial Vascular Complex (SVC) — arteriolar and capillary density changes
+* Deep Vascular Complex (DVC) — deeper capillary rarefaction, sensitive to diabetic microangiopathy
+* Choriocapillaris (CC) — choroidal perfusion and endothelial function
 
-* Vessel density
-* Vessel length
-* Fractal complexity
-* Flow deficits
-* FAZ morphology
+A model that encodes each layer independently, then learns cross-layer interactions, then fuses with clinical context should outperform any single-layer or single-modality classifier.
 
-can be detected in OCTA and used to predict cardiovascular risk.
-
-Furthermore, SVC, DVC, and CC reflect different depths and types of microvascular pathology. Their interactions — not just their individual signals — contain predictive information not captured by any single layer alone.
+The biological rationale is that each layer reflects a different physiological compartment. Cross-layer correlation patterns — not individual layer signals — contain additional discriminative information about disease type.
 
 ---
 
-# PHASE 1 — DATA ANALYSIS
+# DATASET DESCRIPTION
 
-Perform comprehensive dataset analysis.
+Assume access to the RASTA dataset.
+
+Per patient (per eye):
+
+```
+Sup_OD.bmp    Deep_OD.bmp    CC_OD.bmp
+Sup_OS.bmp    Deep_OS.bmp    CC_OS.bmp   (if available)
+```
+
+Clinical metadata fields:
+
+* Age (continuous)
+* Sex (binary)
+* BMI (continuous)
+* Smoking (ordinal: never / former / current)
+* Hypertension (binary)
+* Diabetes (binary)
+* Dyslipidemia (binary)
+* Additional available fields
+
+Label:
+
+Disease cohort folder (multi-class).
+
+Optional (if available):
+
+* Vessel segmentation masks
+* FAZ masks
+* Flow-deficit maps
+
+---
+
+# PHASE 1 — DATASET ANALYSIS
+
+Perform comprehensive dataset analysis before any modeling.
 
 Generate:
 
-1. Dataset statistics
-2. Patient demographics
-3. Class distribution
-4. Missing values
-5. Label distribution
-6. Image dimensions
-7. Layer availability
-8. Biomarker availability
-9. Potential biases
-10. Data leakage risks
+1. Total sample count (patients and eyes separately)
+2. Class distribution per cohort — compute class imbalance ratio
+3. Bilateral eye availability (OD only vs OD+OS)
+4. Missing values per clinical feature — per cohort breakdown
+5. Age, sex, BMI distributions per cohort
+6. Image resolution and quality distribution
+7. Layer availability audit (are all three layers present for all patients?)
+8. Potential confounders (age-disease correlation, sex imbalance per cohort)
+9. Data leakage risk assessment — verify no patient appears in multiple cohorts
 
-Provide tables and visualizations.
+Also generate:
 
-Also compute:
+* Class-wise biomarker box plots (if basic metrics extractable from images)
+* Inter-cohort demographic comparison table
+* Missing data heatmap (patients × clinical features)
 
-* Inter-class biomarker distributions (CVD vs non-CVD)
-* Spearman correlation matrix across all biomarkers
-* Mutual information between each biomarker and the CVD label
-
-These will inform biomarker selection in Phase 4.
+Use these findings to inform class-weighting, stratification strategy, and imputation design.
 
 ---
 
-# PHASE 2 — OCTA PREPROCESSING
+# PHASE 2 — PREPROCESSING PIPELINE
 
-Design the complete OCTA preprocessing pipeline.
+## Bilateral Eye Handling
 
-Include:
+Treat OD and OS as independent samples during training and evaluation.
 
-## Quality Control
+**Critical rule:** During patient-level splitting, both OD and OS of the same patient MUST be assigned to the same fold. Never allow the same patient's two eyes to appear in different folds. This prevents label leakage via shared patient-level disease state.
 
-Detect and remove:
+Implement a patient-stratified fold assignment that:
 
-* Motion artifacts
-* Blink artifacts
-* Projection artifacts
-* Poor quality scans
-* Low signal regions
+* Groups all eyes by patient ID before splitting
+* Stratifies folds by cohort label AND patient age decade
+* Verifies zero patient overlap across folds after splitting
 
-Use signal-to-noise ratio thresholding and a lightweight CNN-based quality scorer trained on labeled artifact examples.
+## OCTA Image Preprocessing
 
-## Normalization
+For each image (Sup, Deep, CC):
 
-Apply:
+1. **Quality control:** SNR thresholding + lightweight CNN-based quality classifier. Flag and exclude low-quality scans. Log all exclusions.
+2. **Grayscale normalization:** Percentile-based (2nd–98th percentile) per image. Avoids sensitivity to extreme pixel values.
+3. **CLAHE:** Apply contrast-limited adaptive histogram equalization. Clip limit=2.0, tile grid=8×8. Apply per-layer, not globally.
+4. **Resize:** Bicubic interpolation to 224×224.
+5. **Intensity standardization:** Per-channel z-score normalization using training set statistics only (compute on train fold, apply to val/test fold).
+6. **Corruption check:** Remove zero-variance, all-black, or unreadable images. Log counts.
 
-* Intensity normalization (percentile-based, not global min-max)
-* Contrast-limited adaptive histogram equalization (CLAHE) per layer
-* Layer-wise zero-mean unit-variance normalization
+## Clinical Metadata Preprocessing
 
-## Registration
+1. **Continuous features** (age, BMI): z-score normalization using training fold mean and std.
+2. **Binary features** (sex, hypertension, diabetes, dyslipidemia, smoking): encode as integers, preserve as-is.
+3. **Ordinal features** (smoking: 0/1/2): embed as learned ordinal token, not raw integer.
+4. **Missing value handling:** Do NOT use mean/median imputation. Instead, use a **learnable missing-value mask token** per feature — a trainable embedding vector that replaces missing values. This allows the model to learn optimal behavior for absent data rather than assuming a statistical proxy.
+5. **Feature selection:** Compute mutual information between each clinical feature and the disease label on the training fold. Document features with MI < 0.01 — consider dropping or flagging as low-information.
 
-Align:
+## Dataset Object
 
-* OCTA layers (SVC, DVC, CC) to a common reference frame using rigid registration
-* En-face images to the angiocube projection
-* Biomarker maps to registered layer space
+Each sample returns:
 
-Explain mathematically and algorithmically.
-
-## Layer Separation
-
-Separate:
-
-* SVC — inner plexiform to inner nuclear layer
-* DVC — outer plexiform to outer nuclear layer
-* CC — sub-RPE slab
-
-Maintain independent layer volumes for separate encoding streams.
-
-Explain why each layer contributes differently to cardiovascular prediction:
-
-* SVC reflects retinal arteriole and capillary density — sensitive to hypertension and early arteriosclerosis
-* DVC reflects deeper capillary beds — more sensitive to diabetic microvascular changes
-* CC reflects choroidal perfusion — reflects systemic hemodynamic status and endothelial dysfunction
-
----
-
-# PHASE 3 — VESSEL SEGMENTATION
-
-Build a vessel segmentation subsystem.
-
-Architecture:
-
-**Attention U-Net++**
-
-Input per branch:
-* SVC volume
-* DVC volume
-* CC volume
-
-Outputs:
-* Vessel masks
-* Capillary masks
-* FAZ masks
-* Flow deficit maps
-
-Design:
-
-* Dense skip connections (U-Net++ style)
-* Squeeze-and-excitation attention blocks at each skip
-* Deep supervision at every decoder scale
-
-Loss function:
-
-Combined Tversky + Focal loss:
-
-L_seg = α · L_Tversky(β=0.7, γ=0.3) + (1−α) · L_Focal(γ=2)
-
-Set α=0.5. Tversky with β>0.5 penalizes false negatives more heavily — critical for sparse capillary detection.
-
-The segmentation head is also used as an auxiliary supervision signal in multi-task training (Phase 11).
+```python
+{
+  "sup_image":        Tensor[1, 224, 224],
+  "deep_image":       Tensor[1, 224, 224],
+  "cc_image":         Tensor[1, 224, 224],
+  "clinical_features": Tensor[D_clin],     # with mask tokens for missing
+  "clinical_mask":    Tensor[D_clin],     # 1=observed, 0=missing
+  "vessel_mask":      Tensor[1, 224, 224], # zeros if unavailable
+  "faz_mask":         Tensor[1, 224, 224], # zeros if unavailable
+  "flow_mask":        Tensor[1, 224, 224], # zeros if unavailable
+  "label":            int,
+  "patient_id":       str,
+  "eye":              str,                # "OD" or "OS"
+  "fold":             int
+}
+```
 
 ---
 
-# PHASE 4 — BIOMARKER EXTRACTION
+# PHASE 3 — OCTA-SIMCLR PRETRAINING
 
-Extract interpretable retinal biomarkers.
+**Why pretraining is essential:**
 
-## Vessel Biomarkers
+The RASTA dataset is medium-sized. ConvNeXt-Tiny initialized from ImageNet has been trained on natural RGB images — a large domain gap from grayscale vessel-contrast OCTA. Self-supervised pretraining on unlabeled OCTA (or all available RASTA images before labels are used) adapts the visual representations to the retinal vascular domain before fine-tuning.
 
-* VAD — Vessel Area Density
-* VLD — Vessel Length Density
-* VFD — Vessel Flux Density
-* VT — Vessel Tortuosity
-* VBN — Vessel Branch Number
+## Positive Pair Strategy: Bilateral Natural Positives
 
-## FAZ Biomarkers
+For patients with both OD and OS:
 
-* FA — FAZ Area
-* FR — FAZ Regularity Index
-* Circularity = 4π·Area / Perimeter²
-* FAZ Perimeter
+**Positive pair:** (Sup_OD, Sup_OS) from the same patient.
 
-## Perfusion Biomarkers
+The two eyes of the same patient share the same systemic disease state. Their OCTA images are the same modality and disease context, just mirrored. This is a strong, medically meaningful positive pair signal without any manual annotation.
 
-* Perfusion Density (per ETDRS region)
+For patients with only one eye:
 
-## Choriocapillaris Biomarkers
-
-* FD% — Flow Deficit Percentage
-
-## Regional Decomposition
-
-Compute each biomarker at:
-
-* Global level
-* ETDRS 9-zone grid (1mm, 3mm, 6mm rings)
-* 4-quadrant decomposition (superior, inferior, nasal, temporal)
-* 8×8 patch-level maps (for spatial biomarker maps fed to the biomarker branch)
-
-Provide complete mathematical definitions for every metric.
-Explain biomedical significance for each.
-
-## Biomarker Selection Step
-
-Before encoding:
-
-1. Compute Spearman correlation matrix across all extracted biomarkers
-2. Compute mutual information between each biomarker and CVD label
-3. Remove biomarkers with pairwise Spearman |ρ| > 0.85 (keep the one with higher MI)
-4. Retain the top 7–9 most independently informative biomarkers
-
-This prevents redundant gradients in the biomarker MLP head and improves convergence on a medium-sized dataset.
-
----
-
-# PHASE 5 — RETINAL-MAE PRETRAINING (Layer-Masked)
-
-Because the dataset is limited, design a self-supervised pretraining stage before fine-tuning.
-
-## Architecture: Retinal-MAE
-
-Use a **Masked Autoencoder** operating on 3D OCTA Angiocubes with **layer-level masking** instead of random patch masking.
-
-**Why layer-level masking is superior to random patch masking:**
-
-Standard MAE masks random patches — the encoder can reconstruct these by interpolating spatially nearby patches within the same layer. This does not force learning of cross-layer dependencies, which is the biological signal of interest.
-
-Layer-level masking forces the model to reconstruct an entire missing retinal layer from the remaining layers:
-
-* Mask SVC → reconstruct from DVC + CC
-* Mask DVC → reconstruct from SVC + CC
-* Mask CC → reconstruct from SVC + DVC
-
-This compels the encoder to learn that SVC, DVC, and CC contain complementary vascular information — exactly the representation needed for downstream cardiovascular prediction.
-
-## Pretraining Stage
-
-Input: Unlabeled 3D OCTA volumes (can include external OCTA datasets if available)
-
-Encoder: Shared 3D Swin-T (to be reused in fine-tuning)
-
-Decoder: Lightweight 3D convolutional decoder (discarded after pretraining)
-
-Objective: Mean squared error on masked layer voxels in normalized intensity space
-
-## Fine-Tuning Stage
-
-Freeze the pretrained encoder weights for the first 5 epochs.
-Unfreeze all weights and fine-tune end-to-end with a reduced learning rate (lr × 0.1) for the imaging streams.
-
----
-
-# PHASE 6 — SHARED 3D ENCODER WITH LAYER-SPECIFIC ADAPTERS
-
-**Design rationale:**
-
-The original approach of three fully independent 3D Swin Transformer encoders is computationally prohibitive and causes severe overfitting on a medium OCTA dataset.
-
-The refined approach: one **shared 3D Swin-T backbone** initialized from Retinal-MAE pretraining, augmented with **lightweight layer-specific adapter token modules** attached at each transformer block.
-
-## Shared Backbone
-
-Architecture: 3D Swin Transformer (Swin-T configuration)
-
-* Patch size: 4×4×4 voxels
-* Window size: 7×7×7
-* Embedding dimension: 96, doubled at each stage
-* 4 stages with [2, 2, 6, 2] transformer blocks
-* Shifted window self-attention with 3D relative position bias
-
-## Layer-Specific Adapter Tokens
-
-For each retinal layer (SVC, DVC, CC), prepend a small set of learnable adapter tokens (dimension 96, count 8) to the patch token sequence at each transformer stage input.
-
-These adapter tokens:
-
-* Are unique per layer (not shared)
-* Interact with the patch tokens through self-attention
-* Carry layer-identity information without duplicating the full encoder
-
-Parameter cost per adapter: 8 × 96 × 4 stages = negligible vs. duplicating the full encoder.
-
-## Outputs
-
-* Fs — SVC feature map ∈ ℝ^(N×d)
-* Fd — DVC feature map ∈ ℝ^(N×d)
-* Fc — CC feature map ∈ ℝ^(N×d)
-
-Where N = number of patch tokens, d = feature dimension after final stage.
-
-**Do NOT merge layers at this stage.** Maintain independent feature sequences for cross-layer attention.
-
----
-
-# PHASE 7 — CROSS-LAYER ATTENTION
-
-Design a transformer-based cross-layer fusion module.
-
-Goal: Model pairwise interactions between SVC, DVC, and CC feature representations before multimodal fusion.
+**Positive pair:** Two augmented views of the same image (standard SimCLR).
 
 ## Architecture
 
-For each pair of layers, compute bidirectional cross-attention:
+* Backbone: ConvNeXt-Tiny (initialized from ImageNet)
+* Projection head: 2-layer MLP (768 → 256 → 128), appended during pretraining only, discarded afterward
+* Loss: NT-Xent (normalized temperature-scaled cross-entropy) with temperature τ=0.07
 
-* Q = Fs, K = Fd, V = Fd → attended SVC from DVC perspective
-* Q = Fd, K = Fs, V = Fs → attended DVC from SVC perspective
-* Repeat for (SVC, CC) and (DVC, CC) pairs
+Three independent contrastive tasks: one per OCTA layer (Sup, Deep, CC).
 
-Use 8-head multi-head attention with dropout=0.1.
+The encoders do NOT share weights — separate SimCLR pretraining per layer.
 
-Concatenate all attended representations and apply a 2-layer MLP with LayerNorm to produce:
+## Augmentation during pretraining
 
-**F_octa — Layer-Aware OCTA Representation** ∈ ℝ^(N×d)
+Use conservative augmentations that preserve vascular structure:
 
-## Biological Justification
+* Random horizontal flip (p=0.5)
+* Random rotation ±15° (p=0.4)
+* Random crop (scale=0.7–1.0) + resize to 224×224
+* Gaussian blur (σ=0.1–2.0, p=0.3)
+* Intensity jitter (brightness ±0.1, contrast ±0.1) — applied mildly
 
-SVC pathology (e.g., arteriolar narrowing from hypertension) predicts DVC rarefaction. CC flow deficits correlate with SVC perfusion changes in cardiovascular disease. These cross-layer correlations are the structural signature of systemic microvascular dysfunction and must be learned explicitly rather than assumed to emerge from independent encoders.
+Do NOT use: color inversion, aggressive distortion, cutout, or random erasing. These destroy the vessel density signal.
 
----
+## Pretraining schedule
 
-# PHASE 8 — BIOMARKER BRANCH
+* Epochs: 100
+* Optimizer: SGD with momentum=0.9, weight_decay=1e-4
+* LR: 0.1 with cosine decay
+* Batch size: 256 (with gradient accumulation if memory limited)
 
-Create a biomarker encoder.
-
-Input: Selected biomarker vector (7–9 features post-selection, from Phase 4)
-
-Architecture:
-
-* FC(K → 128) + GELU + LayerNorm + Dropout(0.2)
-* FC(128 → 256) + GELU + LayerNorm
-* Single-head self-attention over biomarker feature tokens (treat each biomarker as a token of dimension 32, project and stack)
-* Output: biomarker representation Fb ∈ ℝ^(1×256)
-
-The self-attention step allows the model to learn which biomarkers are most jointly informative rather than treating them as an unordered flat vector.
+After pretraining, retain only backbone weights. Discard projection heads.
 
 ---
 
-# PHASE 9 — CLINICAL FEATURE BRANCH
+# PHASE 4 — IMAGE ENCODERS WITH PROJECTION HEADS
 
-Create a clinical metadata encoder.
+## Backbone
 
-Input examples:
+Architecture: **ConvNeXt-Tiny**
 
-* Age (continuous, z-score normalized)
-* Sex (binary embedding)
-* BMI (continuous, z-score normalized)
-* Diabetes (binary)
-* Hypertension (binary)
-* Smoking (ordinal: never/former/current → embed)
-* Cholesterol (continuous)
-* eGFR if available
+* Initialized from ImageNet pretrained weights
+* Further adapted via OCTA-SimCLR (Phase 3)
+* Output dimension from final stage: 768
 
-Architecture:
+Three independent encoders: one each for Sup, Deep, CC.
 
-* Embed categorical features (lookup table, dim=16)
-* Concatenate with normalized continuous features
-* FC(D_in → 128) + GELU + LayerNorm + Dropout(0.3)
-* FC(128 → 128) + GELU + LayerNorm + Dropout(0.3)
-* FC(128 → 256) + GELU
-* Output: clinical representation Fc_meta ∈ ℝ^(1×256)
+Do NOT share backbone weights between layers.
 
-Explain why GELU is preferred over ReLU for tabular clinical data (smoother gradient flow, better performance on clinical feature distributions).
+**Biological justification:** Each retinal layer has distinct vascular architecture. SVC shows arterioles and capillaries in a 2D mesh. DVC shows sparser, finer capillaries in a different depth plane. CC shows a mosaic perfusion pattern. These textures are fundamentally different — a shared backbone would impose the same filter bank on all three, limiting layer-specific feature learning.
+
+## Projection Heads (post-encoder, pre-attention)
+
+After global average pooling (768-d), apply a per-encoder projection head:
+
+```
+FC(768 → 512) → GELU → LayerNorm
+FC(512 → 256) → LayerNorm
+```
+
+Output: 256-d token per layer.
+
+**Why project before attention?**
+
+768-d tokens in multi-head attention are computationally expensive and prone to overfitting with small N. Projecting to 256-d before the attention module reduces parameters, improves training stability, and is standard practice in vision-language transformer fusion.
+
+## Spatial Feature Map Retention
+
+Before global average pooling, extract the final spatial feature map (7×7×768 after ConvNeXt-Tiny's last stage) and retain a reference for Grad-CAM computation. Do not pool prematurely.
+
+## Output per encoder
+
+* Fs: Sup features ∈ ℝ^256
+* Fd: Deep features ∈ ℝ^256
+* Fc: CC features ∈ ℝ^256
 
 ---
 
-# PHASE 10 — UNIFIED HIERARCHICAL CROSS-MODAL TRANSFORMER (UHCMT)
+# PHASE 5 — CLINICAL METADATA ENCODER
 
-**Design rationale:**
+## Input handling
 
-Simple concatenation discards inter-modal relationships. Two separate attention stages (cross-layer then multimodal) produce representation fragmentation — the second stage has no mechanism to route information back to the layer-specific representations.
+Concatenate all processed clinical features into a single vector of dimension D_clin.
 
-The Unified Hierarchical Cross-Modal Transformer (UHCMT) performs both operations in a single coherent transformer:
+Missing features are replaced by their learned mask token (trainable 1-d embedding per feature, not a fixed zero or mean).
 
 ## Architecture
 
-**Stage 1 — Cross-Layer Integration** (from Phase 7):
-F_octa is the joint layer-aware representation from cross-layer attention.
+```
+Input: [D_clin]
+LayerNorm(input)
+FC(D_clin → 128) → GELU → Dropout(0.3)
+FC(128 → 256) → GELU → LayerNorm → Dropout(0.2)
+```
 
-**Stage 2 — Cross-Modal Fusion:**
+Output: F_clinical ∈ ℝ^256
 
-* F_octa attends to Fb (biomarker) via cross-attention: Q=F_octa, K=Fb, V=Fb
-* F_octa attends to Fc_meta (clinical) via cross-attention: Q=F_octa, K=Fc_meta, V=Fc_meta
-* Biomarker and clinical modalities also cross-attend to F_octa for bidirectional information flow
+## Why GELU over ReLU for clinical data
 
-Extract CLS token from each modality stream after fusion.
+Clinical feature distributions are often non-Gaussian and contain negative z-scored values. GELU's smooth, non-zero gradient near zero allows better gradient flow for near-zero features (e.g., slightly below-average BMI). ReLU hard-zeros these, losing gradient information.
 
-Concatenate CLS tokens: [CLS_octa ; CLS_bio ; CLS_clin]
+## Missing value training strategy
 
-Apply LayerNorm → FC(3d → 512) → GELU
-
-Output: **H — Shared Multimodal Representation** ∈ ℝ^512
-
-## Why UHCMT outperforms concatenation:
-
-Concatenation treats modalities as independent feature sets. UHCMT allows imaging features to be re-weighted based on which biomarkers are abnormal, and clinical risk factors to modulate which OCTA regions receive attention. This mirrors clinical reasoning: a diabetic patient's DVC rarefaction is weighted differently than the same finding in a normotensive non-diabetic.
+During training, randomly mask 10% of observed clinical features as if missing (set to mask token). This simulates real-world missingness and makes the encoder robust to absent clinical data at inference time.
 
 ---
 
-# PHASE 11 — MULTI-TASK LEARNING
+# PHASE 6 — CROSS-LAYER ATTENTION MODULE
 
-Create three simultaneous prediction tasks from the shared representation H.
+**Goal:** Model interactions between SVC, DVC, and CC feature representations before fusing with clinical data.
 
-## Task 1 — Cardiovascular Risk Prediction
+## Why cross-layer interactions matter
 
-Head: FC(512 → 128 → 1) + Sigmoid
+SVC pathology (e.g., arteriolar narrowing) predicts DVC rarefaction in hypertension. CC flow deficits correlate with SVC perfusion changes in diabetic retinopathy. These cross-layer correlation patterns differ across disease cohorts and constitute discriminative information not captured by any single encoder.
 
-Loss: Binary Cross-Entropy with label smoothing (ε=0.1)
+## Architecture
 
-**Uncertainty quantification:**
-Apply Monte Carlo Dropout (p=0.3) at inference time.
-Run 30–50 stochastic forward passes.
-Report:
-* Mean prediction: P(CVD)
-* Epistemic uncertainty: σ² across passes
-* Calibration loss (temperature scaling): L_cal = ECE
+**Step 1: Layer-identity embedding**
 
-Final output: P(CVD) ± σ
+Before attention, add a learnable layer-identity positional embedding to each token:
 
-## Task 2 — Retinal Biomarker Prediction
+```
+T_sup  = Fs + e_sup
+T_deep = Fd + e_deep
+T_cc   = Fc + e_cc
+```
 
-Head: FC(512 → 256 → K) where K = number of selected biomarkers
+Where e_sup, e_deep, e_cc ∈ ℝ^256 are learnable layer-identity vectors, initialized independently.
 
-Loss: Smooth L1 (Huber) loss — robust to biomarker outliers
+**Why this matters:** Without layer-identity embeddings, multi-head self-attention treats the three tokens as an unordered set. The model cannot learn that "token 2 is always the DVC" because the tokens have no identity marker — any permutation produces identical attention scores. Layer-identity embeddings fix this.
 
-This auxiliary task forces H to retain biomarker-relevant structure, acting as a regularizer that prevents the imaging branch from ignoring interpretable vascular signals.
+**Step 2: Multi-head self-attention**
 
-## Task 3 — Segmentation Supervision
+Stack the three tokens as a sequence: S = [T_sup ; T_deep ; T_cc] ∈ ℝ^(3×256)
 
-Decoder: Reuse U-Net++ skip connections from Phase 3.
+Apply transformer encoder block:
 
-Loss: Combined Tversky + Focal (as defined in Phase 3).
+* 8 attention heads, head dimension = 32
+* Pre-norm (LayerNorm before attention)
+* Feed-forward: 2-layer MLP (256 → 1024 → 256) with GELU
+* Dropout = 0.1
 
-This provides dense spatial supervision that anchors the encoder to anatomically meaningful vessel structures.
+**Step 3: Aggregation**
 
-## Dynamic Multi-Task Loss (Gradient Surgery)
+Apply mean pooling over the three attended tokens:
 
-**Replace static λ weights with PCGrad (Gradient Surgery):**
+F_octa = MeanPool([H_sup; H_deep; H_cc]) ∈ ℝ^256
 
-For each pair of task gradients (g_i, g_j):
-If cos(g_i, g_j) < 0 (conflicting gradients):
-   Project g_i onto the normal plane of g_j
-   Replace g_i with projected g_i
+**Output:** F_octa — Layer-Aware OCTA Representation
 
-This prevents any single task from dominating training and eliminates the need for manual λ hyperparameter search.
+---
 
-Total loss form for monitoring:
+# PHASE 7 — MULTIMODAL CROSS-ATTENTION FUSION
 
-L_total = w₁·L_risk + w₂·L_biomarker + w₃·L_seg
+**Goal:** Fuse imaging representation (F_octa) with clinical context (F_clinical) and optionally segmentation features (F_mask).
 
-Where w₁, w₂, w₃ are dynamically updated per batch by PCGrad.
+**Why cross-attention outperforms concatenation:**
 
-Explain rationale for each task and how they mutually regularize each other.
+Concatenation treats all modalities as equally relevant for every patient. Cross-attention allows F_octa to attend to clinical features selectively — a diabetic patient's DVC rarefaction is contextualised differently than the same finding in a normotensive non-diabetic. This mirrors clinical reasoning.
+
+## Architecture
+
+**Cross-attention block:**
+
+```
+Q = Linear(F_octa)          ∈ ℝ^(1 × 256)
+K = Linear(F_clinical)      ∈ ℝ^(1 × 256)
+V = Linear(F_clinical)      ∈ ℝ^(1 × 256)
+
+Attended = softmax(QK^T / √256) · V    (4-head cross-attention)
+F_fused = F_octa + Attended             (residual connection)
+F_fused = LayerNorm(F_fused)
+```
+
+**Optional mask branch fusion (if segmentation masks available):**
+
+```
+F_mask = MaskEncoder(vessel_mask, faz_mask, flow_mask)  ∈ ℝ^128
+F_fused = Concat([F_fused, F_mask])   → project to 512-d
+```
+
+**Projection to shared space:**
+
+```
+H = FC(Concat([F_fused ; F_clinical]) → 512) + GELU + LayerNorm
+```
+
+Output: H ∈ ℝ^512 — Unified multimodal representation.
+
+---
+
+# PHASE 8 — SEGMENTATION MASK ENCODER (AUXILIARY BRANCH)
+
+Design this branch even if masks are not always available.
+
+Input: Vessel mask, FAZ mask, flow-deficit mask (each 1×224×224)
+
+Handle unavailability: if masks absent for a sample, replace with zero tensors. The encoder must learn to output a neutral representation for zero inputs (train on 30% randomly zeroed masks to force this).
+
+Architecture:
+
+```
+ConvNeXt-Nano (or 3-layer lightweight CNN)
+GlobalAvgPool → 128-d
+Projection: FC(128 → 128) → GELU → LayerNorm
+```
+
+Output: F_mask ∈ ℝ^128
+
+Compare performance with and without mask branch in ablation (Phase 16).
+
+---
+
+# PHASE 9 — CLASSIFICATION HEAD WITH PROTOTYPE AUGMENTATION
+
+## Standard head
+
+```
+FC(512 → 256) → GELU → Dropout(0.3)
+FC(256 → 128) → GELU → Dropout(0.3)
+FC(128 → N_classes)
+```
+
+## Prototype-augmented logits
+
+For imbalanced disease cohorts, augment the standard linear classifier with prototype-based logits:
+
+During training, maintain a running class prototype P_k ∈ ℝ^128 (exponential moving average of class-conditional mean embeddings in the penultimate layer).
+
+At inference, compute prototype similarity:
+
+```
+proto_logit_k = -‖z - P_k‖² / τ_proto
+```
+
+Final logit = standard_logit + α · proto_logit
+
+where α is a learned scalar weight and τ_proto = 0.1.
+
+This provides a non-parametric classification signal that generalises better for rare cohorts with few samples, complementing the standard linear head.
+
+## Uncertainty quantification
+
+Apply Monte Carlo Dropout at inference (30 forward passes with Dropout active).
+
+Report per-sample:
+* Mean prediction: P(class | x) = (1/30) Σ softmax(f_t(x))
+* Epistemic uncertainty: σ²_k = Var_t[softmax(f_t(x))_k] per class
+* Entropy: H = -Σ P_k log P_k (overall prediction uncertainty)
+
+Flag predictions with entropy > threshold as "uncertain — recommend manual review."
+
+## Post-training calibration
+
+Apply temperature scaling on the validation fold:
+
+Learn scalar T such that softmax(logits / T) is well-calibrated.
+
+Minimise Expected Calibration Error (ECE) over the validation fold.
+
+---
+
+# PHASE 10 — LOSS FUNCTIONS
+
+## Primary classification loss
+
+**Default:** Weighted Cross-Entropy with label smoothing ε=0.1
+
+Class weights: inverse class frequency (computed per training fold).
+
+```
+L_cls = -Σ_k w_k · y_k · log(p_k)   (weighted CE with smoothed targets)
+```
+
+**If severe imbalance (max_class_freq / min_class_freq > 10):** Switch to Focal Loss:
+
+```
+L_focal = -Σ_k (1 - p_k)^γ · log(p_k)    γ=2
+```
+
+Compare both in experiments. Report which performs better per dataset split.
+
+**Class-balanced sampling:** Use WeightedRandomSampler to oversample minority cohorts in each training batch. Combine with loss weighting (both simultaneously).
+
+## Auxiliary segmentation loss (if masks available)
+
+```
+L_seg = α · L_Tversky(β=0.7) + (1-α) · L_Focal(γ=2)
+```
+
+Tversky with β=0.7 penalises false negatives more heavily — critical for sparse capillary and FAZ segmentation.
+
+## Calibration loss
+
+```
+L_cal = ECE(p, y)    (computed over mini-batches as a soft differentiable estimate)
+```
+
+## Total loss
+
+```
+L_total = L_cls + λ₁ · L_seg + λ₂ · L_cal
+```
+
+Initial values: λ₁=0.5, λ₂=0.1. Tune via grid search on validation fold.
+
+Label smoothing: applies to L_cls only.
+
+---
+
+# PHASE 11 — DATA AUGMENTATION
+
+Apply augmentations to OCTA images during training only. Never augment validation or test images.
+
+## OCTA-specific augmentation pipeline
+
+```python
+transforms.Compose([
+    transforms.RandomHorizontalFlip(p=0.5),
+    transforms.RandomVerticalFlip(p=0.3),
+    transforms.RandomRotation(degrees=15),
+    transforms.RandomAffine(
+        degrees=0,
+        translate=(0.05, 0.05),
+        scale=(0.95, 1.05),
+        shear=5
+    ),
+    transforms.ColorJitter(brightness=0.1, contrast=0.1),
+    AddGaussianNoise(sigma=0.01, p=0.2),
+    transforms.ToTensor(),
+    transforms.Normalize(mean=fold_mean, std=fold_std)
+])
+```
+
+Do NOT apply:
+
+* Aggressive color jitter (destroys vessel contrast)
+* Random erasing or cutout (removes vascular structure)
+* Large-scale elastic deformation (distorts FAZ morphology)
+* Random grayscale (images are already grayscale)
+
+**For clinical features:** Add Gaussian noise (σ=0.05) to continuous features during training with probability 0.3. Randomly zero out one observed clinical feature per sample with probability 0.1 (simulates missing data at training time).
+
+**Apply same augmentation to all three OCTA layers simultaneously** (same random seed per sample) to preserve cross-layer spatial correspondence.
 
 ---
 
 # PHASE 12 — TRAINING STRATEGY
 
-Provide complete training configuration:
+## 3-Stage Training Schedule
+
+**Stage 1: OCTA-SimCLR pretraining** (unlabeled)
+
+* Epochs: 100
+* LR: 0.1, cosine decay
+* All three encoders independently
+
+**Stage 2: Frozen backbone, train heads only**
+
+* Epochs: 15
+* LR: 3e-4
+* Train projection heads, cross-layer attention, fusion, classification head
+* Backbone weights frozen (loaded from Stage 1)
+* Purpose: initialise downstream heads before catastrophic forgetting risk
+
+**Stage 3: End-to-end fine-tuning**
+
+* Epochs: 100
+* Backbone LR: 3e-5 (10× smaller than head LR)
+* Head LR: 3e-4
+* Linear warmup first 5 epochs
+* Cosine annealing (T_0=20, T_mult=2)
+* Early stopping: patience=15 on validation macro-F1
 
 ## Optimizer
 
 AdamW
-* Learning rate: 3e-4 (imaging backbone: 3e-5 after unfreeze)
+* β₁=0.9, β₂=0.999
 * Weight decay: 1e-2
-* Betas: (0.9, 0.999)
 
-## Scheduler
+## Batch size
 
-Cosine Annealing with Warm Restarts (T_0=10, T_mult=2)
-* Linear warmup for first 5 epochs
-* This avoids early instability when transitioning from frozen to unfrozen backbone
+32 (or 16 with gradient accumulation ×2 = effective 32 if GPU limited)
 
-## Batch Size
+Mixed precision: enabled (bfloat16 or float16 with GradScaler)
 
-16 (gradient accumulation × 4 if GPU memory limited, effective batch = 64)
+## Cross-validation
 
-## Cross-Validation
+5-fold stratified cross-validation
+* Stratify on: disease cohort label AND patient age decade AND sex
+* All eyes from one patient always in same fold (patient-level split)
+* Report: mean ± std across 5 folds for all metrics
+* Final model: ensemble of 5 fold models (average softmax outputs)
 
-Stratified 5-fold cross-validation
-* Stratify on CVD label AND age decade to prevent demographic leakage
-* Report mean ± std across folds for all metrics
+## Reproducibility
 
-## Early Stopping
-
-Patience = 15 epochs on validation AUC
-
-## Augmentation Pipeline
-
-For 3D OCTA volumes:
-* Random horizontal/vertical flip (p=0.5)
-* Random rotation ±15° in axial plane (p=0.3)
-* Elastic deformation (α=1, σ=8, p=0.3)
-* Intensity jitter (brightness ±0.1, contrast ±0.1, p=0.4)
-* Gaussian noise (σ=0.01, p=0.2)
-* MixUp-OCTA: blend two OCTA volumes with their labels (α=0.4) — applied at the volume level, not pixel level, to preserve vascular structure
-
-For clinical and biomarker inputs:
-* Gaussian noise on continuous features (σ=0.05, p=0.3)
-* Random feature dropout (mask one feature to zero, p=0.1) — simulates missing clinical data at test time
-
-## Pretraining → Fine-Tuning Schedule
-
-1. Pretrain Retinal-MAE on unlabeled OCTA (50 epochs)
-2. Freeze backbone, train heads only (10 epochs, lr=3e-4)
-3. Unfreeze all, end-to-end fine-tune (100 epochs, backbone lr=3e-5)
-
-Explain every hyperparameter choice.
+Set all random seeds (Python, NumPy, PyTorch, CUDA).
+Log all hyperparameters, dataset splits, and random states.
+Use deterministic PyTorch operations where available.
 
 ---
 
 # PHASE 13 — EXPLAINABILITY
 
-Implement four complementary explainability methods:
+## Grad-CAM per layer
 
-## Grad-CAM 3D
+For each encoder (Sup, Deep, CC), compute Grad-CAM with respect to the final convolutional feature map before global average pooling.
 
-Apply gradient-weighted class activation mapping to the final convolutional feature maps of the 3D Swin encoder.
+Generate per-patient, per-class heatmaps:
 
-Generate per-layer (SVC, DVC, CC) volumetric heatmaps showing which voxel regions most influenced the CVD risk prediction.
+* Sup heatmap: which SVC regions drove the classification decision
+* Deep heatmap: which DVC regions drove the classification decision
+* CC heatmap: which CC regions drove the classification decision
 
-Overlay on original OCTA en-face projections for clinical presentation.
+Overlay on original OCTA en-face images. Use clinically appropriate colormap (viridis or hot).
 
-## Attention Rollout
+Present side-by-side per-layer heatmaps for example patients in each cohort.
 
-Propagate attention weights through all transformer layers of the UHCMT.
+## Attention rollout — layer dominance analysis
 
-Identify which retinal layer (SVC, DVC, or CC) dominated the multimodal fusion decision for each patient.
+From the cross-layer attention module (Phase 6), extract the attention weight matrix A ∈ ℝ^(3×3) per sample.
 
-Visualize cross-layer attention matrices to reveal learned inter-layer dependencies.
+Compute per-sample layer-dominance score:
 
-## SHAP Values
+```
+dominance_k = (1/N) Σ_i A_{ik}    for k ∈ {Sup, Deep, CC}
+```
 
-Apply KernelSHAP to the biomarker and clinical branches.
+Aggregate per cohort: which retinal layer dominates attention for each disease class?
 
-Generate:
-* Per-patient biomarker contribution waterfall plots
-* Population-level beeswarm plots
-* Dependence plots for top biomarkers vs CVD risk
+This produces a clinically interpretable finding: "Disease X is primarily driven by CC perfusion abnormalities; Disease Y is driven by SVC arteriolar changes."
 
-## Feature Importance Analysis
+## SHAP values for clinical features
 
-Global permutation importance across biomarker features.
-Correlation of biomarker SHAP values with Grad-CAM hotspot locations (do spatial imaging findings agree with biomarker importances?).
+Apply KernelSHAP to the clinical MLP branch.
 
-All explainability outputs must be presented in clinician-readable format with anatomical annotations.
+Generate per-patient:
+
+* Waterfall plots showing clinical feature contribution to prediction
+* Force plots per patient
+* Population beeswarm plots per cohort
+
+Identify which clinical features are most discriminative per disease class.
+
+## Integrated analysis
+
+Correlate Grad-CAM hotspot regions with layer-dominance scores — do the spatial findings agree with the attention-level finding about which layer dominates?
 
 ---
 
-# PHASE 14 — EVALUATION
+# PHASE 14 — EVALUATION METRICS
 
-Evaluate using the following metrics, all with 95% bootstrap confidence intervals (n=1000 bootstrap samples):
+All metrics reported with 95% bootstrap confidence intervals (n=1000 bootstrap samples, stratified).
 
-## Primary Metrics
+## Primary metrics (classification)
 
-* ROC-AUC (primary endpoint)
-* PR-AUC (important for class imbalance)
-* Sensitivity at 90% specificity (clinically relevant operating point)
-* Specificity at 90% sensitivity
+* Macro-averaged ROC-AUC (one-vs-rest)
+* Macro-F1
+* Balanced accuracy (accounts for class imbalance)
+* Per-class sensitivity and specificity
 
-## Secondary Metrics
+## Secondary metrics
 
-* Accuracy, Precision, Recall, F1 at optimal Youden threshold
-* Expected Calibration Error (ECE) — model reliability
-* Brier Score — probabilistic accuracy
-* Decision Curve Analysis (DCA) — net clinical benefit across threshold range
+* Weighted F1
+* PR-AUC (Macro) — particularly important when classes are imbalanced
+* Per-class precision, recall, F1
+* Confusion matrix (normalised by true class count)
+* Top-2 accuracy (whether correct class is in top-2 predictions)
 
-## Uncertainty Evaluation
+## Calibration
 
-* Coverage of 95% prediction intervals (should be ~95%)
-* Mean uncertainty vs. prediction error correlation
-* Uncertainty in high-risk vs. low-risk quartiles
+* Expected Calibration Error (ECE, 10 bins) — primary calibration metric
+* Brier score
+* Reliability diagram per class
 
-## Statistical Comparisons
+## Uncertainty evaluation
 
-* DeLong test for AUC comparison between proposed model and each baseline
-* Report p-values with Bonferroni correction for multiple comparisons
+* Mean prediction entropy vs. classification accuracy (are uncertain predictions also less accurate?)
+* Coverage analysis: percentage of correct predictions in the top-30% confidence bin
 
-Provide healthcare-specific interpretation of all metrics.
+## Statistical comparison
+
+For each baseline model vs. proposed model:
+
+* McNemar's test on binary correct/incorrect vectors across all test samples
+* DeLong test for pairwise AUC comparison
+* Bonferroni correction for multiple comparisons
+* Report p-values and effect sizes (Cohen's h for AUC comparisons)
 
 ---
 
 # PHASE 15 — ABLATION STUDIES
 
-Perform systematic ablation. For each configuration, retrain from scratch with identical seeds and report mean ± std over 5 folds.
+Retrain from scratch with identical seeds for each ablation. Report mean ± std over 5 folds.
 
-| Configuration | Change |
+| Configuration | Modification |
 |---|---|
 | Full model | Proposed architecture |
-| −Layer adapters | Replace with 3 independent encoders |
-| −Cross-layer attention | Concatenate Fs, Fd, Fc directly |
-| −UHCMT | Replace with simple concatenation + MLP |
-| −Biomarker branch | Remove Fb, clinical only |
-| −Clinical branch | Remove Fc_meta, biomarkers only |
-| −Retinal-MAE pretraining | Train encoder from scratch |
+| −SimCLR pretraining | ImageNet init only, no OCTA pretraining |
+| −Cross-layer attention | Concatenate Fs, Fd, Fc directly → project to 256-d |
+| −Layer-identity embeddings | Remove e_sup, e_deep, e_cc from cross-layer attention |
+| −Clinical branch | Remove F_clinical; classify on F_octa only |
+| −Mask branch | Remove F_mask (even when masks available) |
+| −Prototype head | Standard linear head only |
 | −Uncertainty (MC-Dropout) | Single deterministic forward pass |
-| −Dynamic loss (PCGrad) | Fixed λ₁=1.0, λ₂=0.5, λ₃=0.3 |
-| −Segmentation supervision | Remove Task 3 |
-| Biomarker-only baseline | No imaging, clinical + biomarkers only |
-| Imaging-only baseline | No clinical or biomarker branches |
+| −Temperature calibration | Uncalibrated softmax probabilities |
+| −Label smoothing | Hard one-hot targets |
+| −Class-balanced sampling | Uniform sampling only |
+| Sup only | Single encoder; remove Deep and CC |
+| Deep only | Single encoder; remove Sup and CC |
+| CC only | Single encoder; remove Sup and Deep |
+| Sup + Deep | Two encoders; remove CC |
+| Sup + Deep + CC | Three encoders; no clinical |
+| Images + Clinical | Full model (confirmation of full architecture) |
 
-Analyze each ablation to quantify the contribution of each architectural decision.
-
----
-
-# PHASE 16 — STATISTICAL VALIDATION
-
-Perform:
-
-* Mann-Whitney U Test — biomarker distributions between CVD vs non-CVD groups
-* Paired t-test — proposed model vs. each baseline on AUC (across folds)
-* One-way ANOVA — performance across age/sex subgroups (fairness analysis)
-* Pearson/Spearman correlation — predicted CVD risk vs. clinical risk scores (Framingham, SCORE2)
-* Logistic regression baseline — using only selected biomarkers + clinical features
-* Partial correlation — biomarker-risk relationship controlling for age and sex
-
-Report effect sizes (Cohen's d, rank-biserial r) alongside p-values.
+Analyze and discuss the marginal contribution of each component.
 
 ---
 
-# PHASE 17 — BASELINES
+# PHASE 16 — BASELINE COMPARISON
 
-Compare proposed model against:
+Implement and compare against the following baselines. Use identical preprocessing, augmentation, and cross-validation splits.
 
-| Baseline | Type |
-|---|---|
-| Logistic Regression | Classical — biomarkers + clinical only |
-| Random Forest | Ensemble — biomarkers + clinical |
-| XGBoost | Gradient boosting — biomarkers + clinical |
-| LightGBM | Gradient boosting — biomarkers + clinical |
-| ResNet50 2D | CNN — en-face images only |
-| ConvNeXt-T | CNN — en-face images only |
-| Vision Transformer (ViT-S) | Transformer — en-face images only |
-| 3D ResNet-18 | CNN — angiocube only |
-| Biomarker-only MLP | MLP — no imaging |
-| Clinical-only MLP | MLP — no biomarkers or imaging |
-| Proposed (full) | UHCMT multimodal |
+| Baseline | Type | Input |
+|---|---|---|
+| Logistic Regression | Classical | Clinical features only |
+| Random Forest | Ensemble | Clinical features only |
+| XGBoost | Gradient boosting | Clinical features only |
+| ResNet50 | CNN | Sup image only |
+| ResNet50 (3-channel) | CNN | Sup+Deep+CC stacked as RGB |
+| EfficientNet-B0 | CNN | Sup image only |
+| Vision Transformer (ViT-S/16) | Transformer | Sup image only |
+| ConvNeXt-Tiny (single) | CNN | Sup image only |
+| Proposed — full | Multimodal | Sup + Deep + CC + Clinical |
 
-For imaging baselines, use the same augmentation pipeline and training schedule.
-For classical baselines, use the same biomarker selection strategy.
+For CNN baselines: use ImageNet pretrained weights with the same training schedule as the proposed model (no SimCLR pretraining for baselines — this tests the value of pretraining specifically).
+
+---
+
+# PHASE 17 — STATISTICAL VALIDATION
+
+## Group-level analysis
+
+For each biomarker or clinical feature:
+
+* Mann-Whitney U test: cohort A vs. cohort B (pairwise, all pairs)
+* One-way ANOVA: across all cohorts simultaneously
+* Kruskal-Wallis test: non-parametric alternative when normality is violated
+
+## Fairness analysis
+
+Evaluate model performance stratified by:
+
+* Sex (male vs. female)
+* Age quartile (<50, 50–60, 60–70, >70)
+* Presence of diabetes
+* Bilateral vs. unilateral eye availability
+
+Report whether model performance degrades for underrepresented subgroups.
+
+## Multivariate analysis
+
+Logistic regression (one-vs-rest) using clinical features only: use as a clinical baseline and to quantify the added value of imaging features.
+
+Partial correlation: predicted disease probability vs. each clinical feature, controlling for age and sex.
 
 ---
 
 # PHASE 18 — NOVEL RESEARCH CONTRIBUTIONS
 
-Identify and articulate the following novel contributions for publication:
+Identify and articulate the following contributions for publication:
 
-1. **Layer-Masked Retinal-MAE**: First application of layer-level masked autoencoding for OCTA pretraining — forces cross-layer representation learning aligned with the biological hypothesis.
+1. **Bilateral natural positives for OCTA-SimCLR:** First contrastive pretraining strategy that exploits OD/OS pairs as positive samples, leveraging the unique bilateral structure of ophthalmic datasets to avoid label requirements.
 
-2. **Layer-Specific Adapter Architecture**: Parameter-efficient multi-layer OCTA encoding via shared backbone + adapter tokens — achieves layer specificity without triplicated encoder cost.
+2. **Layer-identity tokens in cross-layer attention:** Explicit layer-identity embeddings ensure the transformer-based cross-layer attention module can distinguish which token corresponds to which retinal depth — a critical but commonly omitted detail.
 
-3. **UHCMT Fusion**: Unified hierarchical cross-modal transformer that performs cross-layer and cross-modality attention in a single coherent architecture — superior to staged fusion.
+3. **Learnable mask-token imputation for clinical data:** Replaces statistical imputation (mean/mode) with a learned representation of "this feature was not measured," preserving the model's ability to reason about data absence as a distinct clinical state.
 
-4. **Uncertainty-Aware CVD Screening**: First integration of MC-Dropout uncertainty quantification in retinal OCTA-based cardiovascular prediction — critical for clinical trust and triage.
+4. **Prototype-augmented classification for rare cohorts:** Hybrid parametric + non-parametric classification head that improves generalisation for minority disease classes without requiring oversampling or additional annotations.
 
-5. **PCGrad Multi-Task Training**: Dynamic gradient surgery for conflicting segmentation, biomarker, and classification tasks — removes manual λ tuning and improves training stability.
+5. **Layer-dominance analysis as a clinical explainability tool:** Systematic attribution of predictions to specific retinal layers via attention weight analysis, producing cohort-level findings interpretable by ophthalmologists and cardiologists.
 
-6. **Biomarker-Guided Cross-Modal Attention**: Interpretable fusion where clinical biomarkers modulate imaging attention weights — preserves clinical reasoning structure within deep learning.
+6. **Uncertainty-aware disease classification:** Integration of MC-Dropout uncertainty quantification and ECE-calibrated probabilities, enabling clinical triage — uncertain predictions can be flagged for expert review rather than acted upon directly.
 
 ---
 
-# PHASE 19 — FINAL DELIVERABLES
+# PHASE 19 — DELIVERABLES
 
 Provide all of the following:
 
-1. **Full architecture diagram** — annotated with tensor dimensions at each stage
-2. **Training pipeline flowchart** — pretraining → fine-tuning → evaluation
-3. **Data flow diagram** — from raw OCTA to clinical output
-4. **Mathematical formulation** — complete notation for all losses, attention mechanisms, and biomarker computations
-5. **Pseudocode** — PyTorch-style, covering: Retinal-MAE, shared encoder with adapters, UHCMT, multi-task heads, PCGrad loss, MC-Dropout inference
-6. **PyTorch implementation plan** — file structure, class hierarchy, training loop, evaluation loop
-7. **Hyperparameter table** — all values with justification
-8. **Publication-ready methodology section** — IEEE TMI / Nature Biomedical Engineering style
-9. **Experimental results section** — with placeholder tables for all metrics, ablations, and baseline comparisons
-10. **Research paper outline** — title, abstract structure, section breakdown, figure list, contribution summary
+1. **Dataset loader** — complete PyTorch Dataset class with patient-level stratified splitting, bilateral eye handling, mask-token imputation, and data integrity checks
+2. **Training pipeline** — 3-stage schedule (SimCLR → frozen fine-tune → end-to-end), logging, checkpointing
+3. **Model implementation** — all modules: encoders, projection heads, cross-layer attention, fusion, classification head, mask encoder
+4. **Validation pipeline** — 5-fold CV loop with metric accumulation, bootstrap CI computation, calibration step
+5. **Explainability module** — Grad-CAM (per layer), attention rollout (layer dominance), SHAP (clinical features)
+6. **Experiment manager** — configuration-driven, YAML-based, all hyperparameters logged via wandb or MLflow
+7. **Reproducibility config** — fixed seeds, deterministic ops, dataset split serialisation
+8. **Full PyTorch codebase** — modular, documented, with unit tests for critical components
+9. **Results tables** — all metrics, all ablations, all baselines, with bootstrap CIs
+10. **Publication-ready methodology section** — IEEE TPAMI / Nature Biomedical Engineering style
 
-Design the strongest publishable model possible while maintaining clinical relevance, interpretability, uncertainty awareness, and feasibility on a medium-sized OCTA dataset.
+---
+
+# PHASE 20 — V2 ROADMAP (ANGIOCUBE INTEGRATION)
+
+Version 2 will extend this system with 3D angiocube features.
+
+Planned additions:
+
+* Replace 2D ConvNeXt-Tiny with shared 3D Swin-T backbone + layer-specific adapter tokens (as designed in the CVD architecture)
+* Add Retinal-MAE pretraining with layer-masked reconstruction
+* Integrate volumetric biomarker extraction (VAD, VLD, VFD per ETDRS zone)
+* Full multi-task learning: classification + biomarker regression + segmentation supervision
+* PCGrad dynamic loss weighting
+
+Version 2 target: replace the current cross-layer attention on 3 pooled vectors with full cross-layer attention on 3D spatial feature sequences.
+
+This Version 1 system is explicitly designed to be compatible with V2 extension — the modular architecture allows drop-in replacement of 2D encoders with 3D equivalents.
