@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Phase 3 — OCTA-SimCLR Pretraining</title>
+  <style>
+    :root {
+      --bg: #030303;
+      --bg-deep: #090909;
+      --surface: #111111;
+      --surface-2: #171717;
+      --line: rgba(255,255,255,0.1);
+      --line-soft: rgba(255,255,255,0.06);
+      --text: #f5f7fa;
+      --mid: #a4acb7;
+      --low: #6f7782;
+      --halo: #7fb2ff;
+      --halo-soft: rgba(127,178,255,0.14);
+      --green: #86e0ad;
+      --amber: #ffd27d;
+      --violet: #c4afff;
+      --red: #ff9b9b;
+      --max: 1220px;
+      color-scheme: dark;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.72;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 82% 0%, rgba(127,178,255,0.12), transparent 24rem),
+        radial-gradient(circle at 10% 26%, rgba(196,175,255,0.08), transparent 28rem),
+        linear-gradient(180deg, #060606 0%, #030303 35%, #090909 100%);
+      z-index: -2;
+    }
+
+    a { color: inherit; }
+    .shell { width: min(calc(100% - 40px), var(--max)); margin-inline: auto; }
+
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      backdrop-filter: blur(16px);
+      background: rgba(3,3,3,0.78);
+      border-bottom: 1px solid var(--line-soft);
+    }
+
+    .site-header .shell {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 14px 0;
+    }
+
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .mark {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: radial-gradient(circle at 38% 38%, #eff6ff 0 10%, var(--halo) 12% 32%, rgba(127,178,255,0.24) 34% 56%, transparent 58%);
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.1), 0 0 32px rgba(127,178,255,0.18);
+      flex: 0 0 auto;
+    }
+    .brand strong, .brand span { display: block; }
+    .brand strong { font-size: 0.95rem; font-weight: 620; }
+    .brand span { font-size: 0.84rem; color: var(--mid); }
+
+    .nav { display: flex; flex-wrap: wrap; gap: 18px; }
+    .nav a {
+      text-decoration: none;
+      color: var(--mid);
+      font-size: 0.92rem;
+      border-bottom: 1px solid transparent;
+      padding-bottom: 4px;
+    }
+    .nav a:hover { color: var(--text); border-color: rgba(255,255,255,0.18); }
+
+    main { padding-bottom: 100px; }
+
+    .hero { padding: clamp(70px, 10vw, 128px) 0 60px; }
+    .hero-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(290px, 0.9fr);
+      gap: clamp(34px, 7vw, 92px);
+      align-items: end;
+    }
+
+    .signal {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--mid);
+      font-size: 0.92rem;
+      margin-bottom: 24px;
+    }
+    .signal::before {
+      content: "";
+      width: 9px; height: 9px; border-radius: 50%;
+      background: var(--halo);
+      box-shadow: 0 0 18px rgba(127,178,255,0.42);
+    }
+
+    h1, h2, h3 { text-wrap: balance; }
+    h1 {
+      margin: 0;
+      font-size: clamp(3.15rem, 7vw, 5.8rem);
+      line-height: 0.95;
+      letter-spacing: -0.035em;
+      font-weight: 540;
+      max-width: 10ch;
+    }
+    .lead {
+      margin: 24px 0 0;
+      color: var(--mid);
+      max-width: 68ch;
+      font-size: clamp(1.03rem, 1.6vw, 1.16rem);
+    }
+
+    .quiet-panel {
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px;
+      padding: 24px;
+    }
+
+    .hero-panel {
+      display: grid;
+      gap: 20px;
+      box-shadow: 0 0 0 1px rgba(127,178,255,0.05) inset;
+      border-color: rgba(127,178,255,0.16);
+    }
+
+    .eyebrow {
+      color: var(--halo);
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      font-size: 0.76rem;
+    }
+
+    .hero-panel h2 {
+      margin: 0;
+      font-size: clamp(1.3rem, 2vw, 1.8rem);
+      line-height: 1.1;
+      font-weight: 540;
+    }
+
+    .hero-panel p, .hero-panel li { color: var(--mid); }
+    .hero-panel ul { margin: 0; padding-left: 18px; }
+
+    .section {
+      padding: clamp(64px, 9vw, 112px) 0;
+      border-top: 1px solid var(--line-soft);
+    }
+
+    .section-head {
+      display: grid;
+      grid-template-columns: minmax(0, 0.8fr) minmax(280px, 1fr);
+      gap: clamp(26px, 5vw, 78px);
+      align-items: start;
+      margin-bottom: 38px;
+    }
+
+    .section h2 {
+      margin: 0;
+      font-size: clamp(2rem, 4vw, 3.55rem);
+      line-height: 1;
+      letter-spacing: -0.03em;
+      font-weight: 530;
+    }
+    .section-head p {
+      margin: 0;
+      color: var(--mid);
+      max-width: 72ch;
+    }
+
+    .three-col {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 30px;
+      margin-top: 28px;
+    }
+
+    .rail {
+      padding-top: 16px;
+      border-top: 1px solid var(--line);
+    }
+    .rail h3 {
+      margin: 0 0 12px;
+      font-size: 1.05rem;
+      font-weight: 620;
+    }
+    .rail p { margin: 0; color: var(--mid); }
+
+    .viz-block { margin-top: 42px; }
+    .viz-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      align-items: end;
+      margin-bottom: 16px;
+    }
+    .viz-title h3 {
+      margin: 0;
+      font-size: clamp(1.25rem, 2vw, 1.7rem);
+      line-height: 1.1;
+      font-weight: 540;
+    }
+    .viz-title p {
+      margin: 0;
+      color: var(--mid);
+      max-width: 62ch;
+    }
+
+    .canvas-wrap {
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.015));
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 22px;
+      padding: 18px;
+      overflow: hidden;
+    }
+
+    canvas {
+      width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 16px;
+      background: linear-gradient(180deg, #070707, #0a0a0a);
+    }
+
+    .caption {
+      margin: 16px 6px 0;
+      color: var(--low);
+      font-size: 0.94rem;
+      max-width: 72ch;
+    }
+
+    .timeline {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 28px;
+      margin-top: 20px;
+    }
+
+    .step {
+      padding-top: 16px;
+      border-top: 1px solid var(--line);
+    }
+    .step .kicker {
+      display: block;
+      color: var(--halo);
+      font-size: 0.8rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    .step h3 {
+      margin: 0 0 10px;
+      font-size: 1.08rem;
+      font-weight: 620;
+    }
+    .step p, .step li { color: var(--mid); }
+    .step ul { margin: 0; padding-left: 18px; }
+
+    .bottom-note {
+      margin-top: 30px;
+      padding-top: 18px;
+      border-top: 1px solid var(--line);
+      color: var(--mid);
+      max-width: 74ch;
+    }
+
+    @media (max-width: 980px) {
+      .hero-grid, .section-head, .three-col, .timeline { grid-template-columns: 1fr; }
+      .viz-title { display: grid; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="shell">
+      <div class="brand">
+        <div class="mark" aria-hidden="true"></div>
+        <div>
+          <strong>Retina CAD</strong>
+          <span>Phase 3 explainer</span>
+        </div>
+      </div>
+      <nav class="nav" aria-label="Section navigation">
+        <a href="#what">What it is</a>
+        <a href="#ssl">Self-supervised</a>
+        <a href="#why">Why now</a>
+        <a href="#pairs">Positive pairs</a>
+        <a href="#mechanics">Mechanics</a>
+        <a href="#schedule">Training plan</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="shell hero-grid">
+        <div>
+          <div class="signal">Phase 3 of the Retina CAD pipeline</div>
+          <h1>OCTA-SimCLR pretraining before diagnosis training.</h1>
+          <p class="lead">Phase 3 teaches each retinal-layer encoder to understand OCTA structure before labels are used for disease classification. Instead of jumping straight from ImageNet into CAD prediction, we first adapt the visual backbone to grayscale vessel anatomy, bilateral similarity, OCTA-specific texture statistics, and the difference between patient-matched versus unrelated vascular patterns.</p>
+        </div>
+        <aside class="quiet-panel hero-panel">
+          <span class="eyebrow">Core idea</span>
+          <h2>Learn retinal representations first. Classify disease after.</h2>
+          <ul>
+            <li>Three separate pretraining jobs: SVC, DVC, and CC.</li>
+            <li>OD/OS of the same patient become medically meaningful positive pairs.</li>
+            <li>Single-eye patients still contribute via two augmented views of one image.</li>
+            <li>Projection heads exist only during pretraining, then get discarded.</li>
+            <li>The model learns by comparing embeddings, not by seeing CAD labels yet.</li>
+          </ul>
+        </aside>
+      </div>
+    </section>
+
+    <section class="section" id="what">
+      <div class="shell">
+        <div class="section-head">
+          <h2>What Phase 3 is.</h2>
+          <p>Phase 3 is a self-supervised learning stage. The model sees OCTA images without disease labels and learns which images should land near each other in feature space. For this project, “near” means either two eyes from the same patient in the same layer or two careful augmentations of the same image when only one eye is available. In short: the supervision comes from image relationships we construct from the data itself, not from CAD labels typed in by a human.</p>
+        </div>
+        <div class="three-col">
+          <div class="rail">
+            <h3>What “self-supervised” means</h3>
+            <p>No one tells the model “this image is CAD” or “this image is control” during Phase 3. Instead, the training pipeline automatically creates learning targets by saying which two views should match and which other images in the batch should not.</p>
+          </div>
+          <div class="rail">
+            <h3>What the model actually learns</h3>
+            <p>It learns an embedding space: a numeric representation where vessel maps with shared anatomy and disease context sit closer together, while unrelated retinal patterns sit farther apart.</p>
+          </div>
+          <div class="rail">
+            <h3>Why this matters later</h3>
+            <p>When CAD labels are finally introduced in the next phase, the backbone is no longer starting blind. It already knows common OCTA structures, layer-specific textures, and how to encode meaningful vascular similarity.</p>
+          </div>
+        </div>
+        <div class="three-col">
+          <div class="rail">
+            <h3>Input</h3>
+            <p>Preprocessed grayscale OCTA images, separated by retinal layer: superficial, deep, and choriocapillaris.</p>
+          </div>
+          <div class="rail">
+            <h3>Objective</h3>
+            <p>Make medically related images embed close together and unrelated images push apart.</p>
+          </div>
+          <div class="rail">
+            <h3>Output</h3>
+            <p>Three OCTA-adapted ConvNeXt-Tiny backbones, ready for downstream multimodal fine-tuning.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="ssl">
+      <div class="shell">
+        <div class="section-head">
+          <h2>What self-supervised learning is.</h2>
+          <p>Self-supervised learning is a way to train a model without manual labels by generating a training signal from the raw data itself. In SimCLR, the question is not “which disease class is this?” The question is “which two images should represent the same underlying case, and which images should represent different cases?”</p>
+        </div>
+
+        <div class="three-col">
+          <div class="rail">
+            <h3>Supervised learning</h3>
+            <p>Needs explicit labels such as CAD versus non-CAD. The model directly maps an image to a diagnosis target.</p>
+          </div>
+          <div class="rail">
+            <h3>Self-supervised learning</h3>
+            <p>Uses automatically constructed targets. Here, the target is relational: matched OCTA views should agree in embedding space even before any diagnosis label is used.</p>
+          </div>
+          <div class="rail">
+            <h3>Why it fits OCTA</h3>
+            <p>OCTA collections often contain more useful images than high-confidence labels. Self-supervision lets the project extract signal from every scan by first learning retinal structure, then learning disease classification.</p>
+          </div>
+        </div>
+
+        <div class="three-col">
+          <div class="rail">
+            <h3>Is this clustering?</h3>
+            <p>It is similar to clustering in the sense that similar samples are encouraged to live near each other, but it is not the same thing. Phase 3 does not explicitly create disease groups or assign cluster IDs.</p>
+          </div>
+          <div class="rail">
+            <h3>What it does instead</h3>
+            <p>It learns a useful embedding space — a map of OCTA similarity. In that map, related eyes and related image views move closer, while unrelated cases move farther apart.</p>
+          </div>
+          <div class="rail">
+            <h3>What comes later</h3>
+            <p>Once that map is learned, the later supervised classifier uses real labels such as control versus disease or specific clinical cohorts to place decision boundaries on top of the embedding.</p>
+          </div>
+        </div>
+
+        <div class="bottom-note">Think of Phase 3 as pretraining the model to speak the visual language of OCTA. The later classifier then uses that language for CAD prediction. A good shorthand is: clustering tries to make groups, self-supervised contrastive learning tries to learn a good map.</div>
+      </div>
+    </section>
+
+    <section class="section" id="why">
+      <div class="shell">
+        <div class="section-head">
+          <h2>Why we are doing it.</h2>
+          <p>Skipping this stage would mean asking a backbone trained on natural RGB photographs to immediately understand grayscale vascular maps. That is risky. Phase 3 reduces the domain gap, uses unlabeled data efficiently, and gives later classification stages a stronger anatomical prior.</p>
+        </div>
+
+        <div class="three-col">
+          <div class="rail">
+            <h3>1. Domain gap</h3>
+            <p>ImageNet teaches edges, objects, fur, sky, texture, and color relationships. OCTA needs vessel continuity, capillary density, flow voids, and layer-specific vascular geometry.</p>
+          </div>
+          <div class="rail">
+            <h3>2. Label efficiency</h3>
+            <p>Self-supervised training lets every OCTA image help shape the backbone before class labels are consumed in the harder downstream task.</p>
+          </div>
+          <div class="rail">
+            <h3>3. Better fine-tuning start</h3>
+            <p>The classifier begins from features already aligned to retinal anatomy, so later disease learning is more stable and less data-hungry.</p>
+          </div>
+        </div>
+
+        <div class="viz-block">
+          <div class="viz-title">
+            <h3>Visualization 1 — the domain-gap bridge</h3>
+            <p>Left: natural-image initialization. Right: OCTA-adapted representation. Phase 3 is the bridge that converts generic features into retinally useful ones.</p>
+          </div>
+          <div class="canvas-wrap">
+            <canvas id="domainGap" width="1160" height="420" aria-label="Diagram showing ImageNet features bridging into OCTA features through Phase 3 pretraining."></canvas>
+          </div>
+          <p class="caption">Interpretation: without pretraining, downstream CAD classification must solve two problems at once: learning retinal structure and learning disease. Phase 3 removes much of the first burden.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="pairs">
+      <div class="shell">
+        <div class="section-head">
+          <h2>Why bilateral pairs matter.</h2>
+          <p>The plan uses a medically meaningful contrastive signal unique to ophthalmic data. When a patient has both eyes available, OD and OS in the same OCTA layer share systemic disease context. They are not identical images, but they are biologically related views of the same disease state.</p>
+        </div>
+
+        <div class="viz-block">
+          <div class="viz-title">
+            <h3>Visualization 2 — positive pair strategy</h3>
+            <p>The upper path uses bilateral natural positives. The lower path is the fallback for unilateral cases. Both routes feed the same contrastive objective.</p>
+          </div>
+          <div class="canvas-wrap">
+            <canvas id="pairStrategy" width="1160" height="500" aria-label="Diagram showing bilateral OD-OS positive pairs and unilateral augmented-view fallback for SimCLR."></canvas>
+          </div>
+          <p class="caption">Why this is strong: it preserves disease consistency while still allowing natural anatomical variation. That teaches the encoder which changes are disease-relevant versus incidental.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="mechanics">
+      <div class="shell">
+        <div class="section-head">
+          <h2>How the learning works.</h2>
+          <p>Each image goes through a layer-specific ConvNeXt-Tiny backbone and a temporary projection head. SimCLR then compares normalized embeddings with NT-Xent loss. Positive pairs are pulled together; the rest of the batch acts as negatives. After pretraining, the projection head is removed and only backbone weights are kept. The key learning signal is simple: if two embeddings came from the same underlying case, similarity should increase; if they came from unrelated cases, similarity should decrease.</p>
+        </div>
+
+        <div class="viz-block">
+          <div class="viz-title">
+            <h3>Visualization 3 — Phase 3 mechanics</h3>
+            <p>One layer at a time: augment, encode, project, compare, optimize, discard head, keep adapted backbone.</p>
+          </div>
+          <div class="canvas-wrap">
+            <canvas id="simclrFlow" width="1160" height="460" aria-label="Flow diagram of SimCLR pretraining for a single OCTA layer."></canvas>
+          </div>
+          <p class="caption">Important detail: the three retinal layers do not share weights during pretraining. Each layer gets its own encoder because superficial, deep, and CC textures are biologically different.</p>
+        </div>
+
+        <div class="three-col">
+          <div class="rail">
+            <h3>Step 1 — turn image into features</h3>
+            <p>The ConvNeXt backbone converts each OCTA image into a compact feature vector. Early layers respond to local vessel edges and contrast transitions; deeper layers summarize larger vascular arrangements and texture patterns.</p>
+          </div>
+          <div class="rail">
+            <h3>Step 2 — compare paired embeddings</h3>
+            <p>The projection head maps features into a contrastive space where cosine similarity is measured. If the pair is OD/OS from one patient, or two augmentations of one eye, the loss rewards those embeddings for becoming closer.</p>
+          </div>
+          <div class="rail">
+            <h3>Step 3 — separate unrelated cases</h3>
+            <p>All other images in the batch become implicit negatives. Their embeddings compete with the true match, so the backbone must keep patient-matched vascular patterns aligned while not collapsing every OCTA scan into the same representation.</p>
+          </div>
+        </div>
+
+        <div class="three-col">
+          <div class="rail">
+            <h3>Conservative augmentations</h3>
+            <p>Horizontal flip, mild rotation, modest crop-resize, Gaussian blur, and light intensity jitter. These perturb the image without destroying vessel structure.</p>
+          </div>
+          <div class="rail">
+            <h3>What we avoid</h3>
+            <p>No aggressive distortions, no random erasing, no inversion tricks. Those may improve generic SSL benchmarks but can erase clinically meaningful vascular signal.</p>
+          </div>
+          <div class="rail">
+            <h3>Why projection heads are temporary</h3>
+            <p>The projection head helps the contrastive objective work well, but the downstream classifier benefits most from the backbone representation, not the pretraining-only head.</p>
+          </div>
+        </div>
+
+        <p class="bottom-note">A useful mental model: every training batch behaves like a small ranking problem. For each anchor OCTA image, the model should rank its true partner as most similar and rank unrelated patients lower.</p>
+      </div>
+    </section>
+
+    <section class="section" id="schedule">
+      <div class="shell">
+        <div class="section-head">
+          <h2>Training schedule and expected payoff.</h2>
+          <p>Phase 3 is not the final model. It is the preparation stage that gives Phase 4 onward better starting weights. The schedule is intentionally straightforward: long enough to adapt to OCTA, but modular enough that each layer can be audited independently.</p>
+        </div>
+
+        <div class="viz-block">
+          <div class="viz-title">
+            <h3>Visualization 4 — what gets trained and what gets reused</h3>
+            <p>Each layer runs the same recipe: 100 epochs, SGD with cosine decay, projection head during pretraining only, backbone exported for later multimodal training.</p>
+          </div>
+          <div class="canvas-wrap">
+            <canvas id="timeline" width="1160" height="380" aria-label="Timeline showing per-layer SimCLR pretraining and backbone export."></canvas>
+          </div>
+        </div>
+
+        <div class="timeline">
+          <div class="step">
+            <span class="kicker">Stage A</span>
+            <h3>Pretrain per layer</h3>
+            <p>Run separate SimCLR jobs for Sup, Deep, and CC with ConvNeXt-Tiny + MLP projection head.</p>
+          </div>
+          <div class="step">
+            <span class="kicker">Stage B</span>
+            <h3>Export backbones</h3>
+            <p>Discard the projection heads. Keep only layer-adapted backbone weights.</p>
+          </div>
+          <div class="step">
+            <span class="kicker">Stage C</span>
+            <h3>Hand off to downstream phases</h3>
+            <p>Phase 4 and later classification/fusion blocks now start from retinally tuned encoders instead of generic natural-image features.</p>
+          </div>
+        </div>
+
+        <p class="bottom-note">In plain language: Phase 3 makes the later CAD model spend less effort learning “what an OCTA image is” and more effort learning “what disease pattern this OCTA image suggests.” That is why this phase exists, and why it is a high-leverage step in the overall pipeline.</p>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const COLORS = {
+      text: '#f5f7fa',
+      mid: '#9ea6b1',
+      low: '#6f7782',
+      line: 'rgba(255,255,255,0.1)',
+      lineSoft: 'rgba(255,255,255,0.06)',
+      halo: '#7fb2ff',
+      haloSoft: 'rgba(127,178,255,0.16)',
+      green: '#86e0ad',
+      amber: '#ffd27d',
+      violet: '#c4afff',
+      red: '#ff9b9b',
+      whiteSoft: 'rgba(255,255,255,0.86)'
+    };
+
+    function setupCanvas(id) {
+      const canvas = document.getElementById(id);
+      const ctx = canvas.getContext('2d');
+      const ratio = Math.max(window.devicePixelRatio || 1, 1);
+      const logicalWidth = canvas.width;
+      const logicalHeight = canvas.height;
+      canvas.width = logicalWidth * ratio;
+      canvas.height = logicalHeight * ratio;
+      ctx.scale(ratio, ratio);
+      return { canvas, ctx, width: logicalWidth, height: logicalHeight };
+    }
+
+    function roundRect(ctx, x, y, w, h, r, fill, stroke) {
+      const radius = Math.min(r, w / 2, h / 2);
+      ctx.beginPath();
+      ctx.moveTo(x + radius, y);
+      ctx.arcTo(x + w, y, x + w, y + h, radius);
+      ctx.arcTo(x + w, y + h, x, y + h, radius);
+      ctx.arcTo(x, y + h, x, y, radius);
+      ctx.arcTo(x, y, x + w, y, radius);
+      ctx.closePath();
+      if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+      if (stroke) { ctx.strokeStyle = stroke; ctx.stroke(); }
+    }
+
+    function line(ctx, x1, y1, x2, y2, color, width = 1, dash = []) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.setLineDash(dash);
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.strokeStyle = color;
+      ctx.lineWidth = width;
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function arrow(ctx, x1, y1, x2, y2, color, width = 2, size = 10) {
+      line(ctx, x1, y1, x2, y2, color, width);
+      const angle = Math.atan2(y2 - y1, x2 - x1);
+      ctx.beginPath();
+      ctx.moveTo(x2, y2);
+      ctx.lineTo(x2 - size * Math.cos(angle - Math.PI / 6), y2 - size * Math.sin(angle - Math.PI / 6));
+      ctx.lineTo(x2 - size * Math.cos(angle + Math.PI / 6), y2 - size * Math.sin(angle + Math.PI / 6));
+      ctx.closePath();
+      ctx.fillStyle = color;
+      ctx.fill();
+    }
+
+    function label(ctx, text, x, y, opts = {}) {
+      ctx.save();
+      ctx.fillStyle = opts.color || COLORS.text;
+      ctx.font = opts.font || '500 16px ui-sans-serif, system-ui, sans-serif';
+      ctx.textAlign = opts.align || 'left';
+      ctx.textBaseline = opts.baseline || 'alphabetic';
+      ctx.fillText(text, x, y);
+      ctx.restore();
+    }
+
+    function paragraph(ctx, text, x, y, maxWidth, lineHeight = 22, color = COLORS.mid, font = '400 15px ui-sans-serif, system-ui, sans-serif') {
+      ctx.save();
+      ctx.font = font;
+      ctx.fillStyle = color;
+      const words = text.split(' ');
+      let lineText = '';
+      let yy = y;
+      for (const word of words) {
+        const test = lineText ? lineText + ' ' + word : word;
+        if (ctx.measureText(test).width > maxWidth && lineText) {
+          ctx.fillText(lineText, x, yy);
+          lineText = word;
+          yy += lineHeight;
+        } else {
+          lineText = test;
+        }
+      }
+      if (lineText) ctx.fillText(lineText, x, yy);
+      ctx.restore();
+    }
+
+    function circleNode(ctx, x, y, r, fill, stroke) {
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.fillStyle = fill;
+      ctx.fill();
+      ctx.strokeStyle = stroke;
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+    }
+
+    function drawFeatureCloud(ctx, x, y, color, seed, clipRect = null) {
+      ctx.save();
+      if (clipRect) {
+        ctx.beginPath();
+        ctx.rect(clipRect.x, clipRect.y, clipRect.w, clipRect.h);
+        ctx.clip();
+      }
+      for (let i = 0; i < 22; i++) {
+        const px = x + Math.sin(seed + i * 0.8) * (18 + (i % 5) * 6);
+        const py = y + Math.cos(seed * 0.6 + i * 0.7) * (14 + (i % 4) * 8);
+        ctx.beginPath();
+        ctx.arc(px, py, 3 + (i % 3), 0, Math.PI * 2);
+        ctx.fillStyle = color;
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    function drawEye(ctx, x, y, w, h, color) {
+      ctx.save();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(x, y + h / 2);
+      ctx.quadraticCurveTo(x + w / 2, y, x + w, y + h / 2);
+      ctx.quadraticCurveTo(x + w / 2, y + h, x, y + h / 2);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(x + w / 2, y + h / 2, h * 0.22, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(x + w / 2, y + h / 2, h * 0.08, 0, Math.PI * 2);
+      ctx.fillStyle = color;
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function drawDomainGap() {
+      const { ctx, width, height } = setupCanvas('domainGap');
+      ctx.clearRect(0, 0, width, height);
+
+      roundRect(ctx, 40, 72, 270, 270, 26, 'rgba(255,255,255,0.02)', COLORS.lineSoft);
+      roundRect(ctx, 420, 94, 320, 224, 26, 'rgba(127,178,255,0.07)', 'rgba(127,178,255,0.28)');
+      roundRect(ctx, 850, 72, 270, 270, 26, 'rgba(255,255,255,0.02)', COLORS.lineSoft);
+
+      label(ctx, 'ImageNet start', 60, 112, { font: '600 22px ui-sans-serif, system-ui, sans-serif' });
+      paragraph(ctx, 'Generic RGB priors: objects, texture, color boundaries, natural-scene bias.', 60, 148, 220);
+      const leftCloudClip = { x: 70, y: 228, w: 180, h: 92 };
+      drawFeatureCloud(ctx, 165, 282, 'rgba(255,210,125,0.8)', 0.7, leftCloudClip);
+      drawFeatureCloud(ctx, 124, 264, 'rgba(255,155,155,0.62)', 1.3, leftCloudClip);
+      drawFeatureCloud(ctx, 214, 252, 'rgba(196,175,255,0.68)', 2.1, leftCloudClip);
+
+      label(ctx, 'Phase 3', 580, 144, { align: 'center', font: '700 26px ui-sans-serif, system-ui, sans-serif', color: COLORS.halo });
+      paragraph(ctx, 'Self-supervised', 500, 188, 160, 22, COLORS.whiteSoft, '500 16px ui-sans-serif, system-ui, sans-serif');
+      paragraph(ctx, 'OCTA adaptation', 500, 212, 160, 22, COLORS.whiteSoft, '500 16px ui-sans-serif, system-ui, sans-serif');
+      paragraph(ctx, 'pull related pairs', 500, 246, 160, 22, COLORS.green, '600 16px ui-sans-serif, system-ui, sans-serif');
+      paragraph(ctx, 'together', 500, 270, 160, 22, COLORS.green, '600 16px ui-sans-serif, system-ui, sans-serif');
+      paragraph(ctx, 'push unrelated', 500, 300, 170, 22, COLORS.amber, '600 16px ui-sans-serif, system-ui, sans-serif');
+      paragraph(ctx, 'images apart', 500, 324, 170, 22, COLORS.amber, '600 16px ui-sans-serif, system-ui, sans-serif');
+
+      label(ctx, 'OCTA-adapted backbone', 870, 112, { font: '600 22px ui-sans-serif, system-ui, sans-serif' });
+      paragraph(ctx, 'Now tuned toward vessel continuity, density patterns, perfusion voids, and layer-specific retinal anatomy.', 870, 148, 220);
+      const rightCloudClip = { x: 890, y: 228, w: 180, h: 92 };
+      drawFeatureCloud(ctx, 980, 258, 'rgba(127,178,255,0.84)', 2.8, rightCloudClip);
+      drawFeatureCloud(ctx, 928, 286, 'rgba(134,224,173,0.72)', 0.8, rightCloudClip);
+      drawFeatureCloud(ctx, 1038, 292, 'rgba(196,175,255,0.56)', 1.9, rightCloudClip);
+
+      arrow(ctx, 312, 206, 414, 206, COLORS.halo, 3, 12);
+      arrow(ctx, 746, 206, 845, 206, COLORS.halo, 3, 12);
+
+      line(ctx, 430, 342, 730, 342, 'rgba(127,178,255,0.26)', 2, [8, 8]);
+      label(ctx, 'Bridge over domain gap', 580, 372, { align: 'center', color: COLORS.mid, font: '500 15px ui-sans-serif, system-ui, sans-serif' });
+    }
+
+    function drawPairStrategy() {
+      const { ctx, width, height } = setupCanvas('pairStrategy');
+      ctx.clearRect(0, 0, width, height);
+
+      label(ctx, 'A. Bilateral natural positives', 56, 64, { font: '600 21px ui-sans-serif, system-ui, sans-serif' });
+      roundRect(ctx, 48, 92, 1064, 154, 24, 'rgba(255,255,255,0.02)', COLORS.lineSoft);
+      roundRect(ctx, 78, 122, 220, 96, 20, 'rgba(127,178,255,0.08)', 'rgba(127,178,255,0.24)');
+      roundRect(ctx, 468, 122, 220, 96, 20, 'rgba(127,178,255,0.08)', 'rgba(127,178,255,0.24)');
+      roundRect(ctx, 840, 122, 232, 96, 20, 'rgba(134,224,173,0.08)', 'rgba(134,224,173,0.24)');
+      drawEye(ctx, 104, 145, 58, 34, COLORS.halo);
+      drawEye(ctx, 494, 145, 58, 34, COLORS.halo);
+      label(ctx, 'Sup_OD', 180, 160, { font: '600 20px ui-sans-serif, system-ui, sans-serif' });
+      label(ctx, 'Sup_OS', 570, 160, { font: '600 20px ui-sans-serif, system-ui, sans-serif' });
+      paragraph(ctx, 'same patient', 180, 188, 100, 18, COLORS.mid, '400 14px ui-sans-serif, system-ui, sans-serif');
+      paragraph(ctx, 'same patient', 570, 188, 100, 18, COLORS.mid, '400 14px ui-sans-serif, system-ui, sans-serif');
+      arrow(ctx, 300, 170, 464, 170, COLORS.halo, 3, 12);
+      arrow(ctx, 690, 170, 834, 170, COLORS.green, 3, 12);
+      label(ctx, 'positive pair', 956, 160, { align: 'center', color: COLORS.green, font: '700 22px ui-sans-serif, system-ui, sans-serif' });
+      paragraph(ctx, 'shared systemic disease context', 884, 190, 150, 18, COLORS.mid, '400 14px ui-sans-serif, system-ui, sans-serif');
+
+      label(ctx, 'B. Unilateral fallback', 56, 314, { font: '600 21px ui-sans-serif, system-ui, sans-serif' });
+      roundRect(ctx, 48, 340, 1064, 138, 24, 'rgba(255,255,255,0.02)', COLORS.lineSoft);
+      roundRect(ctx, 78, 372, 190, 74, 18, 'rgba(255,255,255,0.03)', COLORS.lineSoft);
+      roundRect(ctx, 390, 372, 188, 74, 18, 'rgba(255,210,125,0.08)', 'rgba(255,210,125,0.24)');
+      roundRect(ctx, 656, 372, 188, 74, 18, 'rgba(196,175,255,0.08)', 'rgba(196,175,255,0.22)');
+      roundRect(ctx, 930, 372, 144, 74, 18, 'rgba(134,224,173,0.08)', 'rgba(134,224,173,0.24)');
+      label(ctx, 'Sup_OD', 173, 417, { align: 'center', font: '600 19px ui-sans-serif, system-ui, sans-serif' });
+      label(ctx, 'aug view 1', 484, 417, { align: 'center', font: '600 19px ui-sans-serif, system-ui, sans-serif', color: COLORS.amber });
+      label(ctx, 'aug view 2', 750, 417, { align: 'center', font: '600 19px ui-sans-serif, system-ui, sans-serif', color: COLORS.violet });
+      label(ctx, '+ pair', 1002, 417, { align: 'center', font: '700 19px ui-sans-serif, system-ui, sans-serif', color: COLORS.green });
+
+      arrow(ctx, 270, 392, 382, 392, COLORS.amber, 3, 12);
+      arrow(ctx, 270, 426, 648, 426, COLORS.violet, 3, 12);
+      arrow(ctx, 580, 409, 648, 409, COLORS.line, 2, 10);
+      arrow(ctx, 846, 409, 922, 409, COLORS.green, 3, 12);
+    }
+
+    function drawSimclrFlow() {
+      const { ctx, width, height } = setupCanvas('simclrFlow');
+      ctx.clearRect(0, 0, width, height);
+
+      const y = 150;
+      const boxes = [
+        { x: 38, w: 148, title: 'pair input', sub: 'OD/OS or two aug views', color: 'rgba(255,255,255,0.03)' },
+        { x: 230, w: 154, title: 'augment', sub: 'mild OCTA-safe transforms', color: 'rgba(255,210,125,0.08)' },
+        { x: 428, w: 170, title: 'ConvNeXt-Tiny', sub: '1-channel backbone', color: 'rgba(127,178,255,0.08)' },
+        { x: 642, w: 164, title: 'projection head', sub: '768 → 256 → 128', color: 'rgba(196,175,255,0.08)' },
+        { x: 850, w: 160, title: 'NT-Xent loss', sub: 'positives close, batch negatives far', color: 'rgba(134,224,173,0.08)' }
+      ];
+
+      boxes.forEach((box, i) => {
+        roundRect(ctx, box.x, y, box.w, 104, 20, box.color, COLORS.lineSoft);
+        label(ctx, box.title, box.x + box.w / 2, y + 44, { align: 'center', font: '600 20px ui-sans-serif, system-ui, sans-serif' });
+        paragraph(ctx, box.sub, box.x + 16, y + 72, box.w - 32, 18, COLORS.mid, '400 14px ui-sans-serif, system-ui, sans-serif');
+        if (i < boxes.length - 1) arrow(ctx, box.x + box.w + 8, y + 52, boxes[i + 1].x - 8, y + 52, COLORS.halo, 3, 10);
+      });
+
+      roundRect(ctx, 884, 298, 220, 96, 18, 'rgba(255,255,255,0.03)', COLORS.lineSoft);
+      label(ctx, 'after Phase 3', 994, 330, { align: 'center', font: '600 19px ui-sans-serif, system-ui, sans-serif' });
+      paragraph(ctx, 'discard projection head, keep backbone', 910, 360, 168, 18, COLORS.mid, '400 14px ui-sans-serif, system-ui, sans-serif');
+      arrow(ctx, 930, 254, 994, 292, COLORS.green, 3, 10);
+
+      label(ctx, 'Run independently for Sup, Deep, and CC', 58, 66, { font: '600 22px ui-sans-serif, system-ui, sans-serif' });
+      paragraph(ctx, 'Separate weights preserve layer-specific vascular anatomy rather than forcing one shared filter bank on biologically different textures.', 58, 98, 620);
+    }
+
+    function drawTimeline() {
+      const { ctx, width, height } = setupCanvas('timeline');
+      ctx.clearRect(0, 0, width, height);
+
+      label(ctx, 'Per-layer pretraining recipe', 54, 58, { font: '600 22px ui-sans-serif, system-ui, sans-serif' });
+      line(ctx, 76, 206, 1084, 206, 'rgba(255,255,255,0.14)', 3);
+
+      const items = [
+        { x: 170, color: COLORS.halo, title: 'Sup encoder', sub: '100 epochs SimCLR' },
+        { x: 580, color: COLORS.violet, title: 'Deep encoder', sub: '100 epochs SimCLR' },
+        { x: 940, color: COLORS.green, title: 'CC encoder', sub: '100 epochs SimCLR' }
+      ];
+
+      items.forEach((item, index) => {
+        circleNode(ctx, item.x, 206, 16, item.color, 'rgba(255,255,255,0.25)');
+        roundRect(ctx, item.x - 94, 102, 188, 72, 18, 'rgba(255,255,255,0.03)', COLORS.lineSoft);
+        label(ctx, item.title, item.x, 130, { align: 'center', font: '600 18px ui-sans-serif, system-ui, sans-serif' });
+        paragraph(ctx, item.sub, item.x - 62, 154, 124, 18, COLORS.mid, '400 14px ui-sans-serif, system-ui, sans-serif');
+        roundRect(ctx, item.x - 104, 246, 208, 82, 18, 'rgba(255,255,255,0.02)', COLORS.lineSoft);
+        label(ctx, 'Export backbone only', item.x, 278, { align: 'center', font: '600 17px ui-sans-serif, system-ui, sans-serif' });
+        paragraph(ctx, 'projection head removed before downstream training', item.x - 84, 304, 168, 18, COLORS.mid, '400 14px ui-sans-serif, system-ui, sans-serif');
+        arrow(ctx, item.x, 224, item.x, 240, item.color, 3, 9);
+      });
+
+      label(ctx, 'Optimizer: SGD + momentum   ·   LR: cosine decay   ·   Batch target: 256   ·   Loss: NT-Xent τ = 0.07', 580, 352, {
+        align: 'center',
+        color: COLORS.mid,
+        font: '500 15px ui-sans-serif, system-ui, sans-serif'
+      });
+    }
+
+    function drawAll() {
+      drawDomainGap();
+      drawPairStrategy();
+      drawSimclrFlow();
+      drawTimeline();
+    }
+
+    window.addEventListener('resize', drawAll, { passive: true });
+    drawAll();
+  </script>
+</body>
+</html>
