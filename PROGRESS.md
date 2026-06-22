@@ -57,10 +57,14 @@
   - NT-Xent loss with temperature 0.07,
   - independent Sup/Deep/CC training loop with SGD, momentum, weight decay, cosine LR, AMP, gradient accumulation, checkpointing, and backbone-only export.
 - Added Phase 3 pair-summary/audit outputs and a backbone registry for later Phase 4 loading.
-- Gated expensive CUDA pretraining behind `RUN_PHASE3_PRETRAINING = False`; set it to `True` on the CUDA-enabled GPU machine to launch training.
+- Set expensive CUDA pretraining gate to `RUN_PHASE3_PRETRAINING = True` for the GPU run.
 - Added `PHASE3_REQUIRE_CUDA = True` so Phase 3 fails fast if accidentally launched in a non-CUDA runtime.
 - Added Phase 3 bounded print logging in `main.ipynb`:
   - disabled tqdm/widget progress by default to avoid frozen notebook progress bars,
   - set default physical batch size to 128 and Windows-safe `PHASE3_NUM_WORKERS = 0`,
   - prints first 3 epochs, every 5 epochs, final epoch, and each completed layer-run with elapsed/ETA,
   - writes exact per-epoch history CSV after every epoch to avoid spamming notebook output.
+- Added Phase 3 flat-loss safety diagnostics after observed loss stayed at `ln(255) ≈ 5.541`:
+  - preflight cell checks one throwaway optimizer step, grad flow, parameter delta, embedding/feature variance, positive-vs-negative cosine stats, and saves `outputs/phase3_octa_simclr/phase3_preflight_diagnostics.csv`,
+  - per-epoch history now records NT-Xent random-baseline loss and delta,
+  - layer-run aborts at epoch 10 if loss remains within `0.02` of random baseline, saving a checkpoint first.
