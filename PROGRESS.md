@@ -68,3 +68,4 @@
   - preflight cell checks one throwaway optimizer step, grad flow, parameter delta, embedding/feature variance, positive-vs-negative cosine stats, and saves `outputs/phase3_octa_simclr/phase3_preflight_diagnostics.csv`,
   - per-epoch history now records NT-Xent random-baseline loss and delta,
   - layer-run aborts at epoch 10 if loss remains within `0.02` of random baseline, saving a checkpoint first.
+- After preflight showed `inf` gradients and zero parameter update, disabled Phase 3 AMP, lowered LR from `0.1` to `0.03`, added finite-gradient checks, and added gradient clipping at norm `1.0`.
