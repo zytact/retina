@@ -6,133 +6,621 @@
   <title>Self-generated OCTA masks</title>
   <style>
     :root {
-      --bg: #030403;
-      --surface: #0d1110;
-      --surface-2: #141a18;
-      --line: rgba(220, 255, 238, 0.10);
-      --text: #f4fbf7;
-      --mid: #a7b8b0;
-      --low: #6f7d77;
-      --green: #7dd9a7;
-      --cyan: #7fd8ff;
-      --amber: #ffcc7f;
-      --rose: #ff9ab0;
+      --bg: #030303;
+      --bg-deep: #090909;
+      --surface: #111111;
+      --line: rgba(255, 255, 255, 0.08);
+      --line-strong: rgba(255, 255, 255, 0.14);
+      --text: #f5f7fa;
+      --mid: #9aa1ab;
+      --low: #6b727c;
+      --halo: #7fb2ff;
+      --halo-soft: rgba(127, 178, 255, 0.14);
+      --amber: #ffd27d;
+      --amber-soft: rgba(255, 210, 125, 0.08);
       --max: 1180px;
       color-scheme: dark;
     }
+
     * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
     body {
       margin: 0;
-      color: var(--text);
-      background:
-        radial-gradient(circle at 76% 8%, rgba(127, 216, 255, 0.14), transparent 31rem),
-        radial-gradient(circle at 5% 30%, rgba(125, 217, 167, 0.11), transparent 28rem),
-        linear-gradient(180deg, #07100d 0%, #030403 34%, #090d0b 100%);
       font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-      line-height: 1.72;
+      color: var(--text);
+      background: linear-gradient(180deg, var(--bg-deep) 0%, var(--bg) 22%, var(--bg) 100%);
+      line-height: 1.78;
+      text-rendering: optimizeLegibility;
     }
-    .shell { width: min(calc(100% - 40px), var(--max)); margin: 0 auto; }
-    header { padding: clamp(64px, 9vw, 120px) 0 50px; }
-    .eyebrow { display: inline-flex; gap: 10px; align-items: center; color: var(--mid); margin-bottom: 24px; }
-    .eyebrow::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: var(--green); box-shadow: 0 0 24px rgba(125,217,167,.5); }
+
+    a { color: inherit; }
+    .shell { width: min(calc(100% - 40px), var(--max)); margin-inline: auto; }
+
+    .masthead {
+      border-bottom: 1px solid var(--line);
+      background: rgba(3, 3, 3, 0.88);
+      backdrop-filter: blur(10px);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .masthead .shell {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 14px 0;
+    }
+
+    .project {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .mark {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 40% 38%, #f5f7fa 0 12%, var(--halo) 16% 36%, rgba(127, 178, 255, 0.18) 40% 60%, transparent 64%);
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08);
+      flex: 0 0 auto;
+    }
+
+    .project strong,
+    .project span { display: block; }
+    .project strong { font-size: 0.95rem; font-weight: 580; }
+    .project span { color: var(--mid); font-size: 0.86rem; }
+
+    .jump {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 18px;
+      color: var(--mid);
+      font-size: 0.92rem;
+    }
+
+    .jump a {
+      text-decoration: none;
+      border-bottom: 1px solid transparent;
+      padding-bottom: 3px;
+    }
+
+    .jump a:hover,
+    .jump a:focus-visible {
+      color: var(--text);
+      border-color: rgba(255, 255, 255, 0.2);
+      outline: none;
+    }
+
+    .hero {
+      padding: clamp(64px, 10vw, 132px) 0 56px;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(280px, 0.72fr);
+      gap: clamp(34px, 7vw, 92px);
+      align-items: end;
+    }
+
+    .hero-note {
+      color: var(--mid);
+      font-size: 0.94rem;
+      margin-bottom: 24px;
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .hero-note::before {
+      content: "";
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--halo);
+      box-shadow: 0 0 0 6px var(--halo-soft);
+    }
+
     h1, h2, h3 { text-wrap: balance; }
-    h1 { margin: 0; max-width: 12ch; font-size: clamp(3.2rem, 7vw, 5.9rem); line-height: .95; letter-spacing: -.04em; font-weight: 560; }
-    .lead { max-width: 78ch; margin: 26px 0 0; color: var(--mid); font-size: clamp(1.04rem, 1.5vw, 1.18rem); }
-    section { padding: clamp(54px, 7vw, 92px) 0; border-top: 1px solid var(--line); }
-    .section-head { display: grid; grid-template-columns: minmax(0,.68fr) minmax(280px,1fr); gap: clamp(24px,5vw,70px); margin-bottom: 34px; }
-    h2 { margin: 0; font-size: clamp(2rem, 4vw, 3.6rem); line-height: 1; letter-spacing: -.03em; font-weight: 540; }
-    .section-head p, p { color: var(--mid); }
-    .grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 16px; }
-    .card, .callout, .flow { background: linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.02)); border: 1px solid var(--line); border-radius: 20px; padding: 22px; }
-    .card h3 { margin: 0 0 10px; font-size: 1.08rem; }
-    .card p { margin: 0; }
-    .tag { display: inline-flex; padding: 5px 10px; border-radius: 99px; background: rgba(125,217,167,.10); color: var(--green); font-size: .78rem; margin-bottom: 14px; }
-    .flow { display: grid; gap: 14px; }
-    .step { display: grid; grid-template-columns: 130px 1fr; gap: 18px; padding: 16px; border: 1px solid var(--line); border-radius: 16px; background: rgba(255,255,255,.025); }
-    .step strong { color: var(--text); }
-    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: #dff7ec; }
-    table { width: 100%; border-collapse: collapse; color: var(--mid); }
-    th, td { text-align: left; vertical-align: top; padding: 15px 12px; border-bottom: 1px solid var(--line); }
-    th, td:first-child { color: var(--text); }
-    .warn { border-color: rgba(255,204,127,.28); background: rgba(255,204,127,.06); }
-    .warn strong { color: var(--amber); }
-    @media (max-width: 900px) { .section-head, .grid, .step { grid-template-columns: 1fr; } }
+    p { text-wrap: pretty; }
+
+    h1 {
+      margin: 0;
+      max-width: 11ch;
+      font-size: clamp(3.1rem, 7vw, 5.5rem);
+      line-height: 0.96;
+      letter-spacing: -0.03em;
+      font-weight: 520;
+    }
+
+    .lead {
+      margin: 24px 0 0;
+      max-width: 69ch;
+      color: var(--mid);
+      font-size: clamp(1.04rem, 1.5vw, 1.16rem);
+    }
+
+    .status {
+      padding: 0 0 0 26px;
+      border-left: 1px solid var(--line-strong);
+      display: grid;
+      gap: 18px;
+    }
+
+    .status-block {
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .status-block:last-child {
+      padding-bottom: 0;
+      border-bottom: 0;
+    }
+
+    .status-block dt {
+      margin: 0 0 8px;
+      color: var(--low);
+      font-size: 0.9rem;
+    }
+
+    .status-block dd {
+      margin: 0;
+      color: var(--text);
+      font-size: 1rem;
+    }
+
+    main { padding-bottom: 100px; }
+
+    .section {
+      padding: clamp(58px, 8vw, 108px) 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .section-head {
+      display: grid;
+      grid-template-columns: minmax(0, 0.82fr) minmax(290px, 1fr);
+      gap: clamp(24px, 5vw, 82px);
+      align-items: start;
+      margin-bottom: 34px;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: clamp(2rem, 4vw, 3.35rem);
+      line-height: 1.02;
+      letter-spacing: -0.028em;
+      font-weight: 520;
+    }
+
+    .section-head p {
+      margin: 0;
+      color: var(--mid);
+      max-width: 72ch;
+    }
+
+    .rule-list {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 26px;
+    }
+
+    .rule {
+      padding-top: 18px;
+      border-top: 1px solid var(--line-strong);
+    }
+
+    .rule h3,
+    .choice h3,
+    .dataset h3 {
+      margin: 0 0 10px;
+      font-size: 1.08rem;
+      font-weight: 600;
+      line-height: 1.2;
+    }
+
+    .rule p,
+    .choice p,
+    .dataset p {
+      margin: 0;
+      color: var(--mid);
+    }
+
+    .rule small {
+      display: block;
+      margin-bottom: 12px;
+      color: var(--low);
+      font-size: 0.88rem;
+    }
+
+    .process {
+      display: grid;
+      grid-template-columns: minmax(0, 0.76fr) minmax(0, 1.24fr);
+      gap: clamp(24px, 5vw, 72px);
+      align-items: start;
+    }
+
+    .sequence {
+      position: relative;
+      padding-left: 28px;
+      display: grid;
+      gap: 24px;
+    }
+
+    .sequence::before {
+      content: "";
+      position: absolute;
+      top: 4px;
+      bottom: 4px;
+      left: 8px;
+      width: 1px;
+      background: linear-gradient(180deg, rgba(127, 178, 255, 0.3), rgba(255, 255, 255, 0.04));
+    }
+
+    .step {
+      position: relative;
+    }
+
+    .step::before {
+      content: "";
+      position: absolute;
+      left: -28px;
+      top: 0.42rem;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--halo);
+      box-shadow: 0 0 0 6px rgba(127, 178, 255, 0.08);
+    }
+
+    .step strong {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .step p {
+      margin: 0;
+      color: var(--mid);
+    }
+
+    .side-note {
+      display: grid;
+      gap: 16px;
+      align-content: start;
+    }
+
+    .side-panel {
+      background: rgba(255, 255, 255, 0.025);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 20px 22px;
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
+    }
+
+    .side-panel h3 {
+      margin: 0 0 12px;
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .side-panel p,
+    .side-panel li {
+      color: var(--mid);
+    }
+
+    .side-panel ul {
+      margin: 0;
+      padding-left: 18px;
+    }
+
+    .compare {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 30px;
+    }
+
+    .choice {
+      padding-top: 18px;
+      border-top: 1px solid var(--line-strong);
+    }
+
+    .choice ul {
+      margin: 14px 0 0;
+      padding-left: 18px;
+      color: var(--mid);
+    }
+
+    .choice li + li { margin-top: 8px; }
+
+    .warning {
+      margin-top: 32px;
+      padding: 18px 20px;
+      border: 1px solid rgba(255, 210, 125, 0.18);
+      border-radius: 16px;
+      background: linear-gradient(180deg, var(--amber-soft), rgba(255, 210, 125, 0.03));
+    }
+
+    .warning strong {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--amber);
+      font-size: 0.98rem;
+      font-weight: 600;
+    }
+
+    .warning p {
+      margin: 0;
+      color: #e4d1a6;
+    }
+
+    .dataset-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 26px 34px;
+    }
+
+    .dataset {
+      padding-top: 18px;
+      border-top: 1px solid var(--line);
+    }
+
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      color: #dfe8f5;
+      font-size: 0.96em;
+    }
+
+    .fade-up {
+      opacity: 0;
+      transform: translateY(16px);
+      animation: fade-up 700ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    .delay-1 { animation-delay: 70ms; }
+    .delay-2 { animation-delay: 140ms; }
+    .delay-3 { animation-delay: 210ms; }
+
+    @keyframes fade-up {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      .fade-up {
+        opacity: 1;
+        transform: none;
+        animation: none;
+      }
+    }
+
+    @media (max-width: 980px) {
+      .hero-grid,
+      .section-head,
+      .process,
+      .rule-list,
+      .compare,
+      .dataset-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .status {
+        padding-left: 0;
+        border-left: 0;
+        border-top: 1px solid var(--line-strong);
+        padding-top: 24px;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .masthead .shell {
+        align-items: start;
+        flex-direction: column;
+      }
+
+      .jump { gap: 12px 16px; }
+      .hero { padding-top: 54px; }
+      .shell { width: min(calc(100% - 28px), var(--max)); }
+    }
   </style>
 </head>
 <body>
-  <header>
+  <header class="masthead">
     <div class="shell">
-      <div class="eyebrow">New plan section: self-generated segmentation</div>
-      <h1>We create the masks ourselves.</h1>
-      <p class="lead">RASTA has no human-drawn vessel, FAZ, or flow-deficit masks. So the project now treats segmentation as weak, automated mask generation: classical image processing first, optional frozen student model second, classifier fusion last.</p>
+      <div class="project">
+        <div class="mark" aria-hidden="true"></div>
+        <div>
+          <strong>Retina CAD project</strong>
+          <span>Segmentation pseudo-mask brief</span>
+        </div>
+      </div>
+      <nav class="jump" aria-label="Section navigation">
+        <a href="#rule">Rule</a>
+        <a href="#student">Student stage</a>
+        <a href="#choice">Model choice</a>
+        <a href="#dataset">Dataset fields</a>
+      </nav>
     </div>
   </header>
 
   <main>
-    <section>
-      <div class="shell">
-        <div class="section-head">
-          <h2>Core rule.</h2>
-          <p>These are pseudo-masks, not manual ground truth. They can guide the classifier and produce interpretable biomarkers, but papers and docs must not claim human-validated segmentation unless we later annotate a validation subset.</p>
+    <section class="hero">
+      <div class="shell hero-grid">
+        <div class="fade-up">
+          <div class="hero-note">Plan update: self-generated segmentation, not manual annotation</div>
+          <h1>We generate the masks ourselves.</h1>
+          <p class="lead">RASTA does not ship with hand-drawn vessel, FAZ, or choriocapillaris masks. The segmentation branch therefore starts as deterministic pseudo-mask generation, may add a frozen student later, and only then feeds mask features into CAD classification.</p>
         </div>
-        <div class="grid">
-          <article class="card"><span class="tag">Sup / Deep</span><h3>Vessel masks</h3><p>CLAHE, vesselness filtering, adaptive thresholding, morphology cleanup, small-component removal.</p></article>
-          <article class="card"><span class="tag">Sup / Deep</span><h3>FAZ masks</h3><p>Find central avascular low-flow component, smooth contour, reject implausible area or off-center masks.</p></article>
-          <article class="card"><span class="tag">CC</span><h3>Flow-deficit masks</h3><p>Local thresholding finds dark hypoperfusion regions, then morphology and area filters remove noise.</p></article>
+        <dl class="status fade-up delay-1">
+          <div class="status-block">
+            <dt>Status</dt>
+            <dd>Pseudo-masks are acceptable as weak supervision and biomarker scaffolding.</dd>
+          </div>
+          <div class="status-block">
+            <dt>Not allowed</dt>
+            <dd>Any claim that segmentation is human-validated or ground truth.</dd>
+          </div>
+          <div class="status-block">
+            <dt>Classifier contract</dt>
+            <dd>Segmentation stays upstream. Disease labels must not shape masks by default.</dd>
+          </div>
+        </dl>
+      </div>
+    </section>
+
+    <section class="section" id="rule">
+      <div class="shell">
+        <div class="section-head fade-up">
+          <h2>The rule is simple.</h2>
+          <p>These masks are operational tools, not final truth. They exist to standardize structure, extract biomarkers, and keep the CAD branch interpretable. If a later paper wants segmentation claims, it needs a manually reviewed validation subset.</p>
+        </div>
+        <div class="rule-list">
+          <article class="rule fade-up delay-1">
+            <small>Superficial and deep slabs</small>
+            <h3>Vessel masks</h3>
+            <p>Use CLAHE, vesselness filtering, adaptive thresholding, morphology cleanup, then remove tiny disconnected components.</p>
+          </article>
+          <article class="rule fade-up delay-2">
+            <small>Central avascular region</small>
+            <h3>FAZ masks</h3>
+            <p>Find the central low-flow component, smooth the contour, then reject masks that drift off-center or fall outside plausible size bounds.</p>
+          </article>
+          <article class="rule fade-up delay-3">
+            <small>Choriocapillaris slab</small>
+            <h3>Flow-deficit masks</h3>
+            <p>Use local thresholding for dark hypoperfusion regions, followed by morphology and area filtering to suppress speckle noise.</p>
+          </article>
         </div>
       </div>
     </section>
 
-    <section>
+    <section class="section" id="student">
       <div class="shell">
-        <div class="section-head">
-          <h2>Where the student fits.</h2>
-          <p>The student model is upstream of the disease classifier. It is not the classifier. It learns to imitate the classical pseudo-masks and then produces standardized masks for every image.</p>
+        <div class="section-head fade-up">
+          <h2>Where the student model belongs.</h2>
+          <p>The student is an optional cleanup stage. It learns the pseudo-mask grammar first, then freezes. It is not a second path for disease supervision, and it should not be trained jointly with the classifier unless a separate experiment proves the masks stay stable.</p>
         </div>
-        <div class="flow">
-          <div class="step"><strong>1. Preprocess OCTA</strong><span>Normalize, CLAHE, resize, quality-control image.</span></div>
-          <div class="step"><strong>2. Classical pseudo-mask</strong><span>Generate deterministic vessel, FAZ, and CC flow-deficit masks without using disease labels.</span></div>
-          <div class="step"><strong>3. Optional student</strong><span>Train Attention U-Net or U-Net++-style model on pseudo-masks. Freeze it before classifier training.</span></div>
-          <div class="step"><strong>4. Biomarkers</strong><span>Extract density, skeleton density, FAZ geometry, and flow-deficit burden. Normalize with training-fold stats.</span></div>
-          <div class="step"><strong>5. Classifier fusion</strong><span>Use OCTA images + <span class="mono">F_mask</span> + biomarkers + clinical features.</span></div>
+        <div class="process">
+          <div class="sequence fade-up delay-1" aria-label="Pseudo-mask pipeline">
+            <div class="step">
+              <strong>1. Preprocess OCTA</strong>
+              <p>Normalize intensity, apply CLAHE, resize consistently, run image-level quality control.</p>
+            </div>
+            <div class="step">
+              <strong>2. Generate pseudo-masks</strong>
+              <p>Create deterministic vessel, FAZ, and choriocapillaris flow-deficit masks without CAD labels.</p>
+            </div>
+            <div class="step">
+              <strong>3. Train optional student</strong>
+              <p>Use Attention U-Net or U-Net++ style segmentation only to imitate those pseudo-masks.</p>
+            </div>
+            <div class="step">
+              <strong>4. Freeze and measure</strong>
+              <p>Extract density, skeleton density, FAZ geometry, and flow-deficit burden with fold-specific normalization.</p>
+            </div>
+            <div class="step">
+              <strong>5. Fuse for CAD</strong>
+              <p>Feed OCTA image features, <span class="mono">F_mask</span>, biomarkers, and clinical data into the classifier.</p>
+            </div>
+          </div>
+          <aside class="side-note fade-up delay-2">
+            <div class="side-panel">
+              <h3>Why freeze it</h3>
+              <p>Freezing protects the segmentation representation from drifting toward shortcut patterns that only help CAD labels.</p>
+            </div>
+            <div class="side-panel">
+              <h3>What to review before enabling it</h3>
+              <ul>
+                <li>Montage quality across slabs and devices</li>
+                <li>Failure rate for implausible FAZ or noisy flow maps</li>
+                <li>Whether student masks reduce variance without hallucinating structure</li>
+              </ul>
+            </div>
+          </aside>
         </div>
       </div>
     </section>
 
-    <section>
+    <section class="section" id="choice">
       <div class="shell">
-        <div class="section-head">
-          <h2>Attention U-Net or U-Net++?</h2>
-          <p>Both are allowed. The updated plan can keep Attention U-Net as the light default and evaluate U-Net++ when pseudo-masks look stable enough to justify the extra capacity.</p>
+        <div class="section-head fade-up">
+          <h2>Attention U-Net or U-Net++.</h2>
+          <p>Both remain valid. The default stays conservative: classical masks first, then a lighter student if visual review says the pseudo-labels are stable enough to support it.</p>
         </div>
-        <table>
-          <thead><tr><th>Choice</th><th>Why use it</th><th>Risk</th></tr></thead>
-          <tbody>
-            <tr><td>Attention U-Net</td><td>Simpler, lighter, easier inside notebook, less likely to overfit noisy pseudo-labels.</td><td>May miss fine capillary detail.</td></tr>
-            <tr><td>U-Net++</td><td>Better multi-scale refinement; attractive for thin OCTA vessels and FAZ boundaries.</td><td>Can learn pseudo-label noise if QC is weak.</td></tr>
-            <tr><td>Default policy</td><td>Start classical-only. Add student only if masks improve by visual/QC review. Freeze student during classifier training.</td><td>Needs montage review and ablation: classical masks vs student masks.</td></tr>
-          </tbody>
-        </table>
-        <div class="callout warn"><strong>Do not joint-train by default.</strong><p>Classifier gradients can distort masks. End-to-end segmentation/classification is only an experimental variant after mask-quality monitoring exists.</p></div>
+        <div class="compare">
+          <article class="choice fade-up delay-1">
+            <h3>Attention U-Net</h3>
+            <p>Lighter, easier to run inside the notebook, and less likely to memorize noisy pseudo-label artifacts.</p>
+            <ul>
+              <li>Good default for early experiments</li>
+              <li>Lower overfitting risk on weak labels</li>
+              <li>May miss fine capillary detail</li>
+            </ul>
+          </article>
+          <article class="choice fade-up delay-2">
+            <h3>U-Net++</h3>
+            <p>Stronger multi-scale refinement, useful when vessel continuity and FAZ edge quality become the bottleneck.</p>
+            <ul>
+              <li>Better thin-structure recovery potential</li>
+              <li>More capacity for OCTA detail</li>
+              <li>Higher risk of learning pseudo-label noise</li>
+            </ul>
+          </article>
+          <article class="choice fade-up delay-3">
+            <h3>Default policy</h3>
+            <p>Start without a student. Add one only if montage review, QC counts, and ablations show a real improvement.</p>
+            <ul>
+              <li>Compare classical vs student masks directly</li>
+              <li>Freeze segmentation before CAD training</li>
+              <li>Keep joint training as a later experiment</li>
+            </ul>
+          </article>
+        </div>
+        <div class="warning fade-up delay-3">
+          <strong>Do not joint-train by default.</strong>
+          <p>Classifier gradients can distort masks into label-specific artifacts. End-to-end segmentation plus classification belongs in an explicit experimental branch with mask-quality monitoring.</p>
+        </div>
       </div>
     </section>
 
-    <section>
+    <section class="section" id="dataset">
       <div class="shell">
-        <div class="section-head">
-          <h2>What gets added to the dataset.</h2>
-          <p>The old placeholder mask fields are obsolete. Before classifier work, the notebook should return generated masks, biomarkers, and mask provenance.</p>
+        <div class="section-head fade-up">
+          <h2>What the dataset must return.</h2>
+          <p>The old placeholder mask fields are no longer enough. The notebook output should expose generated masks, mask-derived biomarkers, and provenance so every experiment can trace whether a result came from direct classical processing or from a frozen student stage.</p>
         </div>
-        <table>
-          <thead><tr><th>Field</th><th>Meaning</th></tr></thead>
-          <tbody>
-            <tr><td><span class="mono">sup_vessel_mask</span>, <span class="mono">deep_vessel_mask</span></td><td>Generated vessel pseudo-masks.</td></tr>
-            <tr><td><span class="mono">sup_faz_mask</span>, <span class="mono">deep_faz_mask</span></td><td>Generated FAZ pseudo-masks.</td></tr>
-            <tr><td><span class="mono">cc_flow_mask</span></td><td>Generated choriocapillaris flow-deficit pseudo-mask.</td></tr>
-            <tr><td><span class="mono">biomarkers</span></td><td>Mask-derived OCTA measurements appended to tabular branch.</td></tr>
-            <tr><td><span class="mono">mask_source</span></td><td><span class="mono">classical</span> or <span class="mono">student</span>, so experiments are traceable.</td></tr>
-          </tbody>
-        </table>
+        <div class="dataset-grid">
+          <article class="dataset fade-up delay-1">
+            <h3><span class="mono">sup_vessel_mask</span>, <span class="mono">deep_vessel_mask</span></h3>
+            <p>Generated vessel pseudo-masks for the superficial and deep slabs.</p>
+          </article>
+          <article class="dataset fade-up delay-2">
+            <h3><span class="mono">sup_faz_mask</span>, <span class="mono">deep_faz_mask</span></h3>
+            <p>Generated FAZ pseudo-masks, with center and plausibility checks.</p>
+          </article>
+          <article class="dataset fade-up delay-2">
+            <h3><span class="mono">cc_flow_mask</span></h3>
+            <p>Generated choriocapillaris flow-deficit pseudo-mask.</p>
+          </article>
+          <article class="dataset fade-up delay-3">
+            <h3><span class="mono">biomarkers</span></h3>
+            <p>Mask-derived OCTA measurements appended to the tabular branch.</p>
+          </article>
+          <article class="dataset fade-up delay-3">
+            <h3><span class="mono">mask_source</span></h3>
+            <p>Use <span class="mono">classical</span> or <span class="mono">student</span> so every downstream run remains auditable.</p>
+          </article>
+          <article class="dataset fade-up delay-3">
+            <h3><span class="mono">qc_flags</span></h3>
+            <p>Optional but useful: record rejected or suspicious masks so weak labels can be filtered later.</p>
+          </article>
+        </div>
       </div>
     </section>
   </main>
