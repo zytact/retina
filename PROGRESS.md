@@ -82,3 +82,11 @@
   - continue at the next epoch,
   - treat already-complete checkpoints as complete and export the backbone without retraining.
 - Changed Phase 3 launch cell to print resume settings before layer runs.
+
+## 2026-06-23
+
+### Planning update
+- Updated `PLAN.md` to replace optional human-provided masks with self-generated OCTA pseudo-masks.
+- Added classical vessel/FAZ/CC flow-deficit pseudo-mask generation, optional frozen segmentation-student refinement, mask QC, biomarker extraction, and classifier mask/biomarker fusion.
+- Adjusted losses, ablations, contributions, and deliverables to reflect weak segmentation without manual ground-truth masks.
+- Note: existing Phase 2 notebook placeholder masks now need replacement by generated masks in a later implementation pass.

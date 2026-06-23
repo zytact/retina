@@ -72,11 +72,14 @@ Label:
 
 Disease cohort folder (multi-class).
 
-Optional (if available):
+Generated internally; the RASTA dataset is assumed to provide **no manual segmentation masks**:
 
-* Vessel segmentation masks
-* FAZ masks
-* Flow-deficit maps
+* Vessel pseudo-masks for SVC and DVC
+* FAZ pseudo-masks for SVC and DVC
+* Choriocapillaris flow-deficit pseudo-masks
+* Quantitative OCTA biomarkers extracted from generated masks
+
+These masks are automated weak labels, not human-annotated ground truth. The pipeline must clearly distinguish classical pseudo-mask generation, optional segmentation-student refinement, and downstream disease classification.
 
 ---
 
@@ -98,7 +101,7 @@ Generate:
 
 Also generate:
 
-* Class-wise biomarker box plots (if basic metrics extractable from images)
+* Class-wise biomarker box plots from generated pseudo-masks and image-derived metrics
 * Inter-cohort demographic comparison table
 * Missing data heatmap (patients × clinical features)
 
@@ -150,9 +153,13 @@ Each sample returns:
   "cc_image":         Tensor[1, 224, 224],
   "clinical_features": Tensor[D_clin],     # with mask tokens for missing
   "clinical_mask":    Tensor[D_clin],     # 1=observed, 0=missing
-  "vessel_mask":      Tensor[1, 224, 224], # zeros if unavailable
-  "faz_mask":         Tensor[1, 224, 224], # zeros if unavailable
-  "flow_mask":        Tensor[1, 224, 224], # zeros if unavailable
+  "sup_vessel_mask":  Tensor[1, 224, 224], # generated pseudo-mask
+  "deep_vessel_mask": Tensor[1, 224, 224], # generated pseudo-mask
+  "sup_faz_mask":     Tensor[1, 224, 224], # generated pseudo-mask
+  "deep_faz_mask":    Tensor[1, 224, 224], # generated pseudo-mask
+  "cc_flow_mask":     Tensor[1, 224, 224], # generated pseudo-mask
+  "biomarkers":       Tensor[D_bio],       # generated mask/image biomarkers
+  "mask_source":      str,                 # "classical" or "student"
   "label":            int,
   "patient_id":       str,
   "eye":              str,                # "OD" or "OS"
@@ -256,24 +263,24 @@ Before global average pooling, extract the final spatial feature map (7×7×768 
 
 ---
 
-# PHASE 5 — CLINICAL METADATA ENCODER
+# PHASE 5 — TABULAR METADATA ENCODER
 
 ## Input handling
 
-Concatenate all processed clinical features into a single vector of dimension D_clin.
+Concatenate all processed clinical features into a single vector of dimension D_clin. After Phase 8, append generated OCTA biomarkers to form D_tab = D_clin + D_bio.
 
-Missing features are replaced by their learned mask token (trainable 1-d embedding per feature, not a fixed zero or mean).
+Missing clinical features are replaced by their learned mask token (trainable 1-d embedding per feature, not a fixed zero or mean). Biomarker missingness can occur if mask QC fails; represent failed biomarkers with a biomarker-missing mask token and explicit QC flag.
 
 ## Architecture
 
 ```
-Input: [D_clin]
+Input: [D_tab]
 LayerNorm(input)
-FC(D_clin → 128) → GELU → Dropout(0.3)
+FC(D_tab → 128) → GELU → Dropout(0.3)
 FC(128 → 256) → GELU → LayerNorm → Dropout(0.2)
 ```
 
-Output: F_clinical ∈ ℝ^256
+Output: F_tabular ∈ ℝ^256
 
 ## Why GELU over ReLU for clinical data
 
@@ -332,7 +339,7 @@ F_octa = MeanPool([H_sup; H_deep; H_cc]) ∈ ℝ^256
 
 # PHASE 7 — MULTIMODAL CROSS-ATTENTION FUSION
 
-**Goal:** Fuse imaging representation (F_octa) with clinical context (F_clinical) and optionally segmentation features (F_mask).
+**Goal:** Fuse imaging representation (F_octa) with tabular context (F_tabular: clinical features + generated biomarkers) and generated segmentation-mask features (F_mask).
 
 **Why cross-attention outperforms concatenation:**
 
@@ -340,42 +347,193 @@ Concatenation treats all modalities as equally relevant for every patient. Cross
 
 ## Architecture
 
+**Tabular + biomarker encoding:**
+
+Generated OCTA biomarkers are appended to the tabular stream after fold-fitted normalization:
+
+```
+F_tabular = TabularEncoder(Concat([clinical_features, biomarkers])) ∈ ℝ^256
+```
+
 **Cross-attention block:**
 
 ```
 Q = Linear(F_octa)          ∈ ℝ^(1 × 256)
-K = Linear(F_clinical)      ∈ ℝ^(1 × 256)
-V = Linear(F_clinical)      ∈ ℝ^(1 × 256)
+K = Linear(F_tabular)       ∈ ℝ^(1 × 256)
+V = Linear(F_tabular)       ∈ ℝ^(1 × 256)
 
 Attended = softmax(QK^T / √256) · V    (4-head cross-attention)
 F_fused = F_octa + Attended             (residual connection)
 F_fused = LayerNorm(F_fused)
 ```
 
-**Optional mask branch fusion (if segmentation masks available):**
+**Generated mask branch fusion:**
+
+Generated masks are produced upstream by Phase 8. The classifier never assumes human-provided masks.
 
 ```
-F_mask = MaskEncoder(vessel_mask, faz_mask, flow_mask)  ∈ ℝ^128
-F_fused = Concat([F_fused, F_mask])   → project to 512-d
+M = Stack([sup_vessel, deep_vessel, sup_faz, deep_faz, cc_flow])
+F_mask = MaskEncoder(M)  ∈ ℝ^128
+F_fused = Concat([F_fused, F_mask]) → project to 512-d
 ```
 
 **Projection to shared space:**
 
 ```
-H = FC(Concat([F_fused ; F_clinical]) → 512) + GELU + LayerNorm
+H = FC(Concat([F_fused ; F_tabular]) → 512) + GELU + LayerNorm
 ```
 
 Output: H ∈ ℝ^512 — Unified multimodal representation.
 
 ---
 
-# PHASE 8 — SEGMENTATION MASK ENCODER (AUXILIARY BRANCH)
+# PHASE 8 — SELF-GENERATED SEGMENTATION MASKS AND MASK ENCODER
 
-Design this branch even if masks are not always available.
+The dataset is assumed to contain **no manual vessel, FAZ, or flow-deficit masks**. Therefore, segmentation in Version 1 is an automated weak-segmentation pipeline:
 
-Input: Vessel mask, FAZ mask, flow-deficit mask (each 1×224×224)
+```text
+Preprocessed OCTA image
+  → classical pseudo-mask generation
+  → optional segmentation-student refinement
+  → mask QC + biomarker extraction
+  → downstream classifier mask branch
+```
 
-Handle unavailability: if masks absent for a sample, replace with zero tensors. The encoder must learn to output a neutral representation for zero inputs (train on 30% randomly zeroed masks to force this).
+Do not describe these as human ground-truth segmentations unless a manually annotated validation subset is later created.
+
+## Step A — Classical pseudo-mask generation
+
+Generate deterministic pseudo-labels for every fold using training-independent image-processing rules. These masks are reproducible weak labels, not learned from disease labels.
+
+### SVC and DVC vessel masks
+
+For Sup and Deep layers:
+
+```text
+percentile normalization
+→ CLAHE
+→ denoising / mild Gaussian smoothing
+→ Frangi or Sato vesselness filtering
+→ adaptive/local thresholding
+→ morphological opening/closing
+→ small-component removal
+→ optional skeletonization for biomarkers
+```
+
+Outputs:
+
+```text
+sup_vessel_mask, deep_vessel_mask
+```
+
+### SVC and DVC FAZ masks
+
+FAZ is detected as the central avascular low-flow region.
+
+```text
+vessel mask / low-flow map
+→ central search window around image center
+→ connected-component selection nearest center
+→ contour smoothing / hole filling
+→ plausibility QC by area, eccentricity, and centroid distance
+```
+
+Outputs:
+
+```text
+sup_faz_mask, deep_faz_mask
+```
+
+Skip FAZ generation for CC unless dataset-specific review shows CC FAZ-like annotations are meaningful.
+
+### CC flow-deficit masks
+
+For choriocapillaris:
+
+```text
+percentile normalization
+→ CLAHE or local background correction
+→ local thresholding (Phansalkar/Niblack/Sauvola-style)
+→ dark-region detection
+→ morphology cleanup
+→ area filtering
+```
+
+Output:
+
+```text
+cc_flow_mask
+```
+
+## Step B — Segmentation student model
+
+If classical masks are noisy or brittle, train a segmentation student to imitate pseudo-labels and produce smoother standardized masks. This model fits **upstream of the disease classifier**, between preprocessing and classification.
+
+Default student architecture:
+
+```text
+Attention U-Net
+Encoder: EfficientNet-B0 or ConvNeXt-Nano, 1-channel OCTA input
+Decoder: U-Net decoder with skip connections and attention gates
+Output heads:
+  Sup/Deep model: 2 channels = vessel + FAZ
+  CC model: 1 channel = flow-deficit
+Activation: sigmoid per channel
+```
+
+Training target: classical pseudo-masks from Step A.
+
+Student loss:
+
+```
+L_student = α · L_Tversky(β=0.7) + (1-α) · L_Focal(γ=2) + λ_dice · L_Dice
+```
+
+Use confidence weighting where possible: downweight pseudo-label regions that fail QC or lie near unstable boundaries.
+
+During downstream disease-classifier training, freeze the segmentation student by default:
+
+```text
+OCTA image → frozen student segmenter → generated masks → mask encoder + biomarker extractor
+```
+
+End-to-end fine-tuning of the student is not allowed in Version 1 unless a stability loss preserves mask quality; otherwise classifier gradients may distort segmentation.
+
+## Mask QC
+
+Reject or flag generated masks with implausible properties:
+
+* Vessel density outside plausible range
+* FAZ centroid too far from image center
+* FAZ area too small/large
+* CC flow-deficit mask nearly all black or all white
+* Excessive tiny connected components
+
+Generate visual montage sheets for random samples and all QC failures. Manually inspect a subset of generated masks and report accept/reject rate if used in a paper.
+
+## Biomarker extraction
+
+Extract quantitative features from generated masks:
+
+* Vessel density
+* Vessel skeleton density / vessel length density
+* FAZ area
+* FAZ perimeter
+* FAZ circularity
+* FAZ centroid distance from image center
+* CC flow-deficit percentage
+* CC flow-deficit count
+* Mean / median flow-deficit area
+
+These biomarkers are normalized using training-fold statistics and appended to the clinical/tabular encoder.
+
+## Mask encoder for classifier
+
+Input:
+
+```text
+[sup_vessel_mask, deep_vessel_mask, sup_faz_mask, deep_faz_mask, cc_flow_mask] ∈ ℝ^(5×224×224)
+```
 
 Architecture:
 
@@ -387,7 +545,7 @@ Projection: FC(128 → 128) → GELU → LayerNorm
 
 Output: F_mask ∈ ℝ^128
 
-Compare performance with and without mask branch in ablation (Phase 16).
+Version 1 default: generate classical masks for all samples. Train/use the frozen segmentation student only if validation QC and visual review show cleaner masks than raw classical masks. The reported full model must state `mask_source` explicitly. Compare performance with and without generated masks, generated biomarkers, and student refinement in ablation (Phase 15).
 
 ---
 
@@ -462,13 +620,17 @@ Compare both in experiments. Report which performs better per dataset split.
 
 **Class-balanced sampling:** Use WeightedRandomSampler to oversample minority cohorts in each training batch. Combine with loss weighting (both simultaneously).
 
-## Auxiliary segmentation loss (if masks available)
+## Segmentation student loss
+
+Segmentation is trained as a separate upstream stage against generated pseudo-labels, not against human masks.
 
 ```
-L_seg = α · L_Tversky(β=0.7) + (1-α) · L_Focal(γ=2)
+L_student = α · L_Tversky(β=0.7) + (1-α) · L_Focal(γ=2) + λ_dice · L_Dice
 ```
 
-Tversky with β=0.7 penalises false negatives more heavily — critical for sparse capillary and FAZ segmentation.
+Tversky with β=0.7 penalises false negatives more heavily — critical for sparse capillary, FAZ, and flow-deficit masks.
+
+Do not include `L_student` in the main classifier objective by default. The segmentation student is frozen during disease-classifier training.
 
 ## Calibration loss
 
@@ -476,13 +638,21 @@ Tversky with β=0.7 penalises false negatives more heavily — critical for spar
 L_cal = ECE(p, y)    (computed over mini-batches as a soft differentiable estimate)
 ```
 
-## Total loss
+## Total disease-classifier loss
 
 ```
-L_total = L_cls + λ₁ · L_seg + λ₂ · L_cal
+L_total = L_cls + λ₂ · L_cal
 ```
 
-Initial values: λ₁=0.5, λ₂=0.1. Tune via grid search on validation fold.
+Optional experimental variant only:
+
+```
+L_total_joint = L_cls + λ₁ · L_student + λ₂ · L_cal
+```
+
+Use joint training only if mask-quality monitoring confirms that classifier gradients do not degrade segmentation masks.
+
+Initial value: λ₂=0.1 for calibration. For the optional joint variant only, start with λ₁=0.1–0.5 and tune via validation while monitoring mask QC.
 
 Label smoothing: applies to L_cls only.
 
@@ -679,8 +849,11 @@ Retrain from scratch with identical seeds for each ablation. Report mean ± std 
 | −SimCLR pretraining | ImageNet init only, no OCTA pretraining |
 | −Cross-layer attention | Concatenate Fs, Fd, Fc directly → project to 256-d |
 | −Layer-identity embeddings | Remove e_sup, e_deep, e_cc from cross-layer attention |
-| −Clinical branch | Remove F_clinical; classify on F_octa only |
-| −Mask branch | Remove F_mask (even when masks available) |
+| −Tabular branch | Remove F_tabular; classify on F_octa + F_mask only |
+| −Mask branch | Remove F_mask from generated masks |
+| −Mask biomarkers | Remove generated OCTA biomarker vector from tabular encoder |
+| Classical masks only | Use raw image-processing pseudo-masks; bypass segmentation student |
+| Student masks only | Use frozen segmentation-student outputs for masks and biomarkers |
 | −Prototype head | Standard linear head only |
 | −Uncertainty (MC-Dropout) | Single deterministic forward pass |
 | −Temperature calibration | Uncalibrated softmax probabilities |
@@ -690,8 +863,9 @@ Retrain from scratch with identical seeds for each ablation. Report mean ± std 
 | Deep only | Single encoder; remove Sup and CC |
 | CC only | Single encoder; remove Sup and Deep |
 | Sup + Deep | Two encoders; remove CC |
-| Sup + Deep + CC | Three encoders; no clinical |
-| Images + Clinical | Full model (confirmation of full architecture) |
+| Sup + Deep + CC | Three encoders; no tabular or mask branch |
+| Images + Tabular | Sup + Deep + CC + clinical + generated biomarkers; no mask encoder |
+| Images + Tabular + Masks | Full model confirmation |
 
 Analyze and discuss the marginal contribution of each component.
 
@@ -711,7 +885,7 @@ Implement and compare against the following baselines. Use identical preprocessi
 | EfficientNet-B0 | CNN | Sup image only |
 | Vision Transformer (ViT-S/16) | Transformer | Sup image only |
 | ConvNeXt-Tiny (single) | CNN | Sup image only |
-| Proposed — full | Multimodal | Sup + Deep + CC + Clinical |
+| Proposed — full | Multimodal | Sup + Deep + CC + Clinical + generated masks + biomarkers |
 
 For CNN baselines: use ImageNet pretrained weights with the same training schedule as the proposed model (no SimCLR pretraining for baselines — this tests the value of pretraining specifically).
 
@@ -762,6 +936,8 @@ Identify and articulate the following contributions for publication:
 
 6. **Uncertainty-aware disease classification:** Integration of MC-Dropout uncertainty quantification and ECE-calibrated probabilities, enabling clinical triage — uncertain predictions can be flagged for expert review rather than acted upon directly.
 
+7. **Automated weak OCTA segmentation for mask-guided classification:** Generates vessel, FAZ, and CC flow-deficit pseudo-masks without manual annotations, optionally refines them with a frozen segmentation student, and converts them into interpretable biomarkers for disease classification.
+
 ---
 
 # PHASE 19 — DELIVERABLES
@@ -769,15 +945,16 @@ Identify and articulate the following contributions for publication:
 Provide all of the following:
 
 1. **Dataset loader** — complete PyTorch Dataset class with patient-level stratified splitting, bilateral eye handling, mask-token imputation, and data integrity checks
-2. **Training pipeline** — 3-stage schedule (SimCLR → frozen fine-tune → end-to-end), logging, checkpointing
-3. **Model implementation** — all modules: encoders, projection heads, cross-layer attention, fusion, classification head, mask encoder
+2. **Training pipeline** — staged schedule (SimCLR → pseudo-mask generation/student training → frozen fine-tune → end-to-end classifier), logging, checkpointing
+3. **Model implementation** — all modules: encoders, projection heads, cross-layer attention, fusion, classification head, segmentation student, mask encoder
 4. **Validation pipeline** — 5-fold CV loop with metric accumulation, bootstrap CI computation, calibration step
-5. **Explainability module** — Grad-CAM (per layer), attention rollout (layer dominance), SHAP (clinical features)
+5. **Explainability module** — Grad-CAM (per layer), attention rollout (layer dominance), SHAP (clinical features), generated-mask visual overlays
 6. **Experiment manager** — configuration-driven, YAML-based, all hyperparameters logged via wandb or MLflow
 7. **Reproducibility config** — fixed seeds, deterministic ops, dataset split serialisation
 8. **Full PyTorch codebase** — modular, documented, with unit tests for critical components
 9. **Results tables** — all metrics, all ablations, all baselines, with bootstrap CIs
 10. **Publication-ready methodology section** — IEEE TPAMI / Nature Biomedical Engineering style
+11. **Segmentation artifacts** — pseudo-mask generator, optional segmentation-student checkpoints, mask QC reports, visual montage sheets, and biomarker CSVs
 
 ---
 
