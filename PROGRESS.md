@@ -121,3 +121,10 @@
   - per-layer final spatial feature maps.
 - Added backbone availability audit writing `outputs/phase4_image_encoders/phase4_backbone_availability.csv`.
 - Kept `PHASE4_REQUIRE_SIMCLR_BACKBONES = False` and `PHASE4_RUN_SMOKE_TEST = False` so the notebook does not fail before Phase 3 outputs exist.
+
+### Phase 5 progress
+- Added **Phase 5 — Tabular Metadata Encoder** cells to `main.ipynb`.
+- Implemented clinical/tabular input assembly with learned scalar missing tokens, ordinal embeddings via the Phase 2 clinical preprocessor, and training-time random masking of observed clinical features at 10%.
+- Added optional generated-biomarker support for Phase 8 with learned biomarker missing tokens and explicit biomarker QC flag slots.
+- Implemented Phase 5 MLP: `LayerNorm(D_tab) -> Linear(D_tab,128) -> GELU -> Dropout(0.3) -> Linear(128,256) -> GELU -> LayerNorm -> Dropout(0.2)`.
+- Added `build_phase5_tabular_encoder(...)`, parameter counting, fold-wise tabular input audit, and optional smoke test gated by `PHASE5_RUN_SMOKE_TEST = False`.
