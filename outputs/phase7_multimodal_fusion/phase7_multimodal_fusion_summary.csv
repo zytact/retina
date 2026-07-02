@@ -1,0 +1,2 @@
+token_dim,mask_channels,mask_feature_dim,output_dim,cross_attention_heads,mask_order,mask_source_assumption,smoke_test_device,h_shape,cross_attention_shape,smoke_test_passed
+256,5,128,512,4,"['sup_vessel_mask', 'deep_vessel_mask', 'sup_faz_mask', 'deep_faz_mask', 'cc_flow_mask']",generated pseudo-masks; no human ground-truth masks assumed,cuda,"[2, 512]","[2, 1, 1]",True

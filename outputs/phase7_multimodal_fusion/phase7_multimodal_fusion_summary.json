@@ -1,0 +1,26 @@
+{
+  "cross_attention_heads": 4,
+  "cross_attention_shape": [
+    2,
+    1,
+    1
+  ],
+  "h_shape": [
+    2,
+    512
+  ],
+  "mask_channels": 5,
+  "mask_feature_dim": 128,
+  "mask_order": [
+    "sup_vessel_mask",
+    "deep_vessel_mask",
+    "sup_faz_mask",
+    "deep_faz_mask",
+    "cc_flow_mask"
+  ],
+  "mask_source_assumption": "generated pseudo-masks; no human ground-truth masks assumed",
+  "output_dim": 512,
+  "smoke_test_device": "cuda",
+  "smoke_test_passed": true,
+  "token_dim": 256
+}
