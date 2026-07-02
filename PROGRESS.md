@@ -138,3 +138,11 @@
 - Added utilities to infer Phase 8 biomarker columns when available, save fold-wise biomarker stats, save tabular schema JSON files, and write `outputs/phase5_tabular_encoder/phase5_tabular_encoder_summary.csv`.
 - Added a no-image-read smoke test for output shape `[B, 256]` when Phase 2 artifacts are loaded.
 - Revised Phase 5 after Phase 4 output review: biomarker detection now includes current `FAZ/Faz/DENS_/PERF_` table columns, and eye-specific biomarker columns ending `_OD`/`_OS` are aligned to each sample's `eye` instead of feeding both eyes as separate tabular features.
+
+### Phase 6 progress
+- Added **Phase 6 — Cross-Layer Attention Module** cells to `main.ipynb`.
+- Implemented layer-identity embeddings for ordered Sup/Deep/CC tokens before attention.
+- Implemented pre-norm transformer encoder block with 8 heads, 32-d head size, 256→1024→256 GELU feed-forward path, dropout 0.1, residuals, and mean pooling to `F_octa ∈ R^256`.
+- Added attention extraction and layer-dominance utility for later explainability: per-sample Sup/Deep/CC dominance from attention received across heads/query tokens.
+- Added `Phase6LayerAwareOCTAEncoder` wrapper to compose Phase 4 image encoders with Phase 6 attention.
+- Added smoke test and saved Phase 6 summary/audit artifacts under `outputs/phase6_cross_layer_attention/` when run.

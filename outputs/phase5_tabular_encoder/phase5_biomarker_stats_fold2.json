@@ -1,0 +1,77 @@
+{
+  "DENS_Average_FOV_deep": {
+    "mean": 11.65723792776209,
+    "observed_fraction": 0.9814814814814815,
+    "std": 4.155702979999272
+  },
+  "DENS_Average_FOV_sup": {
+    "mean": 18.932283791162654,
+    "observed_fraction": 0.9841269841269841,
+    "std": 2.2054242751515662
+  },
+  "DENS_Circle3mm_deep": {
+    "mean": 10.59220066678749,
+    "observed_fraction": 0.9814814814814815,
+    "std": 3.935496405981153
+  },
+  "DENS_Circle3mm_sup": {
+    "mean": 17.872435540468782,
+    "observed_fraction": 0.9814814814814815,
+    "std": 2.8611921406537375
+  },
+  "DENS_Circle6mm_deep": {
+    "mean": 11.718940530400861,
+    "observed_fraction": 0.9814814814814815,
+    "std": 4.176382263559724
+  },
+  "DENS_Circle6mm_sup": {
+    "mean": 18.967594336096628,
+    "observed_fraction": 0.9814814814814815,
+    "std": 2.2782871259105835
+  },
+  "FAZRawLength": {
+    "mean": 2.569199688,
+    "observed_fraction": 0.9920634920634921,
+    "std": 4.514314106456837
+  },
+  "FAZRawSize": {
+    "mean": 0.37117748207466666,
+    "observed_fraction": 0.9920634920634921,
+    "std": 1.114319144159151
+  },
+  "FazCircularity": {
+    "mean": 0.6943071462133333,
+    "observed_fraction": 0.9920634920634921,
+    "std": 0.1283173839438397
+  },
+  "PERF_Average_FOV_deep": {
+    "mean": 0.24936303078222669,
+    "observed_fraction": 0.9867724867724867,
+    "std": 0.3123990616475078
+  },
+  "PERF_Average_FOV_sup": {
+    "mean": 0.41624615339427484,
+    "observed_fraction": 0.9867724867724867,
+    "std": 0.049038741941236114
+  },
+  "PERF_Circle3mm_deep": {
+    "mean": 0.22191836801656079,
+    "observed_fraction": 0.9867724867724867,
+    "std": 0.19828498467669228
+  },
+  "PERF_Circle3mm_sup": {
+    "mean": 0.37456777477667774,
+    "observed_fraction": 0.9867724867724867,
+    "std": 0.06286741101550647
+  },
+  "PERF_Circle6mm_deep": {
+    "mean": 0.2496414562501747,
+    "observed_fraction": 0.9867724867724867,
+    "std": 0.29584401810974104
+  },
+  "PERF_Circle6mm_sup": {
+    "mean": 0.41176040385182344,
+    "observed_fraction": 0.9867724867724867,
+    "std": 0.052167736696531554
+  }
+}

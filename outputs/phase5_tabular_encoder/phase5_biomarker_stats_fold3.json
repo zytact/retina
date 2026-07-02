@@ -1,0 +1,77 @@
+{
+  "DENS_Average_FOV_deep": {
+    "mean": 11.479440518178054,
+    "observed_fraction": 0.9738219895287958,
+    "std": 4.294996258673301
+  },
+  "DENS_Average_FOV_sup": {
+    "mean": 18.868115059363824,
+    "observed_fraction": 0.9738219895287958,
+    "std": 2.184388536179095
+  },
+  "DENS_Circle3mm_deep": {
+    "mean": 10.412199455585718,
+    "observed_fraction": 0.9738219895287958,
+    "std": 4.069206058430301
+  },
+  "DENS_Circle3mm_sup": {
+    "mean": 17.75625350790138,
+    "observed_fraction": 0.9738219895287958,
+    "std": 2.9792591594099416
+  },
+  "DENS_Circle6mm_deep": {
+    "mean": 11.53702413537399,
+    "observed_fraction": 0.9738219895287958,
+    "std": 4.309641188633082
+  },
+  "DENS_Circle6mm_sup": {
+    "mean": 18.872028441604897,
+    "observed_fraction": 0.9738219895287958,
+    "std": 2.3277221110224064
+  },
+  "FAZRawLength": {
+    "mean": 2.3351779566489363,
+    "observed_fraction": 0.9842931937172775,
+    "std": 1.904500331866782
+  },
+  "FAZRawSize": {
+    "mean": 0.3064384615106383,
+    "observed_fraction": 0.9842931937172775,
+    "std": 0.36140168414091267
+  },
+  "FazCircularity": {
+    "mean": 0.6942660811170214,
+    "observed_fraction": 0.9842931937172775,
+    "std": 0.12781840282966633
+  },
+  "PERF_Average_FOV_deep": {
+    "mean": 0.2459733558423584,
+    "observed_fraction": 0.9790575916230366,
+    "std": 0.3127219552345753
+  },
+  "PERF_Average_FOV_sup": {
+    "mean": 0.41558606356860484,
+    "observed_fraction": 0.9790575916230366,
+    "std": 0.04602362119837213
+  },
+  "PERF_Circle3mm_deep": {
+    "mean": 0.21802076715921045,
+    "observed_fraction": 0.9790575916230366,
+    "std": 0.19875703823141622
+  },
+  "PERF_Circle3mm_sup": {
+    "mean": 0.37405645005756705,
+    "observed_fraction": 0.9790575916230366,
+    "std": 0.06160090440986164
+  },
+  "PERF_Circle6mm_deep": {
+    "mean": 0.24580560506063862,
+    "observed_fraction": 0.9790575916230366,
+    "std": 0.2960259056196303
+  },
+  "PERF_Circle6mm_sup": {
+    "mean": 0.4118930729514678,
+    "observed_fraction": 0.9790575916230366,
+    "std": 0.04752783570607481
+  }
+}

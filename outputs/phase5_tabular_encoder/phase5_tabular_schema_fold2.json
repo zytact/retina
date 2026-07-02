@@ -1,0 +1,154 @@
+{
+  "architecture": "LayerNorm -> Linear(D_tab,128) -> GELU -> Dropout(0.3) -> Linear(128,256) -> GELU -> LayerNorm -> Dropout(0.2)",
+  "biomarker_dim": 15,
+  "biomarker_names": [
+    "DENS_Average_FOV_deep",
+    "DENS_Average_FOV_sup",
+    "DENS_Circle3mm_deep",
+    "DENS_Circle3mm_sup",
+    "DENS_Circle6mm_deep",
+    "DENS_Circle6mm_sup",
+    "FAZRawLength",
+    "FAZRawSize",
+    "FazCircularity",
+    "PERF_Average_FOV_deep",
+    "PERF_Average_FOV_sup",
+    "PERF_Circle3mm_deep",
+    "PERF_Circle3mm_sup",
+    "PERF_Circle6mm_deep",
+    "PERF_Circle6mm_sup"
+  ],
+  "biomarker_specs": [
+    {
+      "columns": {
+        "OD": "DENS_Average_FOV_deep_OD",
+        "OS": "DENS_Average_FOV_deep_OS"
+      },
+      "name": "DENS_Average_FOV_deep"
+    },
+    {
+      "columns": {
+        "OD": "DENS_Average_FOV_sup_OD",
+        "OS": "DENS_Average_FOV_sup_OS"
+      },
+      "name": "DENS_Average_FOV_sup"
+    },
+    {
+      "columns": {
+        "OD": "DENS_Circle3mm_deep_OD",
+        "OS": "DENS_Circle3mm_deep_OS"
+      },
+      "name": "DENS_Circle3mm_deep"
+    },
+    {
+      "columns": {
+        "OD": "DENS_Circle3mm_sup_OD",
+        "OS": "DENS_Circle3mm_sup_OS"
+      },
+      "name": "DENS_Circle3mm_sup"
+    },
+    {
+      "columns": {
+        "OD": "DENS_Circle6mm_deep_OD",
+        "OS": "DENS_Circle6mm_deep_OS"
+      },
+      "name": "DENS_Circle6mm_deep"
+    },
+    {
+      "columns": {
+        "OD": "DENS_Circle6mm_sup_OD",
+        "OS": "DENS_Circle6mm_sup_OS"
+      },
+      "name": "DENS_Circle6mm_sup"
+    },
+    {
+      "columns": {
+        "OD": "FAZRawLength_OD",
+        "OS": "FAZRawLength_OS"
+      },
+      "name": "FAZRawLength"
+    },
+    {
+      "columns": {
+        "OD": "FAZRawSize_OD",
+        "OS": "FAZRawSize_OS"
+      },
+      "name": "FAZRawSize"
+    },
+    {
+      "columns": {
+        "OD": "FazCircularity_OD",
+        "OS": "FazCircularity_OS"
+      },
+      "name": "FazCircularity"
+    },
+    {
+      "columns": {
+        "OD": "PERF_Average_FOV_deep_OD",
+        "OS": "PERF_Average_FOV_deep_OS"
+      },
+      "name": "PERF_Average_FOV_deep"
+    },
+    {
+      "columns": {
+        "OD": "PERF_Average_FOV_sup_OD",
+        "OS": "PERF_Average_FOV_sup_OS"
+      },
+      "name": "PERF_Average_FOV_sup"
+    },
+    {
+      "columns": {
+        "OD": "PERF_Circle3mm_deep_OD",
+        "OS": "PERF_Circle3mm_deep_OS"
+      },
+      "name": "PERF_Circle3mm_deep"
+    },
+    {
+      "columns": {
+        "OD": "PERF_Circle3mm_sup_OD",
+        "OS": "PERF_Circle3mm_sup_OS"
+      },
+      "name": "PERF_Circle3mm_sup"
+    },
+    {
+      "columns": {
+        "OD": "PERF_Circle6mm_deep_OD",
+        "OS": "PERF_Circle6mm_deep_OS"
+      },
+      "name": "PERF_Circle6mm_deep"
+    },
+    {
+      "columns": {
+        "OD": "PERF_Circle6mm_sup_OD",
+        "OS": "PERF_Circle6mm_sup_OS"
+      },
+      "name": "PERF_Circle6mm_sup"
+    }
+  ],
+  "clinical_cols": [
+    "Age",
+    "Sex",
+    "Congestive heart failure",
+    "Hypertension",
+    "Diabetes mellitus",
+    "Stroke",
+    "Vascular disease",
+    "Body mass index",
+    "CHA2DS2-VASc",
+    "Obstructive sleep apnea syndrom",
+    "Smoking",
+    "Dyslipidemia"
+  ],
+  "clinical_dim": 12,
+  "d_tab": 27,
+  "eye_specific_biomarkers": "columns ending _OD/_OS are resolved by each row eye and exported as one feature name",
+  "fold": 2,
+  "missingness": "learned per-feature scalar missing tokens; biomarker missing tokens represent absent/QC-failed biomarkers; 10% observed clinical features masked during training",
+  "ordinal_cardinalities": {
+    "10": 3
+  },
+  "ordinal_indices": [
+    10
+  ],
+  "output_dim": 256
+}
