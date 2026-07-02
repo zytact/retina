@@ -1,0 +1,609 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>RASTA OCTA CAD, phases 4 to 8 from zero to advanced</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --void: #030303;
+      --deep: #0a0a0a;
+      --surface: #111111;
+      --surface-2: #171717;
+      --line: #2a2a2a;
+      --line-soft: rgba(255,255,255,.08);
+      --text: #f5f7fa;
+      --text-mid: #b8bec8;
+      --text-low: #8c919a;
+      --halo: #7fb2ff;
+      --mint: #8de6bf;
+      --amber: #d8b76a;
+      --red: #ff8a95;
+      --max: 1180px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--void);
+      color: var(--text);
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.72;
+      text-rendering: optimizeLegibility;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(90deg, transparent 0, rgba(127,178,255,.05) 49.8%, rgba(127,178,255,.10) 50%, rgba(127,178,255,.05) 50.2%, transparent 100%),
+        radial-gradient(circle at 50% 8%, rgba(127,178,255,.08), transparent 28rem);
+      opacity: .8;
+    }
+
+    main, header { position: relative; z-index: 1; }
+    a { color: var(--text); text-decoration-color: rgba(127,178,255,.55); text-underline-offset: .18em; }
+    a:hover { color: var(--halo); }
+    strong { color: var(--text); font-weight: 620; }
+    code, pre { font-family: "SFMono-Regular", Consolas, Menlo, monospace; }
+    code {
+      color: #e7f1ff;
+      background: rgba(127,178,255,.08);
+      border: 1px solid rgba(127,178,255,.16);
+      border-radius: 7px;
+      padding: .12rem .34rem;
+      white-space: nowrap;
+    }
+
+    .page {
+      width: min(var(--max), calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    .hero {
+      min-height: 76vh;
+      display: grid;
+      align-content: center;
+      padding: clamp(72px, 12vw, 150px) 0 64px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .kicker {
+      color: var(--halo);
+      font-size: .92rem;
+      letter-spacing: .01em;
+      margin-bottom: 20px;
+    }
+
+    h1, h2, h3, h4 { margin: 0; text-wrap: balance; }
+    h1 {
+      max-width: 980px;
+      font-size: clamp(3rem, 7vw, 5.8rem);
+      line-height: .96;
+      font-weight: 520;
+      letter-spacing: -.035em;
+    }
+    h2 {
+      font-size: clamp(2rem, 4vw, 3.65rem);
+      line-height: 1.02;
+      font-weight: 520;
+      letter-spacing: -.028em;
+    }
+    h3 {
+      font-size: clamp(1.32rem, 2vw, 1.8rem);
+      line-height: 1.16;
+      font-weight: 560;
+      letter-spacing: -.014em;
+    }
+    h4 {
+      font-size: 1.02rem;
+      line-height: 1.25;
+      font-weight: 620;
+      color: var(--text);
+    }
+    p { color: var(--text-mid); margin: 0; max-width: 72ch; text-wrap: pretty; }
+    .hero p { font-size: clamp(1.05rem, 1.5vw, 1.28rem); max-width: 780px; margin-top: 28px; color: var(--text-mid); }
+
+    .status-line {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 18px 28px;
+      margin-top: 42px;
+      color: var(--text-low);
+      font-size: .96rem;
+    }
+    .status-line b { color: var(--text); font-weight: 560; }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 260px minmax(0, 1fr);
+      gap: clamp(28px, 5vw, 72px);
+      align-items: start;
+      padding-top: 54px;
+    }
+
+    nav {
+      position: sticky;
+      top: 22px;
+      padding: 6px 0 22px;
+      border-top: 1px solid var(--line);
+      color: var(--text-low);
+    }
+    nav .nav-title { color: var(--text); margin: 14px 0 12px; font-weight: 560; }
+    nav a {
+      display: block;
+      color: var(--text-low);
+      text-decoration: none;
+      padding: 7px 0;
+      border-bottom: 1px solid transparent;
+    }
+    nav a:hover { color: var(--text); border-bottom-color: var(--line); }
+
+    article { min-width: 0; }
+    section.chapter {
+      padding: clamp(54px, 8vw, 96px) 0;
+      border-top: 1px solid var(--line);
+    }
+    .chapter:first-child { border-top: 0; padding-top: 0; }
+    .chapter-head {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(220px, 360px);
+      gap: 28px;
+      align-items: end;
+      margin-bottom: 34px;
+    }
+    .chapter-head p { color: var(--text-low); }
+
+    .split {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(260px, 390px);
+      gap: 32px;
+      align-items: start;
+      margin: 30px 0;
+    }
+    .measure > * + * { margin-top: 16px; }
+    .stack > * + * { margin-top: 22px; }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 22px;
+    }
+    .quiet-panel {
+      background: linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.015));
+      border: 1px solid var(--line-soft);
+      border-radius: 16px;
+      padding: 22px;
+    }
+    .rule-box {
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      padding: 18px 0;
+    }
+
+    .term-list {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0 34px;
+      border-top: 1px solid var(--line);
+      margin-top: 28px;
+    }
+    .term {
+      padding: 22px 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .term p { margin-top: 8px; color: var(--text-low); }
+
+    .flow {
+      margin: 28px 0;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      padding: 20px 0;
+    }
+    .flow-row {
+      display: grid;
+      grid-template-columns: 150px 34px 170px 34px minmax(0, 1fr);
+      gap: 10px;
+      align-items: center;
+      min-height: 48px;
+    }
+    .flow-row + .flow-row { border-top: 1px solid rgba(255,255,255,.06); }
+    .flow-label { color: var(--text); font-weight: 560; }
+    .flow-arrow { color: var(--halo); text-align: center; }
+    .flow-note { color: var(--text-low); }
+
+    pre {
+      margin: 18px 0 0;
+      overflow-x: auto;
+      color: #dbeaff;
+      background: #070707;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 18px;
+      line-height: 1.55;
+      font-size: .92rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 18px 0 0;
+      border-top: 1px solid var(--line);
+    }
+    th, td {
+      text-align: left;
+      vertical-align: top;
+      padding: 13px 12px 13px 0;
+      border-bottom: 1px solid var(--line);
+    }
+    th { color: var(--text); font-weight: 560; }
+    td { color: var(--text-mid); }
+
+    .signal {
+      margin: 24px 0;
+      padding: 18px 0;
+      border-top: 1px solid rgba(127,178,255,.35);
+      border-bottom: 1px solid rgba(127,178,255,.35);
+      color: var(--text-mid);
+    }
+    .signal strong { color: var(--halo); }
+    .warning { border-color: rgba(255,138,149,.42); }
+    .warning strong { color: var(--red); }
+    .ok { border-color: rgba(141,230,191,.42); }
+    .ok strong { color: var(--mint); }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 0;
+      margin: 28px 0;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+    }
+    .metric { padding: 20px 18px; border-right: 1px solid var(--line); }
+    .metric:last-child { border-right: 0; }
+    .metric .num { color: var(--text); font-size: clamp(1.8rem, 3vw, 2.8rem); line-height: 1; letter-spacing: -.03em; font-weight: 560; }
+    .metric .caption { color: var(--text-low); margin-top: 8px; font-size: .95rem; }
+
+    .decision {
+      display: grid;
+      grid-template-columns: 90px minmax(0, 1fr);
+      gap: 20px;
+      padding: 18px 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .decision:first-child { border-top: 1px solid var(--line); }
+    .decision b { color: var(--halo); font-size: 1.2rem; }
+
+    ul, ol { color: var(--text-mid); padding-left: 1.25rem; margin: 12px 0 0; }
+    li + li { margin-top: 8px; }
+
+    .foot {
+      padding: 48px 0 80px;
+      color: var(--text-low);
+      border-top: 1px solid var(--line);
+      margin-top: 24px;
+    }
+
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 1fr; }
+      nav { position: relative; top: auto; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 18px; }
+      nav .nav-title { grid-column: 1 / -1; }
+      .chapter-head, .split { grid-template-columns: 1fr; }
+      .term-list { grid-template-columns: 1fr; }
+      .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .metric:nth-child(2) { border-right: 0; }
+      .metric:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
+      .flow-row { grid-template-columns: 1fr 24px 1fr; }
+      .flow-note { grid-column: 1 / -1; padding-bottom: 12px; }
+    }
+
+    @media (max-width: 560px) {
+      .page { width: min(100% - 22px, var(--max)); }
+      h1 { font-size: clamp(2.65rem, 14vw, 4.2rem); }
+      nav { grid-template-columns: 1fr; }
+      .metrics { grid-template-columns: 1fr; }
+      .metric { border-right: 0; border-bottom: 1px solid var(--line); }
+      .metric:last-child { border-bottom: 0; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <header class="page hero">
+    <div class="kicker">RASTA OCTA CAD teaching reference</div>
+    <h1>Phases 4 to 8, from first principles to the working architecture.</h1>
+    <p>This explains the model stack after OCTA SimCLR pretraining: image encoders, clinical metadata, layer attention, multimodal fusion, and generated OCTA masks. It assumes no machine learning background, then reaches implementation detail.</p>
+    <div class="status-line" aria-label="Current implementation status">
+      <span><b>Current mask source</b> classical_improved</span>
+      <span><b>Phase 8 rows</b> 476</span>
+      <span><b>Latest QC pass</b> 473 of 476</span>
+      <span><b>U-Net++</b> decision gated</span>
+    </div>
+  </header>
+
+  <main class="page layout">
+    <nav aria-label="Document sections">
+      <div class="nav-title">Contents</div>
+      <a href="#zero">Start from zero</a>
+      <a href="#pipeline">Whole pipeline</a>
+      <a href="#p4">Phase 4, image encoders</a>
+      <a href="#p5">Phase 5, tabular encoder</a>
+      <a href="#p6">Phase 6, layer attention</a>
+      <a href="#p7">Phase 7, fusion</a>
+      <a href="#p8">Phase 8, generated masks</a>
+      <a href="#truth">Ground truth</a>
+      <a href="#unet">U-Net++ gate</a>
+      <a href="#next">Next action</a>
+    </nav>
+
+    <article>
+      <section class="chapter" id="zero">
+        <div class="chapter-head">
+          <h2>Start from zero.</h2>
+          <p>These words appear throughout the notebook and plan. Read this section first if the pipeline feels abstract.</p>
+        </div>
+        <div class="term-list">
+          <div class="term"><h3>OCTA</h3><p>Optical Coherence Tomography Angiography. It is an eye scan that maps retinal blood-flow signal without dye injection. Bright linear patterns often correspond to vessels or flow.</p></div>
+          <div class="term"><h3>Sup, Deep, CC</h3><p>Three retinal vascular compartments. Sup is the superficial vascular complex, Deep is the deeper capillary plexus, and CC is the choriocapillaris flow layer.</p></div>
+          <div class="term"><h3>Tensor</h3><p>A numeric array. A grayscale OCTA image resized to 224 by 224 pixels is represented as <code>[1, 224, 224]</code>. A batch of 32 is <code>[32, 1, 224, 224]</code>.</p></div>
+          <div class="term"><h3>Encoder</h3><p>A neural network module that converts raw input into a compact vector. Here, an image encoder converts an OCTA image into learned features.</p></div>
+          <div class="term"><h3>Mask</h3><p>A binary image. White pixels mark a structure, black pixels mark background. Vessel masks mark vessels. FAZ masks mark the foveal avascular zone.</p></div>
+          <div class="term"><h3>Biomarker</h3><p>A numeric measurement derived from biology or images. Example: vessel density is the fraction of image pixels marked as vessel.</p></div>
+        </div>
+      </section>
+
+      <section class="chapter" id="pipeline">
+        <div class="chapter-head">
+          <h2>The whole pipeline in one pass.</h2>
+          <p>The classifier is not one monolithic image model. It keeps retinal layers, clinical context, and generated masks separate until the fusion stage.</p>
+        </div>
+        <div class="flow" aria-label="Pipeline flow">
+          <div class="flow-row"><div class="flow-label">Sup OCTA</div><div class="flow-arrow">→</div><div>Sup encoder</div><div class="flow-arrow">→</div><div class="flow-note">256 dimensional Sup token</div></div>
+          <div class="flow-row"><div class="flow-label">Deep OCTA</div><div class="flow-arrow">→</div><div>Deep encoder</div><div class="flow-arrow">→</div><div class="flow-note">256 dimensional Deep token</div></div>
+          <div class="flow-row"><div class="flow-label">CC OCTA</div><div class="flow-arrow">→</div><div>CC encoder</div><div class="flow-arrow">→</div><div class="flow-note">256 dimensional CC token</div></div>
+          <div class="flow-row"><div class="flow-label">Three tokens</div><div class="flow-arrow">→</div><div>Layer attention</div><div class="flow-arrow">→</div><div class="flow-note">One OCTA vector that models cross-layer interactions</div></div>
+          <div class="flow-row"><div class="flow-label">Clinical data</div><div class="flow-arrow">+</div><div>Biomarkers</div><div class="flow-arrow">→</div><div class="flow-note">Tabular vector</div></div>
+          <div class="flow-row"><div class="flow-label">Generated masks</div><div class="flow-arrow">→</div><div>Mask encoder</div><div class="flow-arrow">→</div><div class="flow-note">Mask vector</div></div>
+          <div class="flow-row"><div class="flow-label">All vectors</div><div class="flow-arrow">→</div><div>Fusion</div><div class="flow-arrow">→</div><div class="flow-note">Disease prediction</div></div>
+        </div>
+        <div class="signal"><strong>Core idea:</strong> understand each retinal layer first, then learn how layers relate, then interpret them with clinical context and generated mask evidence.</div>
+      </section>
+
+      <section class="chapter" id="p4">
+        <div class="chapter-head"><h2>Phase 4. Image encoders.</h2><p>Turns each OCTA layer into a learned feature vector while preserving spatial maps for later explanation.</p></div>
+        <div class="split">
+          <div class="measure">
+            <h3>Beginner view</h3>
+            <p>A raw OCTA image has 50,176 pixels after resizing. The classifier should not reason over raw pixels directly. An encoder compresses the image into a smaller, more meaningful summary.</p>
+            <p>Analogy: a clinician looks at a scan and forms a structured impression, such as sparse vessels, enlarged central avascular zone, or abnormal CC texture. The encoder learns a numeric version of that impression.</p>
+          </div>
+          <div class="quiet-panel"><h4>Input and output</h4><p><code>[1, 224, 224]</code> image in. <code>256</code> dimensional token out, one token per retinal layer.</p></div>
+        </div>
+        <pre>Sup image  → ConvNeXt-Tiny Sup encoder  → 768-d pooled vector → projection → 256-d token
+Deep image → ConvNeXt-Tiny Deep encoder → 768-d pooled vector → projection → 256-d token
+CC image   → ConvNeXt-Tiny CC encoder   → 768-d pooled vector → projection → 256-d token
+
+Projection head:
+Linear(768 → 512) → GELU → LayerNorm
+Linear(512 → 256) → LayerNorm</pre>
+        <h3>Why separate encoders?</h3>
+        <table>
+          <tr><th>Layer</th><th>Reason</th></tr>
+          <tr><td>Sup</td><td>Contains larger superficial vessels plus capillary texture.</td></tr>
+          <tr><td>Deep</td><td>Contains finer capillary patterns and different disease sensitivity.</td></tr>
+          <tr><td>CC</td><td>Represents perfusion texture and flow deficits, not a normal vessel tree.</td></tr>
+        </table>
+        <div class="signal"><strong>Advanced detail:</strong> Phase 4 retains final spatial feature maps before global pooling. Grad-CAM later uses these maps to show which image regions influenced prediction.</div>
+      </section>
+
+      <section class="chapter" id="p5">
+        <div class="chapter-head"><h2>Phase 5. Tabular metadata encoder.</h2><p>Converts clinical variables and generated OCTA biomarkers into a 256 dimensional context vector.</p></div>
+        <div class="split">
+          <div class="measure">
+            <h3>Why tabular data matters</h3>
+            <p>The same OCTA pattern can mean different things depending on age, diabetes, hypertension, BMI, sex, smoking, and other clinical factors. Phase 5 gives the model that context.</p>
+            <h3>Missing values are learned, not filled in</h3>
+            <p>Medical spreadsheets often have missing values. Instead of mean or median imputation, the model uses a learned missing token per feature. This lets it learn the meaning of absence.</p>
+          </div>
+          <div class="quiet-panel">
+            <h4>Z-score normalization</h4>
+            <p>For continuous values such as age and BMI:</p>
+            <pre>z = (value − training_mean) / training_std</pre>
+            <p>Use training-fold statistics only, otherwise validation data leaks into training.</p>
+          </div>
+        </div>
+        <table>
+          <tr><th>Feature type</th><th>Example</th><th>Handling</th></tr>
+          <tr><td>Continuous</td><td>Age, BMI</td><td>Fold-fitted z-score normalization.</td></tr>
+          <tr><td>Binary</td><td>Hypertension, diabetes</td><td>0 or 1 with explicit missingness mask.</td></tr>
+          <tr><td>Ordinal</td><td>Smoking status</td><td>Learned ordinal representation.</td></tr>
+          <tr><td>Biomarker</td><td>Vessel density, FAZ area</td><td>Generated in Phase 8, normalized per fold, appended to clinical stream.</td></tr>
+        </table>
+        <pre>Input: clinical features + Phase 8 biomarkers
+LayerNorm(D_tab)
+Linear(D_tab → 128) → GELU → Dropout(0.3)
+Linear(128 → 256) → GELU → LayerNorm → Dropout(0.2)
+Output: F_tabular ∈ R^256</pre>
+      </section>
+
+      <section class="chapter" id="p6">
+        <div class="chapter-head"><h2>Phase 6. Cross-layer attention.</h2><p>Lets Sup, Deep, and CC feature tokens compare themselves before the model sees clinical metadata.</p></div>
+        <div class="split">
+          <div class="measure">
+            <h3>Beginner view</h3>
+            <p>Attention is a learned weighting mechanism. It asks: when interpreting this layer, which other layer should matter?</p>
+            <p>A clinician does this naturally. DVC rarefaction may be interpreted differently if SVC and CC are also abnormal. Phase 6 makes that comparison learnable.</p>
+          </div>
+          <div class="quiet-panel"><h4>Layer identity matters</h4><p>Without identity embeddings, the transformer receives three anonymous vectors. Identity embeddings tell it which token is Sup, Deep, and CC.</p></div>
+        </div>
+        <pre>T_sup  = Fs + e_sup
+T_deep = Fd + e_deep
+T_cc   = Fc + e_cc
+
+Input sequence: [T_sup, T_deep, T_cc] ∈ R^(3×256)
+Transformer encoder:
+  pre-norm multi-head self-attention
+  8 heads, 32 dimensions per head
+  feed-forward MLP: 256 → 1024 → 256
+  GELU, dropout 0.1
+Mean pool over 3 tokens
+Output: F_octa ∈ R^256</pre>
+        <div class="signal"><strong>Explainability:</strong> attention weights can be summarized into layer-dominance scores, showing whether a cohort tends to rely more on Sup, Deep, or CC.</div>
+      </section>
+
+      <section class="chapter" id="p7">
+        <div class="chapter-head"><h2>Phase 7. Multimodal fusion.</h2><p>Combines image evidence, clinical context, generated biomarkers, and generated mask features.</p></div>
+        <div class="split">
+          <div class="measure">
+            <h3>Why fusion is not just concatenation</h3>
+            <p>Concatenation treats all modalities as equally relevant. Cross-attention lets OCTA features selectively use clinical context. A vascular pattern in a diabetic patient may not mean the same thing in a non-diabetic patient.</p>
+          </div>
+          <div class="quiet-panel"><h4>Three vectors enter fusion</h4><ul><li><code>F_octa</code>, image-layer representation.</li><li><code>F_tabular</code>, clinical plus biomarker representation.</li><li><code>F_mask</code>, generated-mask representation.</li></ul></div>
+        </div>
+        <pre>Q = Linear(F_octa)
+K = Linear(F_tabular)
+V = Linear(F_tabular)
+Attended = softmax(QKᵀ / √256) · V
+F_fused = LayerNorm(F_octa + Attended)
+
+Mask branch input: [B, 5, 224, 224]
+Channels:
+  1. Sup vessel mask
+  2. Deep vessel mask
+  3. Sup FAZ mask
+  4. Deep FAZ mask
+  5. CC flow-deficit mask
+
+Mask encoder → F_mask ∈ R^128
+Final projection → H ∈ R^512</pre>
+      </section>
+
+      <section class="chapter" id="p8">
+        <div class="chapter-head"><h2>Phase 8. Generated masks and biomarkers.</h2><p>The dataset has no manual segmentation masks, so Phase 8 creates weak masks using image-processing rules.</p></div>
+        <div class="signal warning"><strong>Do not call these human ground-truth segmentations.</strong> They are deterministic pseudo-masks. They are useful inputs and biomarker sources, but they are not expert annotations.</div>
+
+        <div class="metrics" aria-label="Latest Phase 8 output summary">
+          <div class="metric"><div class="num">476</div><div class="caption">generated rows</div></div>
+          <div class="metric"><div class="num">99.4%</div><div class="caption">QC pass after improvement</div></div>
+          <div class="metric"><div class="num">0</div><div class="caption">vessel QC failures</div></div>
+          <div class="metric"><div class="num">3</div><div class="caption">remaining FAZ failures</div></div>
+        </div>
+
+        <h3>Classical pseudo-mask, defined plainly</h3>
+        <p>A classical pseudo-mask is made by fixed image-processing rules. It is not a neural network and has no learned weights.</p>
+        <pre>OCTA image → filters → thresholds → morphology cleanup → binary mask</pre>
+
+        <h3>Sup and Deep vessel rules</h3>
+        <pre>1. Percentile normalize image intensity
+2. Apply CLAHE contrast enhancement
+3. Mild Gaussian smoothing
+4. Build vessel score:
+     0.55 × Frangi/Sato vesselness
+   + 0.30 × local bright-vessel contrast
+   + 0.15 × top-hat bright-vessel filter
+5. Try local, adaptive, and percentile thresholds
+6. Pick candidate with plausible vessel density
+7. Light morphology cleanup
+8. Suppress bottom-right watermark region
+9. Skeletonize for vessel-length biomarker</pre>
+        <table>
+          <tr><th>Rule</th><th>Purpose</th></tr>
+          <tr><td>CLAHE</td><td>Improves local contrast so faint vessels become more visible.</td></tr>
+          <tr><td>Frangi or Sato vesselness</td><td>Responds to line-like and tube-like structures.</td></tr>
+          <tr><td>Top-hat filter</td><td>Highlights bright small structures against local background.</td></tr>
+          <tr><td>Thresholding</td><td>Converts continuous vessel score into black and white pixels.</td></tr>
+          <tr><td>Morphology</td><td>Removes tiny artifacts and lightly repairs broken fragments.</td></tr>
+          <tr><td>Skeletonization</td><td>Reduces vessels to one-pixel centerlines for length density.</td></tr>
+        </table>
+
+        <div class="split">
+          <div>
+            <h3>FAZ rules</h3>
+            <pre>Vessel mask + low-flow map
+→ central search window
+→ connected avascular components
+→ choose plausible component nearest center
+→ fill and smooth
+→ QC by area and centroid distance</pre>
+          </div>
+          <div>
+            <h3>CC flow-deficit rules</h3>
+            <pre>CC image
+→ normalize + CLAHE
+→ local background correction
+→ Sauvola/adaptive dark threshold
+→ morphology cleanup
+→ QC by area fraction</pre>
+          </div>
+        </div>
+
+        <h3>Biomarkers extracted from masks</h3>
+        <table>
+          <tr><th>Structure</th><th>Biomarkers</th></tr>
+          <tr><td>Sup vessel</td><td>Vessel density, skeleton density.</td></tr>
+          <tr><td>Deep vessel</td><td>Vessel density, skeleton density.</td></tr>
+          <tr><td>Sup FAZ</td><td>Area, perimeter, circularity, centroid distance.</td></tr>
+          <tr><td>Deep FAZ</td><td>Area, perimeter, circularity, centroid distance.</td></tr>
+          <tr><td>CC flow</td><td>Flow-deficit fraction, count, mean area, median area.</td></tr>
+        </table>
+
+        <h3>What are montages?</h3>
+        <p>A montage is a human review sheet. It puts original Sup, Deep, and CC images beside the generated masks for the same eye. It is for visual QC, not model training.</p>
+        <pre>Top row:    Sup image | Deep image | CC image | Sup vessel mask
+Bottom row: Deep vessel mask | Sup FAZ mask | Deep FAZ mask | CC flow mask</pre>
+        <div class="signal warning"><strong>Current note:</strong> old montage files remained from a prior run. The notebook now clears stale montage PNGs before generation. Rerun Phase 8 once more so montage sheets match current improved masks.</div>
+      </section>
+
+      <section class="chapter" id="truth">
+        <div class="chapter-head"><h2>Ground truth versus pseudo-labels.</h2><p>This distinction controls what claims are scientifically valid.</p></div>
+        <table>
+          <tr><th>Term</th><th>Meaning in this project</th></tr>
+          <tr><td>Classification ground truth</td><td>The disease cohort label from the dataset folder or clinical table. This is used to train and evaluate disease classification.</td></tr>
+          <tr><td>Segmentation ground truth</td><td>Expert-drawn vessel, FAZ, or CC flow-deficit masks. These are not currently available.</td></tr>
+          <tr><td>Pseudo-label</td><td>An automatic label generated by rules or another model. Phase 8 masks are pseudo-labels.</td></tr>
+          <tr><td>Student target</td><td>A QC-passed improved pseudo-mask used to train U-Net++ if the student route is selected.</td></tr>
+        </table>
+        <div class="signal"><strong>Paper-safe wording:</strong> use generated pseudo-masks, weak masks, or automatically generated masks. Do not write ground-truth segmentations unless expert annotations are created.</div>
+      </section>
+
+      <section class="chapter" id="unet">
+        <div class="chapter-head"><h2>U-Net++ is a decision, not a default skip.</h2><p>U-Net++ is a learned segmentation architecture. It can regularize pseudo-masks, but it cannot invent ground truth.</p></div>
+        <div class="measure">
+          <p>If trained now, U-Net++ would learn from Phase 8 pseudo-masks. That means the pseudo-labels must be anatomically plausible first. A student model trained on bad labels learns bad labels.</p>
+        </div>
+        <div class="stack" style="margin-top:28px">
+          <div class="decision"><b>A</b><div><h4>Use improved classical masks only</h4><p>Allowed if refreshed montages show masks are anatomically acceptable and stable. Must document why student refinement is unnecessary.</p></div></div>
+          <div class="decision"><b>B</b><div><h4>Train U-Net++ student</h4><p>Required if improved masks are plausible but noisy, fragmented, threshold-unstable, or biomarker-unstable. Compare student versus classical with Dice, IoU, montage review, and biomarker stability.</p></div></div>
+          <div class="decision"><b>C</b><div><h4>Tune classical masks again</h4><p>Required if improved masks are still anatomically poor. Do not train U-Net++ on poor pseudo-labels.</p></div></div>
+        </div>
+        <div class="signal"><strong>Instruction for future agents:</strong> after refreshed montages, record Decision A, B, or C in <code>PROGRESS.md</code>. Do not silently skip U-Net++.</div>
+      </section>
+
+      <section class="chapter" id="next">
+        <div class="chapter-head"><h2>Immediate next action.</h2><p>The latest mask files are improved. The review sheets need one clean refresh.</p></div>
+        <ol>
+          <li>Rerun Phase 8 once more after the stale-montage cleanup patch.</li>
+          <li>Review random montage sheets and all QC failures.</li>
+          <li>Record Decision A, B, or C for U-Net++ in <code>PROGRESS.md</code>.</li>
+          <li>If Decision A, proceed to the classifier phases.</li>
+          <li>If Decision B, implement and train the U-Net++ student.</li>
+          <li>If Decision C, tune classical masks again before any student model.</li>
+        </ol>
+      </section>
+
+      <footer class="foot">Generated for the Retina CAD project. This document explains implementation status through Phase 8 and separates current evidence from future student-refinement decisions.</footer>
+    </article>
+  </main>
+</body>
+</html>
