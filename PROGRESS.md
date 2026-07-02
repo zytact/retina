@@ -137,3 +137,4 @@
   - `LayerNorm(D_tab)` → `Linear(D_tab→128)` → `GELU` → `Dropout(0.3)` → `Linear(128→256)` → `GELU` → `LayerNorm` → `Dropout(0.2)`.
 - Added utilities to infer Phase 8 biomarker columns when available, save fold-wise biomarker stats, save tabular schema JSON files, and write `outputs/phase5_tabular_encoder/phase5_tabular_encoder_summary.csv`.
 - Added a no-image-read smoke test for output shape `[B, 256]` when Phase 2 artifacts are loaded.
+- Revised Phase 5 after Phase 4 output review: biomarker detection now includes current `FAZ/Faz/DENS_/PERF_` table columns, and eye-specific biomarker columns ending `_OD`/`_OS` are aligned to each sample's `eye` instead of feeding both eyes as separate tabular features.
