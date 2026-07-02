@@ -280,8 +280,8 @@
 
     canvas {
       display: block;
-      width: 1500px;
-      height: 940px;
+      width: 1580px;
+      height: 1080px;
       max-width: none;
     }
 
@@ -394,7 +394,7 @@
       .site-header .shell { align-items: flex-start; }
       .nav { justify-content: flex-start; }
       .answer-grid { grid-template-columns: 1fr; }
-      canvas { width: 1220px; height: 820px; }
+      canvas { width: 1320px; height: 902px; }
     }
 
     @media (max-width: 640px) {
@@ -423,7 +423,7 @@
         <div class="mark" aria-hidden="true"></div>
         <div>
           <strong>Retina CAD architecture</strong>
-          <span>implemented through Phase 8 + U-Net++ gate</span>
+          <span>planned full V1 architecture</span>
         </div>
       </div>
       <nav class="nav" aria-label="Page sections">
@@ -441,7 +441,7 @@
         <div>
           <div class="signal">Plain-language model briefing</div>
           <h1>How the model learns what to look at.</h1>
-          <p class="lead">This page explains the current notebook architecture: Phase 4 image encoders, Phase 5 tabular encoder, Phase 6 cross-layer self-attention, Phase 7 multimodal fusion, and Phase 8 generated masks/biomarkers.</p>
+          <p class="lead">This page explains the planned full Version 1 architecture: OCTA-SimCLR adaptation, three independent image encoders, cross-layer self-attention, clinical and biomarker encoding, generated mask refinement, multimodal fusion, prototype classification, uncertainty, and calibration.</p>
         </div>
         <aside class="quiet-panel hero-note" aria-label="Core idea">
           <h2>Attention is weighted relevance.</h2>
@@ -478,7 +478,7 @@
           <article class="definition">
             <h3>Cross-attention</h3>
             <div>
-              <p>Cross-attention means the query comes from one source, while keys and values come from another. In the current Phase 7 fusion block, <span class="mono">F_octa</span> asks a question, and <span class="mono">F_tabular</span> supplies clinical context plus generated OCTA biomarkers as keys and values.</p>
+              <p>Cross-attention means the query comes from one source, while keys and values come from another. In the planned Phase 7 fusion block, <span class="mono">F_octa</span> asks a question, and <span class="mono">F_tabular</span> supplies clinical context plus generated OCTA biomarkers as keys and values.</p>
               <p>It asks: “given this OCTA pattern, which clinical facts should change the interpretation?” The same retinal finding may matter differently in a diabetic, hypertensive, or normotensive patient.</p>
             </div>
           </article>
@@ -490,7 +490,7 @@
       <div class="shell">
         <div class="section-head">
           <h2>Architecture map.</h2>
-          <p>The canvas shows the current implemented stack: three OCTA images become 256-d layer tokens, self-attention creates <span class="mono">F_octa</span>, clinical data plus biomarkers create <span class="mono">F_tabular</span>, generated masks create <span class="mono">F_mask</span>, then cross-attention and mask fusion produce a 512-d unified vector for later classification.</p>
+          <p>The canvas separates the planned model into its main branches so nothing is hidden inside one box: OCTA encoders, cross-layer attention, clinical encoder, generated-mask pipeline, biomarker stream, fusion, classifier, prototypes, uncertainty, calibration, explainability, and evaluation.</p>
         </div>
         <div class="canvas-toolbar">
           <div class="legend" aria-label="Diagram legend">
@@ -532,11 +532,11 @@
           </div>
           <div class="layer-row">
             <strong>1 cross-attention block</strong>
-            <span>Four heads let the OCTA representation query tabular context: clinical metadata plus generated biomarkers. The result is concatenated with the mask feature before the 512-d projection.</span>
+            <span>Four heads let the OCTA representation query tabular context: clinical metadata plus generated biomarkers. The cross-attended OCTA feature is combined with the generated-mask feature before projection to the unified 512-d representation.</span>
           </div>
           <div class="layer-row">
             <strong>Several MLP layers</strong>
-            <span>Projection heads reduce 768 to 256, tabular metadata plus biomarkers become 256, generated masks become a 128-d feature, and Phase 7 emits the final 512-d representation for the downstream classifier.</span>
+            <span>Projection heads reduce 768 to 256, tabular metadata plus biomarkers become 256, generated masks become a 128-d feature, fusion emits a 512-d representation, and Phase 9 maps it to disease logits with prototype augmentation and uncertainty.</span>
           </div>
         </div>
       </div>
@@ -580,7 +580,7 @@
           </article>
           <article class="answer">
             <h3>Where does the student model fit?</h3>
-            <p>Phase 8C/D now has an explicit decision gate. Current default decision is to evaluate a compact U-Net++ student, but training is disabled by default until refreshed mask artifacts are available on the data/GPU machine.</p>
+            <p>The segmentation student is upstream of the classifier. After classical masks pass QC, the plan requires an explicit Decision A/B/C: use improved classical masks, train U-Net++ student, or tune classical masks again. If trained, the student is frozen by default during disease classification.</p>
           </article>
           <article class="answer">
             <h3>What are z-scores?</h3>
@@ -594,7 +594,7 @@
 
         <div class="callout">
           <strong>The full path</strong>
-          <p>Sup, Deep, and CC images each pass through their own ConvNeXt-Tiny backbone. Their 768-dimensional outputs are projected to 256-dimensional tokens. Layer-identity embeddings mark which token is which. Self-attention creates <span class="mono">F_octa</span>. Phase 8 generates vessel, FAZ, and CC flow-deficit pseudo-masks, extracts biomarkers, and encodes five mask channels as <span class="mono">F_mask</span>. Clinical metadata plus biomarkers become <span class="mono">F_tabular</span>. Phase 7 cross-attention lets OCTA query tabular context, concatenates the mask feature, and emits a 512-dimensional unified representation for the classifier.</p>
+          <p>Sup, Deep, and CC images each pass through their own ConvNeXt-Tiny backbone adapted by OCTA-SimCLR. Their 768-dimensional outputs are projected to 256-dimensional tokens. Layer-identity embeddings mark which token is which. Self-attention creates <span class="mono">F_octa</span>. A separate weak-segmentation path generates vessel, FAZ, and CC flow-deficit masks, optionally refines them with U-Net++, extracts biomarkers, and encodes five mask channels as <span class="mono">F_mask</span>. Clinical metadata plus biomarkers become <span class="mono">F_tabular</span>. Cross-attention lets OCTA query tabular context. The fused 512-dimensional representation goes to a prototype-augmented classifier with MC-Dropout uncertainty and temperature calibration.</p>
         </div>
       </div>
     </section>
@@ -656,7 +656,7 @@
             </tr>
           </tbody>
         </table>
-        <p class="footer-note">Current status: Phase 8 classical_improved masks reached 473/476 QC pass locally. U-Net++ is now an explicit next decision/training gate, not silently skipped. Large Phase 3 backbone .pt files are absent from this copy but histories show all folds/layers completed.</p>
+        <p class="footer-note">This is the planned full architecture, not a progress report. Implementation status belongs in PROGRESS.md. The explainer intentionally shows roadmap components such as U-Net++ refinement, prototype logits, uncertainty, calibration, and explainability so reviewers see the complete design.</p>
       </div>
     </section>
   </main>
@@ -772,73 +772,84 @@
 
       ctx.strokeStyle = C.lineSoft;
       ctx.lineWidth = 1;
-      for (let x = 80; x < canvas.width; x += 80) {
-        ctx.beginPath(); ctx.moveTo(x, 72); ctx.lineTo(x, 880); ctx.stroke();
-      }
-      for (let y = 120; y < canvas.height; y += 80) {
-        ctx.beginPath(); ctx.moveTo(54, y); ctx.lineTo(1440, y); ctx.stroke();
+      for (let y = 132; y < canvas.height; y += 84) {
+        ctx.beginPath(); ctx.moveTo(48, y); ctx.lineTo(1508, y); ctx.stroke();
       }
 
-      label('Retina CAD model, current Phase 4–8 architecture', 54, 42, 30, C.text, 560);
-      wrap('Three OCTA depth slabs are encoded separately, aligned by layer identity, fused by self-attention, then interpreted through tabular cross-attention plus generated mask and biomarker evidence.', 54, 82, 1040, 22, 16, C.mid);
+      label('Retina CAD model, planned full V1 architecture', 54, 38, 30, C.text, 560);
+      wrap('The diagram is split by responsibility: OCTA representation, tabular context, weak segmentation, fusion, decision head, and review outputs.', 54, 78, 1120, 22, 16, C.mid);
 
+      label('OCTA image path', 70, 136, 18, C.blue, 620);
       const rows = [
-        {name: 'Sup OCTA', y: 172, sub: 'superficial vascular slab'},
-        {name: 'Deep OCTA', y: 320, sub: 'deep capillary slab'},
-        {name: 'CC OCTA', y: 468, sub: 'choriocapillaris slab'}
+        {name: 'Sup OCTA', y: 170, sub: 'SVC image, 1×224×224'},
+        {name: 'Deep OCTA', y: 304, sub: 'DVC image, 1×224×224'},
+        {name: 'CC OCTA', y: 438, sub: 'choriocapillaris image, 1×224×224'}
       ];
-
       rows.forEach((r) => {
-        box({x: 70, y: r.y, w: 150, h: 82, title: r.name, sub: r.sub, color: C.blue, fill: '#101318'});
-        box({x: 278, y: r.y - 8, w: 205, h: 98, title: 'ConvNeXt-Tiny', sub: 'Independent per layer. Loads Phase 3 backbone when .pt exists; fallback allowed locally.', color: C.blue});
-        box({x: 542, y: r.y, w: 176, h: 82, title: 'Projection', sub: '768 to 512 to 256 token', color: C.blue});
-        arrow(220, r.y + 41, 278, r.y + 41, C.blue + 'aa');
-        arrow(483, r.y + 41, 542, r.y + 41, C.blue + 'aa');
+        box({x: 70, y: r.y, w: 132, h: 72, title: r.name, sub: r.sub, color: C.blue, fill: '#101318'});
+        box({x: 244, y: r.y - 10, w: 178, h: 92, title: 'ConvNeXt-Tiny', sub: 'independent backbone, ImageNet plus OCTA-SimCLR', color: C.blue});
+        box({x: 462, y: r.y, w: 148, h: 72, title: 'Pool 768', sub: 'retain 7×7 map for Grad-CAM', color: C.blue});
+        box({x: 650, y: r.y, w: 150, h: 72, title: 'Projection', sub: '768→512→256', color: C.blue});
+        arrow(202, r.y + 36, 244, r.y + 36, C.blue + 'aa');
+        arrow(422, r.y + 36, 462, r.y + 36, C.blue + 'aa');
+        arrow(610, r.y + 36, 650, r.y + 36, C.blue + 'aa');
       });
 
-      bracket(742, 172, 550, '3 independent OCTA encoders', C.blue);
-
-      box({x: 785, y: 184, w: 190, h: 76, title: 'T_sup', sub: 'Fs + layer identity', color: C.violet, fill: '#14111a'});
-      box({x: 785, y: 332, w: 190, h: 76, title: 'T_deep', sub: 'Fd + layer identity', color: C.violet, fill: '#14111a'});
-      box({x: 785, y: 480, w: 190, h: 76, title: 'T_cc', sub: 'Fc + layer identity', color: C.violet, fill: '#14111a'});
-
-      rows.forEach((r, i) => arrow(718, r.y + 41, 785, [222, 370, 518][i], C.violet + 'aa'));
-
-      box({x: 1040, y: 286, w: 238, h: 154, title: 'Self-attention', sub: '8 heads. Tokens from the same OCTA set read each other: Sup, Deep, CC.', color: C.violet, fill: '#151119'});
-      arrow(975, 222, 1040, 318, C.violet + 'aa');
-      arrow(975, 370, 1040, 363, C.violet + 'aa');
-      arrow(975, 518, 1040, 408, C.violet + 'aa');
-
-      box({x: 1332, y: 312, w: 126, h: 104, title: 'F_octa', sub: 'mean-pooled 256-d OCTA representation', color: C.violet, fill: '#151119'});
-      arrow(1278, 363, 1332, 363, C.violet + 'aa');
-
-      box({x: 70, y: 690, w: 210, h: 106, title: 'Clinical data', sub: 'age, BMI, sex, HTN, diabetes, lipids, smoking, missing tokens', color: C.green, fill: '#101713'});
-      box({x: 342, y: 690, w: 236, h: 106, title: 'Tabular MLP', sub: 'clinical + generated biomarkers, missing tokens, FC to 256', color: C.green, fill: '#101713'});
-      box({x: 636, y: 704, w: 172, h: 78, title: 'F_tabular', sub: '256-d context', color: C.green, fill: '#101713'});
-      arrow(280, 743, 342, 743, C.green + 'aa');
-      arrow(578, 743, 636, 743, C.green + 'aa');
-
-      box({x: 910, y: 676, w: 250, h: 128, title: 'Cross-attention', sub: 'Q from F_octa. K and V from F_tabular. 4 heads.', color: C.violet, fill: '#151119'});
-      arrow(1396, 416, 1035, 676, C.violet + 'aa');
-      arrow(808, 743, 910, 743, C.green + 'aa');
-
-      box({x: 1234, y: 690, w: 224, h: 106, title: 'Phase 7 output', sub: 'cross-attended OCTA + F_mask concat to 512-d unified vector', color: C.amber, fill: '#17140d'});
-      arrow(1160, 743, 1234, 743, C.amber + 'bb');
-
-      box({x: 70, y: 824, w: 250, h: 98, title: 'Phase 8 masks', sub: 'classical_improved vessel, FAZ, CC flow deficits; U-Net++ gate next', color: C.green, fill: '#101713'});
-      box({x: 372, y: 824, w: 210, h: 98, title: 'Biomarkers + F_mask', sub: 'density, FAZ area, flow deficit; mask CNN to 128-d', color: C.green, fill: '#101713'});
-      arrow(320, 873, 372, 873, C.green + 'aa');
-      arrow(582, 873, 1234, 794, C.green + '88');
-
-      label('What each attention block means', 70, 970, 22, C.text, 620);
-      wrap('Self-attention is OCTA to OCTA. Cross-attention is OCTA to tabular context. Generated pseudo-masks are encoded separately as F_mask and concatenated during Phase 7 fusion.', 70, 1002, 980, 24, 17, C.mid);
+      box({x: 852, y: 198, w: 172, h: 78, title: 'Layer identity', sub: 'add e_sup, e_deep, e_cc', color: C.violet, fill: '#14111a'});
+      box({x: 852, y: 330, w: 172, h: 78, title: '3-token sequence', sub: '[T_sup, T_deep, T_cc]', color: C.violet, fill: '#14111a'});
+      box({x: 1080, y: 256, w: 214, h: 126, title: 'Cross-layer self-attention', sub: '8 heads, pre-norm, FFN 256→1024→256, mean pool', color: C.violet, fill: '#151119'});
+      box({x: 1344, y: 278, w: 142, h: 82, title: 'F_octa', sub: '256-d layer-aware OCTA', color: C.violet, fill: '#151119'});
+      rows.forEach((r) => arrow(800, r.y + 36, 852, r.y < 300 ? 236 : 369, C.violet + '88'));
+      arrow(1024, 236, 1080, 298, C.violet + 'aa');
+      arrow(1024, 369, 1080, 338, C.violet + 'aa');
+      arrow(1294, 319, 1344, 319, C.violet + 'aa');
 
       ctx.strokeStyle = C.lineSoft;
-      ctx.beginPath();
-      ctx.moveTo(38, 630);
-      ctx.lineTo(1462, 630);
-      ctx.stroke();
-      label('tabular + generated mask branches', 72, 632, 15, C.green, 620);
+      ctx.beginPath(); ctx.moveTo(48, 570); ctx.lineTo(1508, 570); ctx.stroke();
+
+      label('Clinical, biomarker, and generated-mask paths', 70, 598, 18, C.green, 620);
+      box({x: 70, y: 636, w: 176, h: 92, title: 'Clinical features', sub: 'age, BMI, sex, smoking, HTN, diabetes, lipids', color: C.green, fill: '#101713'});
+      box({x: 286, y: 636, w: 180, h: 92, title: 'Missing tokens', sub: 'learned feature tokens plus random masking during training', color: C.green, fill: '#101713'});
+      box({x: 506, y: 636, w: 188, h: 92, title: 'Tabular MLP', sub: 'LayerNorm, 128 hidden, GELU, dropout', color: C.green, fill: '#101713'});
+      box({x: 734, y: 650, w: 138, h: 64, title: 'F_tabular', sub: '256-d', color: C.green, fill: '#101713'});
+      arrow(246, 682, 286, 682, C.green + 'aa');
+      arrow(466, 682, 506, 682, C.green + 'aa');
+      arrow(694, 682, 734, 682, C.green + 'aa');
+
+      box({x: 70, y: 780, w: 176, h: 90, title: 'Classical masks', sub: 'vessels, FAZ, CC flow deficits', color: C.green, fill: '#101713'});
+      box({x: 286, y: 780, w: 180, h: 90, title: 'QC gate', sub: 'montages, density, FAZ center, artifact checks', color: C.green, fill: '#101713'});
+      box({x: 506, y: 780, w: 188, h: 90, title: 'Student decision', sub: 'A classical, B U-Net++, C retune masks', color: C.violet, fill: '#14111a'});
+      box({x: 734, y: 780, w: 172, h: 90, title: 'Frozen student', sub: 'optional U-Net++ or Attention U-Net refinement', color: C.violet, fill: '#14111a'});
+      box({x: 946, y: 770, w: 168, h: 72, title: 'Biomarkers', sub: 'density, skeleton, FAZ, flow-deficit stats', color: C.green, fill: '#101713'});
+      box({x: 946, y: 866, w: 168, h: 72, title: 'Mask encoder', sub: '5×224×224 to F_mask 128-d', color: C.green, fill: '#101713'});
+      arrow(246, 825, 286, 825, C.green + 'aa');
+      arrow(466, 825, 506, 825, C.green + 'aa');
+      arrow(694, 825, 734, 825, C.violet + 'aa');
+      arrow(906, 825, 946, 806, C.green + 'aa');
+      arrow(906, 825, 946, 902, C.green + 'aa');
+      arrow(1030, 770, 600, 728, C.green + '66');
+
+      box({x: 1000, y: 610, w: 198, h: 108, title: 'Cross-attention fusion', sub: 'Q from F_octa, K/V from F_tabular, 4 heads, residual, LayerNorm', color: C.violet, fill: '#151119'});
+      box({x: 1240, y: 626, w: 178, h: 78, title: 'Concat masks', sub: 'cross-attended OCTA + F_mask', color: C.violet, fill: '#151119'});
+      box({x: 1240, y: 760, w: 178, h: 78, title: 'Unified H', sub: 'projection to 512-d', color: C.amber, fill: '#17140d'});
+      arrow(1410, 360, 1098, 610, C.violet + '88');
+      arrow(872, 682, 1000, 664, C.green + 'aa');
+      arrow(1114, 902, 1240, 685, C.green + '88');
+      arrow(1198, 664, 1240, 664, C.violet + 'aa');
+      arrow(1329, 704, 1329, 760, C.amber + 'aa');
+
+      box({x: 70, y: 970, w: 190, h: 78, title: 'Classifier MLP', sub: '512→256→128→N classes', color: C.amber, fill: '#17140d'});
+      box({x: 306, y: 970, w: 190, h: 78, title: 'Prototype logits', sub: 'class prototypes for rare cohorts', color: C.amber, fill: '#17140d'});
+      box({x: 542, y: 970, w: 190, h: 78, title: 'Calibration', sub: 'temperature scaling, ECE', color: C.amber, fill: '#17140d'});
+      box({x: 778, y: 970, w: 190, h: 78, title: 'Uncertainty', sub: 'MC-Dropout, entropy, review flag', color: C.amber, fill: '#17140d'});
+      box({x: 1014, y: 970, w: 190, h: 78, title: 'Explainability', sub: 'Grad-CAM, attention, SHAP, masks', color: C.blue, fill: '#101318'});
+      box({x: 1250, y: 970, w: 190, h: 78, title: 'Evaluation', sub: 'AUROC, F1, ablations, statistics', color: C.blue, fill: '#101318'});
+      arrow(1240, 799, 165, 970, C.amber + '88');
+      arrow(260, 1009, 306, 1009, C.amber + 'aa');
+      arrow(496, 1009, 542, 1009, C.amber + 'aa');
+      arrow(732, 1009, 778, 1009, C.amber + 'aa');
+      arrow(968, 1009, 1014, 1009, C.blue + 'aa');
+      arrow(1204, 1009, 1250, 1009, C.blue + 'aa');
     }
 
     draw();
