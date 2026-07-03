@@ -101,7 +101,7 @@ Generate:
 
 Also generate:
 
-* Class-wise biomarker box plots from generated pseudo-masks and image-derived metrics
+* Class-wise biomarker box plots from available publication-table biomarkers and image-derived metrics. Phase 8 later adds generated-mask biomarkers; do not imply Phase 1 already has Phase 8 masks.
 * Inter-cohort demographic comparison table
 * Missing data heatmap (patients × clinical features)
 
@@ -137,33 +137,46 @@ For each image (Sup, Deep, CC):
 ## Clinical Metadata Preprocessing
 
 1. **Continuous features** (age, BMI): z-score normalization using training fold mean and std.
-2. **Binary features** (sex, hypertension, diabetes, dyslipidemia, smoking): encode as integers, preserve as-is.
+2. **Binary features** (sex, hypertension, diabetes, dyslipidemia): encode as integers, preserve as-is.
 3. **Ordinal features** (smoking: 0/1/2): embed as learned ordinal token, not raw integer.
 4. **Missing value handling:** Do NOT use mean/median imputation. Instead, use a **learnable missing-value mask token** per feature — a trainable embedding vector that replaces missing values. This allows the model to learn optimal behavior for absent data rather than assuming a statistical proxy.
 5. **Feature selection:** Compute mutual information between each clinical feature and the disease label on the training fold. Document features with MI < 0.01 — consider dropping or flagging as low-information.
 
 ## Dataset Object
 
-Each sample returns:
+Current implemented Phase 2 returns OCTA images, clinical tensors, labels, patient/eye/fold metadata, and zero/optional placeholder masks. It does not yet return Phase 8 generated masks or generated-mask biomarkers.
+
+Phase 2 base sample:
 
 ```python
 {
-  "sup_image":        Tensor[1, 224, 224],
-  "deep_image":       Tensor[1, 224, 224],
-  "cc_image":         Tensor[1, 224, 224],
-  "clinical_features": Tensor[D_clin],     # with mask tokens for missing
-  "clinical_mask":    Tensor[D_clin],     # 1=observed, 0=missing
+  "sup_image": Tensor[1, 224, 224],
+  "deep_image": Tensor[1, 224, 224],
+  "cc_image": Tensor[1, 224, 224],
+  "clinical_features": Tensor[D_clin],
+  "clinical_mask": Tensor[D_clin],
+  "vessel_mask": Tensor[1, 224, 224],  # optional/zero placeholder before Phase 8
+  "faz_mask": Tensor[1, 224, 224],     # optional/zero placeholder before Phase 8
+  "flow_mask": Tensor[1, 224, 224],    # optional/zero placeholder before Phase 8
+  "label": int,
+  "patient_id": str,
+  "eye": str,
+  "fold": int,
+}
+```
+
+After Phase 8 enrichment, each sample additionally returns:
+
+```python
+{
   "sup_vessel_mask":  Tensor[1, 224, 224], # generated pseudo-mask
   "deep_vessel_mask": Tensor[1, 224, 224], # generated pseudo-mask
   "sup_faz_mask":     Tensor[1, 224, 224], # generated pseudo-mask
   "deep_faz_mask":    Tensor[1, 224, 224], # generated pseudo-mask
   "cc_flow_mask":     Tensor[1, 224, 224], # generated pseudo-mask
   "biomarkers":       Tensor[D_bio],       # generated mask/image biomarkers
-  "mask_source":      str,                 # "classical" or "student"
-  "label":            int,
-  "patient_id":       str,
-  "eye":              str,                # "OD" or "OS"
-  "fold":             int
+  "mask_source":      str,                 # one of: "classical_improved", "unetpp_student", "attention_unet_student"
+  "biomarker_mask":   Tensor[D_bio],       # 1=observed/QC-pass, 0=missing/QC-failed
 }
 ```
 
@@ -213,8 +226,13 @@ Do NOT use: color inversion, aggressive distortion, cutout, or random erasing. T
 
 * Epochs: 100
 * Optimizer: SGD with momentum=0.9, weight_decay=1e-4
-* LR: 0.1 with cosine decay
-* Batch size: 256 (with gradient accumulation if memory limited)
+* Historical/current successful run setting: LR=0.03 with cosine decay. This superseded the original LR=0.1 attempt because the first GPU pass showed unstable/`inf` gradients and no parameter update at LR=0.1.
+* Historical/current successful run setting: batch size 256 effective, using physical batch size 128 plus gradient accumulation if memory limited
+* Historical/current successful run setting: AMP disabled for SimCLR after failed gradient preflight
+* Historical/current successful run setting: gradient clipping max norm 1.0
+* Abort/safety diagnostics: compare loss against NT-Xent random baseline and save preflight diagnostics if loss remains flat
+
+These Phase 3 notes document the already-completed successful pretraining setup. They do **not** require rerunning Phase 3 if valid Phase 3 histories/backbones already exist.
 
 After pretraining, retain only backbone weights. Discard projection heads.
 
@@ -341,9 +359,9 @@ F_octa = MeanPool([H_sup; H_deep; H_cc]) ∈ ℝ^256
 
 **Goal:** Fuse imaging representation (F_octa) with tabular context (F_tabular: clinical features + generated biomarkers) and generated segmentation-mask features (F_mask).
 
-**Why cross-attention outperforms concatenation:**
+**Why the current fusion block is still useful:**
 
-Concatenation treats all modalities as equally relevant for every patient. Cross-attention allows F_octa to attend to clinical features selectively — a diabetic patient's DVC rarefaction is contextualised differently than the same finding in a normotensive non-diabetic. This mirrors clinical reasoning.
+Version 1 currently uses a single pooled tabular token, so the attention block is mathematically equivalent to a learned tabular projection/residual conditioning step rather than selective attention over individual clinical fields. This is acceptable as a compact first fusion layer, but it must not be described as feature-level clinical attention. If feature-level selectivity is needed later, tokenize clinical/biomarker features into multiple K/V tokens before cross-attention.
 
 ## Architecture
 
@@ -355,33 +373,49 @@ Generated OCTA biomarkers are appended to the tabular stream after fold-fitted n
 F_tabular = TabularEncoder(Concat([clinical_features, biomarkers])) ∈ ℝ^256
 ```
 
-**Cross-attention block:**
+**Residual tabular-conditioning block:**
 
 ```
 Q = Linear(F_octa)          ∈ ℝ^(1 × 256)
 K = Linear(F_tabular)       ∈ ℝ^(1 × 256)
 V = Linear(F_tabular)       ∈ ℝ^(1 × 256)
 
-Attended = softmax(QK^T / √256) · V    (4-head cross-attention)
+# With one K/V token, softmax(QK^T / √256) is 1.0.
+# Therefore this is residual tabular conditioning, not feature-level attention.
+Attended = V
 F_fused = F_octa + Attended             (residual connection)
 F_fused = LayerNorm(F_fused)
 ```
 
-**Generated mask branch fusion:**
+Future upgrade path: replace `F_tabular` with per-feature/per-biomarker tokens and use true 4-head cross-attention across those tokens.
+
+**Implemented generated mask branch fusion and projection to shared space:**
 
 Generated masks are produced upstream by Phase 8. The classifier never assumes human-provided masks.
 
+Current completed Phase 7 notebook code keeps the first-pass contract. It attends from one OCTA token to one tabular token, then concatenates attended OCTA/tabular features, mask features, and the tabular token again:
+
 ```
 M = Stack([sup_vessel, deep_vessel, sup_faz, deep_faz, cc_flow])
-F_mask = MaskEncoder(M)  ∈ ℝ^128
-F_fused = Concat([F_fused, F_mask]) → project to 512-d
+F_mask = MaskEncoder(M)                                  ∈ ℝ^128
+
+F_cross = LayerNorm(F_octa + Attended)                   ∈ ℝ^256
+H = Linear(Concat([F_cross ; F_mask ; F_tabular]) 640 → 512)
+H = GELU(H)
+H = LayerNorm(H)
 ```
 
-**Projection to shared space:**
+This is not the preferred final contract, but it is completed code through Phase 8D and should not be rerun just to change architecture.
+
+**Future implementation note:** before Phase 9 classifier training, add forward-only compatibility code in Phase 9 or later that consumes existing Phase 4–8 artifacts and uses each modality once:
 
 ```
-H = FC(Concat([F_fused ; F_tabular]) → 512) + GELU + LayerNorm
+F_cond = LayerNorm(F_octa + Proj_tab(F_tabular))          ∈ ℝ^256
+F_mask = MaskEncoder(M)                                  ∈ ℝ^128
+H = Linear(Concat([F_cond ; F_mask]) 384 → 512)           ∈ ℝ^512
 ```
+
+Do **not** patch, rerun, or redo completed Phase 7/8 cells solely to fix this contract mismatch. Do **not** concatenate `F_tabular` again after `F_cond`; tabular information has already entered through `Proj_tab(F_tabular)`.
 
 Output: H ∈ ℝ^512 — Unified multimodal representation.
 
@@ -584,11 +618,29 @@ Projection: FC(128 → 128) → GELU → LayerNorm
 
 Output: F_mask ∈ ℝ^128
 
-Version 1 first rerun: generate **improved classical masks** for all samples. Do not use the current sparse vessel masks as final if visual review shows they miss the capillary network. After improved classical masks, a future agent must explicitly choose Decision A/B/C above. If Decision B is chosen, evaluate **U-Net++ as the primary student** and Attention U-Net only as a lighter fallback. The reported full model must state `mask_source` explicitly (`classical_improved`, `unetpp_student`, or `attention_unet_student`). Compare performance with and without generated masks, generated biomarkers, and student refinement in ablation (Phase 15).
+Current local outputs include refreshed `classical_improved` masks for 476 samples with high automated QC pass rate. Phase 8 U-Net++ student training has started on the separate training/GPU machine; it is only disabled in this local copy. Remaining required work is to bring back/inspect the training-machine outputs, visually review refreshed montages/QC failures, and document the final Decision A/B/C. The notebook default `PHASE8_STUDENT_DECISION = 'B_train_unetpp_student'` is a configured/default path, not by itself completed Decision B.
+
+If Decision B is kept, U-Net++ artifacts must actually exist before Phase 9 uses `unetpp_student`: checkpoints, history, Dice/IoU metrics, student-vs-classical montage comparison, and biomarker stability comparison. Otherwise revise the decision to A (`classical_improved` only, with QC/montage rationale) or C (tune classical masks again). The reported full model must state `mask_source` explicitly (`classical_improved`, `unetpp_student`, or `attention_unet_student`). Compare performance with and without generated masks, generated biomarkers, and student refinement in ablation (Phase 15).
 
 ---
 
 # PHASE 9 — CLASSIFICATION HEAD WITH PROTOTYPE AUGMENTATION
+
+## Phase 9 implementation preflight — do this first
+
+Before implementing Phase 9, **do not rerun or redo completed Phase 1–8D cells**. Treat existing Phase 1–8D notebook outputs/artifacts as fixed inputs.
+
+Check the existing Phase 7 output contract. If the notebook still uses the earlier one-token cross-attention/final-concat implementation, do **not** edit/rerun Phase 7. Instead, add Phase 9+ forward-only compatibility code/wrapper that produces the required unified representation:
+
+```
+F_cond = LayerNorm(F_octa + Proj_tab(F_tabular))   ∈ ℝ^256
+F_mask = MaskEncoder(masks)                        ∈ ℝ^128
+H = Project(Concat([F_cond, F_mask]) 384 → 512)    ∈ ℝ^512
+```
+
+Also verify Phase 8 gate status before training: Phase 9 training must wait until refreshed `classical_improved` masks/montages are visually reviewed and Decision A/B/C is documented. U-Net++ training may already be running on the training/GPU machine, but the notebook's default `B_train_unetpp_student` setting alone is not evidence that Decision B is complete. If Decision B is selected, required U-Net++ student artifacts must exist before using `unetpp_student` masks.
+
+Phase 9 consumes the unified multimodal representation `H ∈ R^512`. In the full model, `H` must include OCTA features, the trained tabular encoder output `F_tabular`, and the mask encoder output `F_mask` from the selected Phase 8 `mask_source`.
 
 ## Standard head
 
@@ -603,6 +655,8 @@ FC(128 → N_classes)
 For imbalanced disease cohorts, augment the standard linear classifier with prototype-based logits:
 
 During training, maintain a running class prototype P_k ∈ ℝ^128 (exponential moving average of class-conditional mean embeddings in the penultimate layer).
+
+Prototype state and scalar weights are part of the disease-classifier head and must be trained/updated in Phase 12 Stage 2 and Stage 3.
 
 At inference, compute prototype similarity:
 
@@ -631,9 +685,9 @@ Flag predictions with entropy > threshold as "uncertain — recommend manual rev
 
 Apply temperature scaling on the validation fold:
 
-Learn scalar T such that softmax(logits / T) is well-calibrated.
+Learn scalar T by minimising validation negative log-likelihood / cross-entropy of `softmax(logits / T)`.
 
-Minimise Expected Calibration Error (ECE) over the validation fold.
+After fitting T, report ECE and Brier score on validation/test predictions. Do not optimise ECE directly in the default post-hoc calibration path.
 
 ---
 
@@ -671,27 +725,36 @@ Tversky with β=0.7 penalises false negatives more heavily — critical for spar
 
 Do not include `L_student` in the main classifier objective by default. The segmentation student is frozen during disease-classifier training.
 
-## Calibration loss
+## Calibration objective
+
+Default calibration is **post-hoc temperature scaling** on the validation fold after classifier training. Do not backpropagate ECE through the classifier in the default Version 1 run.
+
+Optional experiment only:
 
 ```
-L_cal = ECE(p, y)    (computed over mini-batches as a soft differentiable estimate)
+L_cal = ECE(p, y)    # differentiable mini-batch estimate
+L_total_with_cal = L_cls + λ₂ · L_cal
 ```
+
+Use this train-time calibration variant only as an ablation/experiment and report it separately from the default model.
 
 ## Total disease-classifier loss
 
-```
-L_total = L_cls + λ₂ · L_cal
-```
-
-Optional experimental variant only:
+Default Version 1 classifier training:
 
 ```
-L_total_joint = L_cls + λ₁ · L_student + λ₂ · L_cal
+L_total = L_cls
 ```
 
-Use joint training only if mask-quality monitoring confirms that classifier gradients do not degrade segmentation masks.
+Backpropagate `L_total` through the complete disease classifier: OCTA encoders when unfrozen, projection heads, cross-layer attention, tabular encoder, mask encoder, multimodal fusion, prototype/logit parameters, and classification head. Exclude the frozen segmentation student unless the optional joint variant is explicitly enabled.
 
-Initial value: λ₂=0.1 for calibration. For the optional joint variant only, start with λ₁=0.1–0.5 and tune via validation while monitoring mask QC.
+Optional joint segmentation experiment only:
+
+```
+L_total_joint = L_cls + λ₁ · L_student
+```
+
+Use joint training only if mask-quality monitoring confirms that classifier gradients do not degrade segmentation masks. For the optional joint variant only, start with λ₁=0.1–0.5 and tune via validation while monitoring mask QC.
 
 Label smoothing: applies to L_cls only.
 
@@ -730,33 +793,53 @@ Do NOT apply:
 
 **For clinical features:** Add Gaussian noise (σ=0.05) to continuous features during training with probability 0.3. Randomly zero out one observed clinical feature per sample with probability 0.1 (simulates missing data at training time).
 
+Do not apply clinical-feature augmentation to validation/test folds. Do not corrupt generated biomarkers by default; only normalize them with training-fold statistics and use biomarker missing tokens/QC flags for missing or failed values.
+
 **Apply same augmentation to all three OCTA layers simultaneously** (same random seed per sample) to preserve cross-layer spatial correspondence.
 
 ---
 
 # PHASE 12 — TRAINING STRATEGY
 
+## Downstream disease-classifier scope
+
+The downstream disease classifier includes:
+
+* Sup/Deep/CC OCTA backbones
+* Phase 4 projection heads
+* Phase 5 tabular encoder for clinical features plus Phase 8 generated biomarkers
+* Phase 6 cross-layer attention
+* Phase 7 multimodal fusion
+* Phase 7 mask encoder using masks from the selected Phase 8 `mask_source`
+* Phase 9 prototype/logit parameters and classification head
+
+The segmentation student is upstream of the classifier and remains frozen during disease-classifier training unless the optional joint variant is explicitly enabled.
+
 ## 3-Stage Training Schedule
 
 **Stage 1: OCTA-SimCLR pretraining** (unlabeled)
 
 * Epochs: 100
-* LR: 0.1, cosine decay
+* Use the already-completed Phase 3 artifacts when available; do not rerun Phase 3 solely because this plan was clarified later.
+* Historical/current successful run settings: LR=0.03 cosine decay, AMP disabled after failed preflight, gradient clipping max norm 1.0
 * All three encoders independently
 
-**Stage 2: Frozen backbone, train heads only**
+**Stage 2: Frozen OCTA backbones, train downstream classifier modules**
 
 * Epochs: 15
 * LR: 3e-4
-* Train projection heads, cross-layer attention, fusion, classification head
-* Backbone weights frozen (loaded from Stage 1)
+* Train projection heads, tabular encoder, mask encoder, cross-layer attention, multimodal fusion, prototype/logit parameters, and classification head
+* Freeze Sup/Deep/CC OCTA backbone weights loaded from Stage 1
+* Freeze any segmentation student selected in Phase 8D
 * Purpose: initialise downstream heads before catastrophic forgetting risk
 
-**Stage 3: End-to-end fine-tuning**
+**Stage 3: End-to-end disease-classifier fine-tuning**
 
 * Epochs: 100
 * Backbone LR: 3e-5 (10× smaller than head LR)
 * Head LR: 3e-4
+* Train Sup/Deep/CC OCTA backbones, projection heads, tabular encoder, mask encoder, cross-layer attention, multimodal fusion, prototype/logit parameters, and classification head
+* Keep any Phase 8D segmentation student frozen unless the optional joint variant is explicitly enabled and mask-quality monitoring is active
 * Linear warmup first 5 epochs
 * Cosine annealing (T_0=20, T_mult=2)
 * Early stopping: patience=15 on validation macro-F1
@@ -776,8 +859,9 @@ Mixed precision: enabled (bfloat16 or float16 with GradScaler)
 ## Cross-validation
 
 5-fold stratified cross-validation
-* Stratify on: disease cohort label AND patient age decade AND sex
-* All eyes from one patient always in same fold (patient-level split)
+* Stratify on: disease cohort label AND patient age decade
+* Preserve patient grouping: all eyes from one patient always in same fold
+* Do not add sex to the current split key unless Phase 2/3 artifacts are regenerated. Sex balance is audited and reported in Phase 1/17 fairness analysis rather than used as a split criterion in the current artifact set. (patient-level split)
 * Report: mean ± std across 5 folds for all metrics
 * Final model: ensemble of 5 fold models (average softmax outputs)
 
@@ -821,7 +905,7 @@ This produces a clinically interpretable finding: "Disease X is primarily driven
 
 ## SHAP values for clinical features
 
-Apply KernelSHAP to the clinical MLP branch.
+Apply SHAP to the trained tabular encoder inputs. Report clinical-feature attributions separately from generated-biomarker attributions.
 
 Generate per-patient:
 
@@ -840,6 +924,8 @@ Correlate Grad-CAM hotspot regions with layer-dominance scores — do the spatia
 # PHASE 14 — EVALUATION METRICS
 
 All metrics reported with 95% bootstrap confidence intervals (n=1000 bootstrap samples, stratified).
+
+For cross-validation, compute metrics from out-of-fold validation/test predictions only. Do not report training-fold metrics as final performance.
 
 ## Primary metrics (classification)
 
@@ -882,17 +968,19 @@ For each baseline model vs. proposed model:
 
 Retrain from scratch with identical seeds for each ablation. Report mean ± std over 5 folds.
 
+Unless a row explicitly removes a component, train all remaining modules with the same Phase 12 schedule as the full model. Every ablation must record the selected Phase 8 `mask_source` and whether generated biomarkers are included.
+
 | Configuration | Modification |
 |---|---|
-| Full model | Proposed architecture |
+| Full model | Train OCTA encoders, projection heads, tabular encoder with clinical + generated biomarkers, mask encoder, cross-layer attention, multimodal fusion, prototype head, MC-Dropout, and temperature calibration using the selected `mask_source` |
 | −SimCLR pretraining | ImageNet init only, no OCTA pretraining |
 | −Cross-layer attention | Concatenate Fs, Fd, Fc directly → project to 256-d |
 | −Layer-identity embeddings | Remove e_sup, e_deep, e_cc from cross-layer attention |
-| −Tabular branch | Remove F_tabular; classify on F_octa + F_mask only |
-| −Mask branch | Remove F_mask from generated masks |
-| −Mask biomarkers | Remove generated OCTA biomarker vector from tabular encoder |
-| Classical masks only | Use raw image-processing pseudo-masks; bypass segmentation student |
-| Student masks only | Use frozen Attention U-Net / U-Net++ outputs for masks and biomarkers, allowed only after improved classical pseudo-labels pass QC |
+| −Tabular branch | Remove `F_tabular` entirely: no clinical features and no generated biomarker vector; classify on `F_octa + F_mask` only |
+| −Mask branch | Remove `F_mask`; keep tabular encoder with clinical features and generated biomarkers |
+| −Mask biomarkers | Keep clinical tabular branch, but remove generated OCTA biomarker vector from tabular encoder |
+| Classical masks only | Use improved classical pseudo-masks for `F_mask` and biomarkers; bypass segmentation student |
+| Student masks only | Use frozen U-Net++/Attention U-Net student outputs for `F_mask` and biomarkers, allowed only after improved classical pseudo-labels pass QC |
 | −Prototype head | Standard linear head only |
 | −Uncertainty (MC-Dropout) | Single deterministic forward pass |
 | −Temperature calibration | Uncalibrated softmax probabilities |
@@ -903,8 +991,8 @@ Retrain from scratch with identical seeds for each ablation. Report mean ± std 
 | CC only | Single encoder; remove Sup and Deep |
 | Sup + Deep | Two encoders; remove CC |
 | Sup + Deep + CC | Three encoders; no tabular or mask branch |
-| Images + Tabular | Sup + Deep + CC + clinical + generated biomarkers; no mask encoder |
-| Images + Tabular + Masks | Full model confirmation |
+| Images + Tabular | Sup + Deep + CC + trained tabular encoder with clinical + generated biomarkers; no mask encoder |
+| Images + Tabular + Masks | Full model confirmation: images + trained tabular encoder + trained mask encoder using selected `mask_source` |
 
 Analyze and discuss the marginal contribution of each component.
 
@@ -913,6 +1001,8 @@ Analyze and discuss the marginal contribution of each component.
 # PHASE 16 — BASELINE COMPARISON
 
 Implement and compare against the following baselines. Use identical preprocessing, augmentation, and cross-validation splits.
+
+Clinical-only baselines use Phase 2 clinical features only; they do not receive generated OCTA biomarkers unless explicitly named as a biomarker baseline. CNN baselines use OCTA images only and do not receive clinical features, masks, or generated biomarkers.
 
 | Baseline | Type | Input |
 |---|---|---|
@@ -924,9 +1014,9 @@ Implement and compare against the following baselines. Use identical preprocessi
 | EfficientNet-B0 | CNN | Sup image only |
 | Vision Transformer (ViT-S/16) | Transformer | Sup image only |
 | ConvNeXt-Tiny (single) | CNN | Sup image only |
-| Proposed — full | Multimodal | Sup + Deep + CC + Clinical + generated masks + biomarkers |
+| Proposed — full | Multimodal | Sup + Deep + CC + clinical features + generated masks and biomarkers from selected `mask_source` |
 
-For CNN baselines: use ImageNet pretrained weights with the same training schedule as the proposed model (no SimCLR pretraining for baselines — this tests the value of pretraining specifically).
+For CNN baselines: use identical splits, preprocessing, augmentations, optimizer family, epoch budget, and early stopping. Train only the baseline backbone and classifier head end-to-end from ImageNet weights, with no SimCLR or multimodal modules.
 
 ---
 
@@ -939,6 +1029,8 @@ For each biomarker or clinical feature:
 * Mann-Whitney U test: cohort A vs. cohort B (pairwise, all pairs)
 * One-way ANOVA: across all cohorts simultaneously
 * Kruskal-Wallis test: non-parametric alternative when normality is violated
+
+For generated biomarkers, state the Phase 8 `mask_source` used to extract them. Keep clinical-feature statistics separate from generated-biomarker statistics.
 
 ## Fairness analysis
 
@@ -984,13 +1076,13 @@ Identify and articulate the following contributions for publication:
 Provide all of the following:
 
 1. **Dataset loader** — complete PyTorch Dataset class with patient-level stratified splitting, bilateral eye handling, mask-token imputation, and data integrity checks
-2. **Training pipeline** — staged schedule (SimCLR → pseudo-mask generation/student training → frozen fine-tune → end-to-end classifier), logging, checkpointing
+2. **Training pipeline** — staged schedule (SimCLR → pseudo-mask generation/student decision → train classifier heads including tabular/mask/fusion modules with OCTA backbones frozen → fine-tune full disease classifier with segmentation student frozen), logging, checkpointing
 3. **Model implementation** — all modules: encoders, projection heads, cross-layer attention, fusion, classification head, segmentation student, mask encoder
 4. **Validation pipeline** — 5-fold CV loop with metric accumulation, bootstrap CI computation, calibration step
 5. **Explainability module** — Grad-CAM (per layer), attention rollout (layer dominance), SHAP (clinical features), generated-mask visual overlays
-6. **Experiment manager** — configuration-driven, YAML-based, all hyperparameters logged via wandb or MLflow
-7. **Reproducibility config** — fixed seeds, deterministic ops, dataset split serialisation
-8. **Full PyTorch codebase** — modular, documented, with unit tests for critical components
+6. **Experiment manager** — notebook-contained configuration dictionaries/cells, all hyperparameters logged via CSV/JSON plus optional wandb or MLflow. Do not create external YAML/config files unless the project instruction is changed.
+7. **Reproducibility config** — notebook-contained fixed seeds, deterministic ops, dataset split serialisation
+8. **Full PyTorch implementation inside `main.ipynb`** — modular notebook classes/functions with notebook-local validation/smoke tests for critical components. Do not create additional Python files unless the project instruction is changed.
 9. **Results tables** — all metrics, all ablations, all baselines, with bootstrap CIs
 10. **Publication-ready methodology section** — IEEE TPAMI / Nature Biomedical Engineering style
 11. **Segmentation artifacts** — pseudo-mask generator, optional segmentation-student checkpoints, mask QC reports, visual montage sheets, and biomarker CSVs
