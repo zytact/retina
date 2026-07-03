@@ -108,6 +108,13 @@
 
 ## 2026-07-02
 
+### Docs update
+- Added `docs/architecture-overview-diagram.svg` as the standalone high-level architecture diagram for guide/advisor use.
+- Added `docs/architecture-overview-guide.html` as a higher-level architecture explainer for advisor/supervisor discussions.
+- Added `docs/architecture-overview-guide.md` as a pointer note.
+- Framed the pipeline at a broader system level: curated inputs → layer-specific encoders → cross-layer + multimodal fusion → prediction/calibration/explainability.
+- Kept current-vs-next-stage separation explicit so the explainer stays honest about what is already implemented versus downstream evaluation work.
+
 ### Phase 3 completion audit
 - Confirmed Phase 3 output histories exist for all 15 SimCLR runs: 5 folds × Sup/Deep/CC.
 - Each history has 100 epochs, finite losses, and loss decreased well below the NT-Xent random baseline (~5.541).
