@@ -68,9 +68,22 @@ Clinical metadata fields:
 * Dyslipidemia (binary)
 * Additional available fields
 
+Current Phase 1/2 notebook artifacts use the available clinical spreadsheet columns and eye-aligned publication-table biomarkers where present. The current target remains the disease cohort derived from folders, not a newly derived binary CAD endpoint.
+
 Label:
 
-Disease cohort folder (multi-class).
+Disease cohort folder (multi-class). Version 1 remains disease-cohort classification; do not pivot this implementation to binary CAD prediction unless labels, metrics, heads, baselines, and manuscript framing are intentionally redesigned later.
+
+## Version 1 label semantics
+
+The primary supervised target is the RASTA folder-derived cohort label, not a direct binary CAD endpoint:
+
+* `RETINORM` — control/normal cohort from the AwARD study
+* `ORNET` — obstructive sleep apnea retinal vascular network cohort
+* `FAMILIPO` — familial hypercholesterolemia cohort, cardiovascular-risk/atherosclerosis related
+* `MRCC` — coronary revascularization cardiac surgery cohort, the clearest CAD-related group
+
+The clinical spreadsheet contains cardiovascular covariates and risk/comorbidity fields such as hypertension, diabetes mellitus, stroke, vascular disease, dyslipidemia, smoking, and CHA2DS2-VASc, plus OCTA biomarkers. These are model inputs or analysis covariates in Version 1, not the folder-derived class labels. CAD is represented indirectly, especially through MRCC and the broader `Vascular disease` covariate. Any future binary CAD or cardiovascular-risk model must define a separate clinically validated endpoint and should not be treated as equivalent to the current four-class cohort classifier.
 
 Generated internally; the RASTA dataset is assumed to provide **no manual segmentation masks**:
 
@@ -123,6 +136,8 @@ Implement a patient-stratified fold assignment that:
 * Stratifies folds by cohort label AND patient age decade
 * Verifies zero patient overlap across folds after splitting
 
+Current completed Phase 2 artifacts were generated with patient grouping and a stratification key that includes cohort label, age decade, and sex when sex is available. Local copied artifact audit shows 476 eye samples, fold counts 94/93/98/94/97, and zero patient leakage across folds. Do not regenerate Phase 2/3 artifacts merely to remove sex from the split key; report the actual completed split strategy.
+
 ## OCTA Image Preprocessing
 
 For each image (Sup, Deep, CC):
@@ -139,7 +154,7 @@ For each image (Sup, Deep, CC):
 1. **Continuous features** (age, BMI): z-score normalization using training fold mean and std.
 2. **Binary features** (sex, hypertension, diabetes, dyslipidemia): encode as integers, preserve as-is.
 3. **Ordinal features** (smoking: 0/1/2): embed as learned ordinal token, not raw integer.
-4. **Missing value handling:** Do NOT use mean/median imputation. Instead, use a **learnable missing-value mask token** per feature — a trainable embedding vector that replaces missing values. This allows the model to learn optimal behavior for absent data rather than assuming a statistical proxy.
+4. **Missing value handling:** Do NOT use mean/median imputation. Instead, use a **learnable missing-value mask token** per feature. Current completed notebook implementation uses a learned scalar replacement per flat tabular feature, plus learned scalar embeddings for ordinal values, because the Phase 5 encoder consumes a flat tabular vector rather than per-feature token sequences. This allows the model to learn optimal behavior for absent data rather than assuming a statistical proxy.
 5. **Feature selection:** Compute mutual information between each clinical feature and the disease label on the training fold. Document features with MI < 0.01 — consider dropping or flagging as low-information.
 
 ## Dataset Object
@@ -199,6 +214,8 @@ The two eyes of the same patient share the same systemic disease state. Their OC
 For patients with only one eye:
 
 **Positive pair:** Two augmented views of the same image (standard SimCLR).
+
+Current completed Phase 3 implementation uses strict fold-training-only self-supervised pretraining (`PHASE3_PRETRAIN_SCOPE = 'fold_train'`), not transductive all-data pretraining. Each downstream fold has separate Sup/Deep/CC SimCLR histories/backbones trained without that fold's held-out patients.
 
 ## Architecture
 
@@ -372,6 +389,8 @@ Generated OCTA biomarkers are appended to the tabular stream after fold-fitted n
 ```
 F_tabular = TabularEncoder(Concat([clinical_features, biomarkers])) ∈ ℝ^256
 ```
+
+Current completed Phase 5 code can infer publication-table/image-derived biomarker columns and eye-align `_OD`/`_OS` columns. Before Phase 9, rebuild or verify Phase 5 biomarker specs/statistics against the Phase 8-enriched manifest so generated Phase 8 biomarkers are included with training-fold-only normalization.
 
 **Residual tabular-conditioning block:**
 
@@ -618,9 +637,9 @@ Projection: FC(128 → 128) → GELU → LayerNorm
 
 Output: F_mask ∈ ℝ^128
 
-Current local outputs include refreshed `classical_improved` masks for 476 samples with high automated QC pass rate. Phase 8 U-Net++ student training has started on the separate training/GPU machine; it is only disabled in this local copy. Remaining required work is to bring back/inspect the training-machine outputs, visually review refreshed montages/QC failures, and document the final Decision A/B/C. The notebook default `PHASE8_STUDENT_DECISION = 'B_train_unetpp_student'` is a configured/default path, not by itself completed Decision B.
+Current local outputs include refreshed `classical_improved` masks for 476 samples with high automated QC pass rate (local copied summary: QC pass rate ≈ 0.9937). This satisfies the pseudo-label quality precondition for Decision B. The project decision is to proceed with **Decision B — train U-Net++ student**, because improved classical masks are QC-acceptable and U-Net++ is the selected refinement path. Phase 8 U-Net++ student training has started on the separate training/GPU machine; it is only disabled in this local copy.
 
-If Decision B is kept, U-Net++ artifacts must actually exist before Phase 9 uses `unetpp_student`: checkpoints, history, Dice/IoU metrics, student-vs-classical montage comparison, and biomarker stability comparison. Otherwise revise the decision to A (`classical_improved` only, with QC/montage rationale) or C (tune classical masks again). The reported full model must state `mask_source` explicitly (`classical_improved`, `unetpp_student`, or `attention_unet_student`). Compare performance with and without generated masks, generated biomarkers, and student refinement in ablation (Phase 15).
+Before Phase 9 uses `unetpp_student`, required training-machine artifacts must actually exist and be inspected/copied or summarized: fold-specific checkpoints (`best.pt`/`last.pt`), history CSVs, Dice/IoU metrics, student-vs-classical montage comparison, and biomarker stability comparison. Operational rule: use `unetpp_student` only if these artifacts show acceptable anatomical masks and stable biomarkers; if U-Net++ smooths away capillaries, distorts FAZ/CC masks, or performs poorly, fall back to `classical_improved` without rerunning earlier phases. If artifacts are missing or poor, revise the operational mask source to A (`classical_improved` only, with QC/montage rationale) or C (tune classical masks again). The reported full model must state `mask_source` explicitly (`classical_improved`, `unetpp_student`, or `attention_unet_student`). Compare performance with and without generated masks, generated biomarkers, and student refinement in ablation (Phase 15).
 
 ---
 
@@ -656,7 +675,7 @@ For imbalanced disease cohorts, augment the standard linear classifier with prot
 
 During training, maintain a running class prototype P_k ∈ ℝ^128 (exponential moving average of class-conditional mean embeddings in the penultimate layer).
 
-Prototype state and scalar weights are part of the disease-classifier head and must be trained/updated in Phase 12 Stage 2 and Stage 3.
+Prototype state and scalar weights are part of the disease-classifier head and must be trained/updated in Phase 12 Stage 2 and Stage 3. Phase 9 implementation should initialize prototypes from class-conditional penultimate embeddings after the first classifier epoch, update prototypes by EMA only for classes present in the current batch, save/load prototype buffers in checkpoints, and include a no-prototype ablation.
 
 At inference, compute prototype similarity:
 
@@ -666,7 +685,7 @@ proto_logit_k = -‖z - P_k‖² / τ_proto
 
 Final logit = standard_logit + α · proto_logit
 
-where α is a learned scalar weight and τ_proto = 0.1.
+where α is a learned scalar weight, initialized conservatively, and τ_proto = 0.1. Calibrate final combined logits using the same validation/calibration path as the standard classifier.
 
 This provides a non-parametric classification signal that generalises better for rare cohorts with few samples, complementing the standard linear head.
 
@@ -711,7 +730,7 @@ L_focal = -Σ_k (1 - p_k)^γ · log(p_k)    γ=2
 
 Compare both in experiments. Report which performs better per dataset split.
 
-**Class-balanced sampling:** Use WeightedRandomSampler to oversample minority cohorts in each training batch. Combine with loss weighting (both simultaneously).
+**Class-balanced sampling:** Do not default to simultaneous inverse-frequency loss weighting and `WeightedRandomSampler`, because using both can overcorrect minority classes. Recommended default for Phase 9 is weighted CE/focal loss with ordinary shuffling. Add `WeightedRandomSampler` only as an ablation or if minority-class recall remains poor.
 
 ## Segmentation student loss
 
@@ -859,11 +878,12 @@ Mixed precision: enabled (bfloat16 or float16 with GradScaler)
 ## Cross-validation
 
 5-fold stratified cross-validation
-* Stratify on: disease cohort label AND patient age decade
 * Preserve patient grouping: all eyes from one patient always in same fold
-* Do not add sex to the current split key unless Phase 2/3 artifacts are regenerated. Sex balance is audited and reported in Phase 1/17 fairness analysis rather than used as a split criterion in the current artifact set. (patient-level split)
+* Current completed artifacts stratify by disease cohort label, patient age decade, and sex when available; local copied audit shows zero patient leakage. Keep these fixed folds for all Phase 9+ work to avoid invalidating Phase 2/3/8 artifacts.
 * Report: mean ± std across 5 folds for all metrics
 * Final model: ensemble of 5 fold models (average softmax outputs)
+
+For publication-strength Phase 9+ training/evaluation, treat each fixed fold as the outer held-out evaluation fold. From the remaining four folds, create a patient-grouped stratified inner validation/calibration split, recommended 80/20 by patient within the outer-training patients, for early stopping and temperature scaling. Do not use the outer held-out fold both for model selection/calibration and final reported metrics.
 
 ## Reproducibility
 
@@ -877,7 +897,7 @@ Use deterministic PyTorch operations where available.
 
 ## Grad-CAM per layer
 
-For each encoder (Sup, Deep, CC), compute Grad-CAM with respect to the final convolutional feature map before global average pooling.
+For each encoder (Sup, Deep, CC), compute Grad-CAM with respect to the final convolutional feature map before global average pooling. Grad-CAM and attention analyses are explanatory aids and should be reported alongside ablation evidence, not as definitive causal proof.
 
 Generate per-patient, per-class heatmaps:
 
@@ -891,6 +911,8 @@ Present side-by-side per-layer heatmaps for example patients in each cohort.
 
 ## Attention rollout — layer dominance analysis
 
+Treat attention-derived layer scores as a layer-dominance proxy, not as causal proof of model reasoning. Support any interpretation with layer ablations and consistency with Grad-CAM findings.
+
 From the cross-layer attention module (Phase 6), extract the attention weight matrix A ∈ ℝ^(3×3) per sample.
 
 Compute per-sample layer-dominance score:
@@ -901,7 +923,7 @@ dominance_k = (1/N) Σ_i A_{ik}    for k ∈ {Sup, Deep, CC}
 
 Aggregate per cohort: which retinal layer dominates attention for each disease class?
 
-This produces a clinically interpretable finding: "Disease X is primarily driven by CC perfusion abnormalities; Disease Y is driven by SVC arteriolar changes."
+This can produce a clinically interpretable hypothesis such as: "Disease X appears to rely more on CC-associated signals; Disease Y appears to rely more on SVC-associated signals." Avoid claiming attention weights alone prove causal anatomical drivers.
 
 ## SHAP values for clinical features
 
@@ -923,9 +945,9 @@ Correlate Grad-CAM hotspot regions with layer-dominance scores — do the spatia
 
 # PHASE 14 — EVALUATION METRICS
 
-All metrics reported with 95% bootstrap confidence intervals (n=1000 bootstrap samples, stratified).
+All metrics reported with 95% bootstrap confidence intervals (n=1000 bootstrap samples, stratified). For publication-facing inference, bootstrap at the patient level or use patient-cluster bootstrap rather than treating bilateral eyes from the same patient as independent.
 
-For cross-validation, compute metrics from out-of-fold validation/test predictions only. Do not report training-fold metrics as final performance.
+For cross-validation, compute metrics from out-of-fold held-out predictions only. Do not report training-fold metrics as final performance. Because OD/OS eyes can both come from one patient, report eye-level metrics for sample-level performance and patient-level or patient-clustered metrics for publication/statistical inference. Recommended patient-level prediction: average OD/OS softmax probabilities per patient before metric computation.
 
 ## Primary metrics (classification)
 
