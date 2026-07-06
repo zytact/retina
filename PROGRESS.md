@@ -207,3 +207,39 @@
 - Clarified in `AGENTS.md` that the project runtime is the separate Windows GPU machine; this local checkout is for code/docs review, so Linux path portability and missing local `.pt` checkpoints are not blockers by themselves.
 - Clarified in `PLAN.md` that Phase 8D `.pt` checkpoints may remain on the training machine. The copied `outputs/phase8_unetpp_student/*/history.csv` and aggregate history provide the available Dice/IoU metrics locally.
 - Kept student-vs-classical montage comparison and biomarker stability comparison as preferred future validation artifacts, but documented that they were not produced for this completed Phase 8D run because adding them now would require additional student inference/rerun work. Do not rerun completed Phase 8D solely to create those retrospective comparisons; generate them only if Phase 8D is rerun or extended later.
+
+### Phase 9 progress
+- Added **Phase 9 — Classification Head with Prototype Augmentation** to `main.ipynb`.
+- Added Phase 9 preflight checks that:
+  - audit the completed Phase 7 fusion contract and explicitly require the forward-only compatibility wrapper instead of rerunning Phase 7/8,
+  - audit Phase 8D U-Net++ history CSVs and selected `mask_source`,
+  - allow local `.pt` checkpoint absence because checkpoints may remain on the Windows GPU machine.
+- Implemented `Phase9CompatibilityFusion` with the intended forward contract:
+  - `F_cond = LayerNorm(F_octa + Proj_tab(F_tabular))`,
+  - `F_mask = MaskEncoder(masks)`,
+  - `H = Project(Concat([F_cond, F_mask]) 384 → 512)`.
+- Implemented `Phase9PrototypeClassifier`:
+  - standard `512 → 256 → 128 → N_classes` head,
+  - EMA class prototypes in the 128-d penultimate space,
+  - prototype logits `-||z - P_k||² / τ_proto`,
+  - learned non-negative prototype weight via `softplus(alpha)`.
+- Added helpers for:
+  - post-hoc temperature scaling on validation logits,
+  - MC-dropout inference with mean probabilities, epistemic variance, and entropy,
+  - optional frozen Phase 8D U-Net++ online mask generation from training-machine checkpoints,
+  - rebuilding Phase 5 biomarker specs/statistics against the Phase 8-enriched manifest before Phase 9 datasets/models.
+- Added `Phase9MultimodalClassifier`, `make_phase9_datasets_for_fold`, and `build_phase9_model_for_fold` scaffolding for later Phase 12 training.
+- Added a no-image-read Phase 9 smoke test for fusion, prototype head, and temperature-scaling helper.
+- Patched Phase 9 after review findings:
+  - `Phase9FrozenUNetPPMaskGenerator.forward()` now refuses to run unless both Phase 8D checkpoints are actually loaded, preventing random initialized student masks.
+  - `Phase9MultimodalClassifier` now refuses to report `unetpp_student` unless a loaded generator exists or batch masks are explicitly marked `mask_source='unetpp_student'`.
+  - `build_phase9_model_for_fold()` now records requested vs effective mask source and falls back to `classical_improved` when local/GPU-runtime U-Net++ checkpoints are unavailable and strict checkpoint loading is disabled.
+
+### Phase 10 progress
+- Added **Phase 10 — Loss Functions** to `main.ipynb`.
+- Implemented training-fold class-count utilities, inverse-frequency class weights, imbalance-ratio audit, and automatic selection between weighted cross-entropy and focal loss.
+- Implemented `Phase10WeightedLabelSmoothingCE` for the default weighted CE + label smoothing objective.
+- Implemented `Phase10FocalLoss` for severe imbalance fallback when max/min class frequency exceeds the configured threshold.
+- Added `phase10_build_loss_bundle()` for Phase 12 training integration, with `WeightedRandomSampler` disabled by default and class-weight disabling when sampler ablation is enabled to avoid double-correcting minority classes.
+- Added `Phase10DiseaseClassifierLoss` so the default disease-classifier objective is explicitly `L_total = L_cls`, excluding segmentation-student loss and train-time calibration loss.
+- Added optional outer-fold loss-plan CSV generation when `phase2_folds` is loaded, plus a smoke-test cell path and `outputs/phase10_losses/phase10_summary.json`.
