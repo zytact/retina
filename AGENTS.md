@@ -1,6 +1,9 @@
 # AGENTS.md
 
-The goal of this project is to create a model trained on the RASTA dataset which has OCTA images and other sorts of images. It will predict Coronary Artery Disease. The directory contains one jupyter notebook, but do not try to run it. It will be run a separate machine with GPU. Your job is simply to work on it. 
+The goal of this project is to create a model trained on the RASTA dataset which has OCTA images and other sorts of images. It will predict Coronary Artery Disease. The directory contains one jupyter notebook, but do not try to run it. It will be run on a separate Windows machine with GPU. Your job is simply to work on it.
+
+This local checkout is a code/documentation review environment, not the training/runtime environment. Do not treat Linux path portability, Windows backslash paths, absent local dataset files, or absent local `.pt` checkpoints as blockers by themselves. Training artifacts such as `.pt` checkpoints may remain only on the Windows GPU machine unless the user explicitly asks to copy them here.
+
 Do not create any other python files or any other notebook files intended to run.
 
 The plan will be in [PLAN.md](PLAN.md). Track the progress in a [PROGRESS.md](PROGRESS.md). No need to implement everything all at once. That is why the PROGRESS.md exists.
