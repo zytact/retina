@@ -20,11 +20,11 @@ Build a robust, reproducible, and publication-quality multimodal classification 
 
 The system must:
 
-* Leverage all three OCTA retinal layers independently before fusion
-* Integrate clinical metadata with proper handling of missing values
-* Produce uncertainty-quantified predictions suitable for clinical screening
-* Be explainable at both the spatial (per-layer heatmap) and feature (clinical attribution) level
-* Outperform single-layer and single-modality baselines
+- Leverage all three OCTA retinal layers independently before fusion
+- Integrate clinical metadata with proper handling of missing values
+- Produce uncertainty-quantified predictions suitable for clinical screening
+- Be explainable at both the spatial (per-layer heatmap) and feature (clinical attribution) level
+- Outperform single-layer and single-modality baselines
 
 **Scope:** Version 1 — 2D OCTA images only. Do NOT use angiocubes. Angiocube integration is planned for Version 2 (roadmap in Phase 20).
 
@@ -36,9 +36,9 @@ Different disease cohorts produce distinct retinal microvascular changes.
 
 These changes appear differently across:
 
-* Superficial Vascular Complex (SVC) — arteriolar and capillary density changes
-* Deep Vascular Complex (DVC) — deeper capillary rarefaction, sensitive to diabetic microangiopathy
-* Choriocapillaris (CC) — choroidal perfusion and endothelial function
+- Superficial Vascular Complex (SVC) — arteriolar and capillary density changes
+- Deep Vascular Complex (DVC) — deeper capillary rarefaction, sensitive to diabetic microangiopathy
+- Choriocapillaris (CC) — choroidal perfusion and endothelial function
 
 A model that encodes each layer independently, then learns cross-layer interactions, then fuses with clinical context should outperform any single-layer or single-modality classifier.
 
@@ -59,14 +59,14 @@ Sup_OS.bmp    Deep_OS.bmp    CC_OS.bmp   (if available)
 
 Clinical metadata fields:
 
-* Age (continuous)
-* Sex (binary)
-* BMI (continuous)
-* Smoking (ordinal: never / former / current)
-* Hypertension (binary)
-* Diabetes (binary)
-* Dyslipidemia (binary)
-* Additional available fields
+- Age (continuous)
+- Sex (binary)
+- BMI (continuous)
+- Smoking (ordinal: never / former / current)
+- Hypertension (binary)
+- Diabetes (binary)
+- Dyslipidemia (binary)
+- Additional available fields
 
 Current Phase 1/2 notebook artifacts use the available clinical spreadsheet columns and eye-aligned publication-table biomarkers where present. The current target remains the disease cohort derived from folders, not a newly derived binary CAD endpoint.
 
@@ -78,19 +78,19 @@ Disease cohort folder (multi-class). Version 1 remains disease-cohort classifica
 
 The primary supervised target is the RASTA folder-derived cohort label, not a direct binary CAD endpoint:
 
-* `RETINORM` — control/normal cohort from the AwARD study
-* `ORNET` — obstructive sleep apnea retinal vascular network cohort
-* `FAMILIPO` — familial hypercholesterolemia cohort, cardiovascular-risk/atherosclerosis related
-* `MRCC` — coronary revascularization cardiac surgery cohort, the clearest CAD-related group
+- `RETINORM` — control/normal cohort from the AwARD study
+- `ORNET` — obstructive sleep apnea retinal vascular network cohort
+- `FAMILIPO` — familial hypercholesterolemia cohort, cardiovascular-risk/atherosclerosis related
+- `MRCC` — coronary revascularization cardiac surgery cohort, the clearest CAD-related group
 
 The clinical spreadsheet contains cardiovascular covariates and risk/comorbidity fields such as hypertension, diabetes mellitus, stroke, vascular disease, dyslipidemia, smoking, and CHA2DS2-VASc, plus OCTA biomarkers. These are model inputs or analysis covariates in Version 1, not the folder-derived class labels. CAD is represented indirectly, especially through MRCC and the broader `Vascular disease` covariate. Any future binary CAD or cardiovascular-risk model must define a separate clinically validated endpoint and should not be treated as equivalent to the current four-class cohort classifier.
 
 Generated internally; the RASTA dataset is assumed to provide **no manual segmentation masks**:
 
-* Vessel pseudo-masks for SVC and DVC
-* FAZ pseudo-masks for SVC and DVC
-* Choriocapillaris flow-deficit pseudo-masks
-* Quantitative OCTA biomarkers extracted from generated masks
+- Vessel pseudo-masks for SVC and DVC
+- FAZ pseudo-masks for SVC and DVC
+- Choriocapillaris flow-deficit pseudo-masks
+- Quantitative OCTA biomarkers extracted from generated masks
 
 These masks are automated weak labels, not human-annotated ground truth. The pipeline must clearly distinguish classical pseudo-mask generation, optional segmentation-student refinement, and downstream disease classification.
 
@@ -114,9 +114,9 @@ Generate:
 
 Also generate:
 
-* Class-wise biomarker box plots from available publication-table biomarkers and image-derived metrics. Phase 8 later adds generated-mask biomarkers; do not imply Phase 1 already has Phase 8 masks.
-* Inter-cohort demographic comparison table
-* Missing data heatmap (patients × clinical features)
+- Class-wise biomarker box plots from available publication-table biomarkers and image-derived metrics. Phase 8 later adds generated-mask biomarkers; do not imply Phase 1 already has Phase 8 masks.
+- Inter-cohort demographic comparison table
+- Missing data heatmap (patients × clinical features)
 
 Use these findings to inform class-weighting, stratification strategy, and imputation design.
 
@@ -132,9 +132,9 @@ Treat OD and OS as independent samples during training and evaluation.
 
 Implement a patient-stratified fold assignment that:
 
-* Groups all eyes by patient ID before splitting
-* Stratifies folds by cohort label AND patient age decade
-* Verifies zero patient overlap across folds after splitting
+- Groups all eyes by patient ID before splitting
+- Stratifies folds by cohort label AND patient age decade
+- Verifies zero patient overlap across folds after splitting
 
 Current completed Phase 2 artifacts were generated with patient grouping and a stratification key that includes cohort label, age decade, and sex when sex is available. Local copied artifact audit shows 476 eye samples, fold counts 94/93/98/94/97, and zero patient leakage across folds. Do not regenerate Phase 2/3 artifacts merely to remove sex from the split key; report the actual completed split strategy.
 
@@ -219,9 +219,9 @@ Current completed Phase 3 implementation uses strict fold-training-only self-sup
 
 ## Architecture
 
-* Backbone: ConvNeXt-Tiny (initialized from ImageNet)
-* Projection head: 2-layer MLP (768 → 256 → 128), appended during pretraining only, discarded afterward
-* Loss: NT-Xent (normalized temperature-scaled cross-entropy) with temperature τ=0.07
+- Backbone: ConvNeXt-Tiny (initialized from ImageNet)
+- Projection head: 2-layer MLP (768 → 256 → 128), appended during pretraining only, discarded afterward
+- Loss: NT-Xent (normalized temperature-scaled cross-entropy) with temperature τ=0.07
 
 Three independent contrastive tasks: one per OCTA layer (Sup, Deep, CC).
 
@@ -231,23 +231,23 @@ The encoders do NOT share weights — separate SimCLR pretraining per layer.
 
 Use conservative augmentations that preserve vascular structure:
 
-* Random horizontal flip (p=0.5)
-* Random rotation ±15° (p=0.4)
-* Random crop (scale=0.7–1.0) + resize to 224×224
-* Gaussian blur (σ=0.1–2.0, p=0.3)
-* Intensity jitter (brightness ±0.1, contrast ±0.1) — applied mildly
+- Random horizontal flip (p=0.5)
+- Random rotation ±15° (p=0.4)
+- Random crop (scale=0.7–1.0) + resize to 224×224
+- Gaussian blur (σ=0.1–2.0, p=0.3)
+- Intensity jitter (brightness ±0.1, contrast ±0.1) — applied mildly
 
 Do NOT use: color inversion, aggressive distortion, cutout, or random erasing. These destroy the vessel density signal.
 
 ## Pretraining schedule
 
-* Epochs: 100
-* Optimizer: SGD with momentum=0.9, weight_decay=1e-4
-* Historical/current successful run setting: LR=0.03 with cosine decay. This superseded the original LR=0.1 attempt because the first GPU pass showed unstable/`inf` gradients and no parameter update at LR=0.1.
-* Historical/current successful run setting: batch size 256 effective, using physical batch size 128 plus gradient accumulation if memory limited
-* Historical/current successful run setting: AMP disabled for SimCLR after failed gradient preflight
-* Historical/current successful run setting: gradient clipping max norm 1.0
-* Abort/safety diagnostics: compare loss against NT-Xent random baseline and save preflight diagnostics if loss remains flat
+- Epochs: 100
+- Optimizer: SGD with momentum=0.9, weight_decay=1e-4
+- Historical/current successful run setting: LR=0.03 with cosine decay. This superseded the original LR=0.1 attempt because the first GPU pass showed unstable/`inf` gradients and no parameter update at LR=0.1.
+- Historical/current successful run setting: batch size 256 effective, using physical batch size 128 plus gradient accumulation if memory limited
+- Historical/current successful run setting: AMP disabled for SimCLR after failed gradient preflight
+- Historical/current successful run setting: gradient clipping max norm 1.0
+- Abort/safety diagnostics: compare loss against NT-Xent random baseline and save preflight diagnostics if loss remains flat
 
 These Phase 3 notes document the already-completed successful pretraining setup. They do **not** require rerunning Phase 3 if valid Phase 3 histories/backbones already exist.
 
@@ -261,9 +261,9 @@ After pretraining, retain only backbone weights. Discard projection heads.
 
 Architecture: **ConvNeXt-Tiny**
 
-* Initialized from ImageNet pretrained weights
-* Further adapted via OCTA-SimCLR (Phase 3)
-* Output dimension from final stage: 768
+- Initialized from ImageNet pretrained weights
+- Further adapted via OCTA-SimCLR (Phase 3)
+- Output dimension from final stage: 768
 
 Three independent encoders: one each for Sup, Deep, CC.
 
@@ -292,9 +292,9 @@ Before global average pooling, extract the final spatial feature map (7×7×768 
 
 ## Output per encoder
 
-* Fs: Sup features ∈ ℝ^256
-* Fd: Deep features ∈ ℝ^256
-* Fc: CC features ∈ ℝ^256
+- Fs: Sup features ∈ ℝ^256
+- Fd: Deep features ∈ ℝ^256
+- Fc: CC features ∈ ℝ^256
 
 ---
 
@@ -357,10 +357,10 @@ Stack the three tokens as a sequence: S = [T_sup ; T_deep ; T_cc] ∈ ℝ^(3×25
 
 Apply transformer encoder block:
 
-* 8 attention heads, head dimension = 32
-* Pre-norm (LayerNorm before attention)
-* Feed-forward: 2-layer MLP (256 → 1024 → 256) with GELU
-* Dropout = 0.1
+- 8 attention heads, head dimension = 32
+- Pre-norm (LayerNorm before attention)
+- Feed-forward: 2-layer MLP (256 → 1024 → 256) with GELU
+- Dropout = 0.1
 
 **Step 3: Aggregation**
 
@@ -530,10 +530,10 @@ Before student refinement is allowed, classical masks must pass a documented rev
 4. Confirm FAZ masks are centered and plausible.
 5. Confirm CC flow-deficit masks are not dominated by watermark/edge artifacts.
 6. Tune classical vessel extraction if masks are too sparse:
-   * lower vesselness or adaptive-threshold cutoff,
-   * reduce small-object removal aggressiveness,
-   * combine Frangi/Sato vesselness with adaptive intensity thresholding,
-   * remove watermark/edge artifacts before QC/biomarkers.
+    - lower vesselness or adaptive-threshold cutoff,
+    - reduce small-object removal aggressiveness,
+    - combine Frangi/Sato vesselness with adaptive intensity thresholding,
+    - remove watermark/edge artifacts before QC/biomarkers.
 
 Only after this gate is passed may a student be trained.
 
@@ -595,11 +595,11 @@ End-to-end fine-tuning of the student is not allowed in Version 1 unless a stabi
 
 Reject or flag generated masks with implausible properties:
 
-* Vessel density outside plausible range
-* FAZ centroid too far from image center
-* FAZ area too small/large
-* CC flow-deficit mask nearly all black or all white
-* Excessive tiny connected components
+- Vessel density outside plausible range
+- FAZ centroid too far from image center
+- FAZ area too small/large
+- CC flow-deficit mask nearly all black or all white
+- Excessive tiny connected components
 
 Generate visual montage sheets for random samples and all QC failures. A montage is a review contact sheet showing the original Sup/Deep/CC OCTA images beside the generated Sup vessel, Deep vessel, Sup FAZ, Deep FAZ, and CC flow masks for the same eye. Manually inspect a subset of generated masks and report accept/reject rate if used in a paper.
 
@@ -607,15 +607,15 @@ Generate visual montage sheets for random samples and all QC failures. A montage
 
 Extract quantitative features from generated masks:
 
-* Vessel density
-* Vessel skeleton density / vessel length density
-* FAZ area
-* FAZ perimeter
-* FAZ circularity
-* FAZ centroid distance from image center
-* CC flow-deficit percentage
-* CC flow-deficit count
-* Mean / median flow-deficit area
+- Vessel density
+- Vessel skeleton density / vessel length density
+- FAZ area
+- FAZ perimeter
+- FAZ circularity
+- FAZ centroid distance from image center
+- CC flow-deficit percentage
+- CC flow-deficit count
+- Mean / median flow-deficit area
 
 These biomarkers are normalized using training-fold statistics and appended to the clinical/tabular encoder.
 
@@ -638,8 +638,6 @@ Projection: FC(128 → 128) → GELU → LayerNorm
 Output: F_mask ∈ ℝ^128
 
 Current local outputs include refreshed `classical_improved` masks for 476 samples with high automated QC pass rate (local copied summary: QC pass rate ≈ 0.9937). This satisfies the pseudo-label quality precondition for Decision B. The project decision is to proceed with **Decision B — train U-Net++ student**, because improved classical masks are QC-acceptable and U-Net++ is the selected refinement path. Phase 8 U-Net++ student training was run on the separate Windows GPU/training machine; this local checkout is not the runtime environment and does not need local `.pt` checkpoints unless explicitly requested.
-
-Before Phase 9 uses `unetpp_student`, required training-machine artifacts must actually exist on the training machine or be summarized in copied logs: fold-specific checkpoints (`best.pt`/`last.pt`), history CSVs, and Dice/IoU metrics. The current copied Phase 8D history CSVs provide Dice/IoU metrics, while `.pt` checkpoints may remain on the Windows GPU machine. Student-vs-classical montage comparison and biomarker stability comparison remain the preferred future validation artifacts, but they were **not produced for this completed Phase 8D run** because producing them now would require additional student inference/rerun work. Do not rerun completed Phase 8D solely to add those retrospective comparisons; if Phase 8D is rerun or extended in the future, generate those comparison artifacts then.
 
 Operational rule: use `unetpp_student` only if the available training-machine outputs/logs show acceptable imitation of the classical pseudo-labels and no obvious anatomical degradation; if U-Net++ smooths away capillaries, distorts FAZ/CC masks, or performs poorly, fall back to `classical_improved` without rerunning earlier phases. If essential training outputs are missing on the training machine or metrics are poor, revise the operational mask source to A (`classical_improved` only, with QC/montage rationale) or C (tune classical masks again). The reported full model must state `mask_source` explicitly (`classical_improved`, `unetpp_student`, or `attention_unet_student`). Compare performance with and without generated masks, generated biomarkers, and student refinement in ablation (Phase 15).
 
@@ -696,9 +694,10 @@ This provides a non-parametric classification signal that generalises better for
 Apply Monte Carlo Dropout at inference (30 forward passes with Dropout active).
 
 Report per-sample:
-* Mean prediction: P(class | x) = (1/30) Σ softmax(f_t(x))
-* Epistemic uncertainty: σ²_k = Var_t[softmax(f_t(x))_k] per class
-* Entropy: H = -Σ P_k log P_k (overall prediction uncertainty)
+
+- Mean prediction: P(class | x) = (1/30) Σ softmax(f_t(x))
+- Epistemic uncertainty: σ²_k = Var_t[softmax(f_t(x))_k] per class
+- Entropy: H = -Σ P_k log P_k (overall prediction uncertainty)
 
 Flag predictions with entropy > threshold as "uncertain — recommend manual review."
 
@@ -807,10 +806,10 @@ transforms.Compose([
 
 Do NOT apply:
 
-* Aggressive color jitter (destroys vessel contrast)
-* Random erasing or cutout (removes vascular structure)
-* Large-scale elastic deformation (distorts FAZ morphology)
-* Random grayscale (images are already grayscale)
+- Aggressive color jitter (destroys vessel contrast)
+- Random erasing or cutout (removes vascular structure)
+- Large-scale elastic deformation (distorts FAZ morphology)
+- Random grayscale (images are already grayscale)
 
 **For clinical features:** Add Gaussian noise (σ=0.05) to continuous features during training with probability 0.3. Randomly zero out one observed clinical feature per sample with probability 0.1 (simulates missing data at training time).
 
@@ -826,13 +825,13 @@ Do not apply clinical-feature augmentation to validation/test folds. Do not corr
 
 The downstream disease classifier includes:
 
-* Sup/Deep/CC OCTA backbones
-* Phase 4 projection heads
-* Phase 5 tabular encoder for clinical features plus Phase 8 generated biomarkers
-* Phase 6 cross-layer attention
-* Phase 7 multimodal fusion
-* Phase 7 mask encoder using masks from the selected Phase 8 `mask_source`
-* Phase 9 prototype/logit parameters and classification head
+- Sup/Deep/CC OCTA backbones
+- Phase 4 projection heads
+- Phase 5 tabular encoder for clinical features plus Phase 8 generated biomarkers
+- Phase 6 cross-layer attention
+- Phase 7 multimodal fusion
+- Phase 7 mask encoder using masks from the selected Phase 8 `mask_source`
+- Phase 9 prototype/logit parameters and classification head
 
 The segmentation student is upstream of the classifier and remains frozen during disease-classifier training unless the optional joint variant is explicitly enabled.
 
@@ -840,36 +839,37 @@ The segmentation student is upstream of the classifier and remains frozen during
 
 **Stage 1: OCTA-SimCLR pretraining** (unlabeled)
 
-* Epochs: 100
-* Use the already-completed Phase 3 artifacts when available; do not rerun Phase 3 solely because this plan was clarified later.
-* Historical/current successful run settings: LR=0.03 cosine decay, AMP disabled after failed preflight, gradient clipping max norm 1.0
-* All three encoders independently
+- Epochs: 100
+- Use the already-completed Phase 3 artifacts when available; do not rerun Phase 3 solely because this plan was clarified later.
+- Historical/current successful run settings: LR=0.03 cosine decay, AMP disabled after failed preflight, gradient clipping max norm 1.0
+- All three encoders independently
 
 **Stage 2: Frozen OCTA backbones, train downstream classifier modules**
 
-* Epochs: 15
-* LR: 3e-4
-* Train projection heads, tabular encoder, mask encoder, cross-layer attention, multimodal fusion, prototype/logit parameters, and classification head
-* Freeze Sup/Deep/CC OCTA backbone weights loaded from Stage 1
-* Freeze any segmentation student selected in Phase 8D
-* Purpose: initialise downstream heads before catastrophic forgetting risk
+- Epochs: 15
+- LR: 3e-4
+- Train projection heads, tabular encoder, mask encoder, cross-layer attention, multimodal fusion, prototype/logit parameters, and classification head
+- Freeze Sup/Deep/CC OCTA backbone weights loaded from Stage 1
+- Freeze any segmentation student selected in Phase 8D
+- Purpose: initialise downstream heads before catastrophic forgetting risk
 
 **Stage 3: End-to-end disease-classifier fine-tuning**
 
-* Epochs: 100
-* Backbone LR: 3e-5 (10× smaller than head LR)
-* Head LR: 3e-4
-* Train Sup/Deep/CC OCTA backbones, projection heads, tabular encoder, mask encoder, cross-layer attention, multimodal fusion, prototype/logit parameters, and classification head
-* Keep any Phase 8D segmentation student frozen unless the optional joint variant is explicitly enabled and mask-quality monitoring is active
-* Linear warmup first 5 epochs
-* Cosine annealing (T_0=20, T_mult=2)
-* Early stopping: patience=15 on validation macro-F1
+- Epochs: 100
+- Backbone LR: 3e-5 (10× smaller than head LR)
+- Head LR: 3e-4
+- Train Sup/Deep/CC OCTA backbones, projection heads, tabular encoder, mask encoder, cross-layer attention, multimodal fusion, prototype/logit parameters, and classification head
+- Keep any Phase 8D segmentation student frozen unless the optional joint variant is explicitly enabled and mask-quality monitoring is active
+- Linear warmup first 5 epochs
+- Cosine annealing (T_0=20, T_mult=2)
+- Early stopping: patience=15 on validation macro-F1
 
 ## Optimizer
 
 AdamW
-* β₁=0.9, β₂=0.999
-* Weight decay: 1e-2
+
+- β₁=0.9, β₂=0.999
+- Weight decay: 1e-2
 
 ## Batch size
 
@@ -880,10 +880,11 @@ Mixed precision: enabled (bfloat16 or float16 with GradScaler)
 ## Cross-validation
 
 5-fold stratified cross-validation
-* Preserve patient grouping: all eyes from one patient always in same fold
-* Current completed artifacts stratify by disease cohort label, patient age decade, and sex when available; local copied audit shows zero patient leakage. Keep these fixed folds for all Phase 9+ work to avoid invalidating Phase 2/3/8 artifacts.
-* Report: mean ± std across 5 folds for all metrics
-* Final model: ensemble of 5 fold models (average softmax outputs)
+
+- Preserve patient grouping: all eyes from one patient always in same fold
+- Current completed artifacts stratify by disease cohort label, patient age decade, and sex when available; local copied audit shows zero patient leakage. Keep these fixed folds for all Phase 9+ work to avoid invalidating Phase 2/3/8 artifacts.
+- Report: mean ± std across 5 folds for all metrics
+- Final model: ensemble of 5 fold models (average softmax outputs)
 
 For publication-strength Phase 9+ training/evaluation, treat each fixed fold as the outer held-out evaluation fold. From the remaining four folds, create a patient-grouped stratified inner validation/calibration split, recommended 80/20 by patient within the outer-training patients, for early stopping and temperature scaling. Do not use the outer held-out fold both for model selection/calibration and final reported metrics.
 
@@ -903,9 +904,9 @@ For each encoder (Sup, Deep, CC), compute Grad-CAM with respect to the final con
 
 Generate per-patient, per-class heatmaps:
 
-* Sup heatmap: which SVC regions drove the classification decision
-* Deep heatmap: which DVC regions drove the classification decision
-* CC heatmap: which CC regions drove the classification decision
+- Sup heatmap: which SVC regions drove the classification decision
+- Deep heatmap: which DVC regions drove the classification decision
+- CC heatmap: which CC regions drove the classification decision
 
 Overlay on original OCTA en-face images. Use clinically appropriate colormap (viridis or hot).
 
@@ -933,9 +934,9 @@ Apply SHAP to the trained tabular encoder inputs. Report clinical-feature attrib
 
 Generate per-patient:
 
-* Waterfall plots showing clinical feature contribution to prediction
-* Force plots per patient
-* Population beeswarm plots per cohort
+- Waterfall plots showing clinical feature contribution to prediction
+- Force plots per patient
+- Population beeswarm plots per cohort
 
 Identify which clinical features are most discriminative per disease class.
 
@@ -953,38 +954,38 @@ For cross-validation, compute metrics from out-of-fold held-out predictions only
 
 ## Primary metrics (classification)
 
-* Macro-averaged ROC-AUC (one-vs-rest)
-* Macro-F1
-* Balanced accuracy (accounts for class imbalance)
-* Per-class sensitivity and specificity
+- Macro-averaged ROC-AUC (one-vs-rest)
+- Macro-F1
+- Balanced accuracy (accounts for class imbalance)
+- Per-class sensitivity and specificity
 
 ## Secondary metrics
 
-* Weighted F1
-* PR-AUC (Macro) — particularly important when classes are imbalanced
-* Per-class precision, recall, F1
-* Confusion matrix (normalised by true class count)
-* Top-2 accuracy (whether correct class is in top-2 predictions)
+- Weighted F1
+- PR-AUC (Macro) — particularly important when classes are imbalanced
+- Per-class precision, recall, F1
+- Confusion matrix (normalised by true class count)
+- Top-2 accuracy (whether correct class is in top-2 predictions)
 
 ## Calibration
 
-* Expected Calibration Error (ECE, 10 bins) — primary calibration metric
-* Brier score
-* Reliability diagram per class
+- Expected Calibration Error (ECE, 10 bins) — primary calibration metric
+- Brier score
+- Reliability diagram per class
 
 ## Uncertainty evaluation
 
-* Mean prediction entropy vs. classification accuracy (are uncertain predictions also less accurate?)
-* Coverage analysis: percentage of correct predictions in the top-30% confidence bin
+- Mean prediction entropy vs. classification accuracy (are uncertain predictions also less accurate?)
+- Coverage analysis: percentage of correct predictions in the top-30% confidence bin
 
 ## Statistical comparison
 
 For each baseline model vs. proposed model:
 
-* McNemar's test on binary correct/incorrect vectors across all test samples
-* DeLong test for pairwise AUC comparison
-* Bonferroni correction for multiple comparisons
-* Report p-values and effect sizes (Cohen's h for AUC comparisons)
+- McNemar's test on binary correct/incorrect vectors across all test samples
+- DeLong test for pairwise AUC comparison
+- Bonferroni correction for multiple comparisons
+- Report p-values and effect sizes (Cohen's h for AUC comparisons)
 
 ---
 
@@ -994,29 +995,29 @@ Retrain from scratch with identical seeds for each ablation. Report mean ± std 
 
 Unless a row explicitly removes a component, train all remaining modules with the same Phase 12 schedule as the full model. Every ablation must record the selected Phase 8 `mask_source` and whether generated biomarkers are included.
 
-| Configuration | Modification |
-|---|---|
-| Full model | Train OCTA encoders, projection heads, tabular encoder with clinical + generated biomarkers, mask encoder, cross-layer attention, multimodal fusion, prototype head, MC-Dropout, and temperature calibration using the selected `mask_source` |
-| −SimCLR pretraining | ImageNet init only, no OCTA pretraining |
-| −Cross-layer attention | Concatenate Fs, Fd, Fc directly → project to 256-d |
-| −Layer-identity embeddings | Remove e_sup, e_deep, e_cc from cross-layer attention |
-| −Tabular branch | Remove `F_tabular` entirely: no clinical features and no generated biomarker vector; classify on `F_octa + F_mask` only |
-| −Mask branch | Remove `F_mask`; keep tabular encoder with clinical features and generated biomarkers |
-| −Mask biomarkers | Keep clinical tabular branch, but remove generated OCTA biomarker vector from tabular encoder |
-| Classical masks only | Use improved classical pseudo-masks for `F_mask` and biomarkers; bypass segmentation student |
-| Student masks only | Use frozen U-Net++/Attention U-Net student outputs for `F_mask` and biomarkers, allowed only after improved classical pseudo-labels pass QC |
-| −Prototype head | Standard linear head only |
-| −Uncertainty (MC-Dropout) | Single deterministic forward pass |
-| −Temperature calibration | Uncalibrated softmax probabilities |
-| −Label smoothing | Hard one-hot targets |
-| −Class-balanced sampling | Uniform sampling only |
-| Sup only | Single encoder; remove Deep and CC |
-| Deep only | Single encoder; remove Sup and CC |
-| CC only | Single encoder; remove Sup and Deep |
-| Sup + Deep | Two encoders; remove CC |
-| Sup + Deep + CC | Three encoders; no tabular or mask branch |
-| Images + Tabular | Sup + Deep + CC + trained tabular encoder with clinical + generated biomarkers; no mask encoder |
-| Images + Tabular + Masks | Full model confirmation: images + trained tabular encoder + trained mask encoder using selected `mask_source` |
+| Configuration              | Modification                                                                                                                                                                                                                                  |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Full model                 | Train OCTA encoders, projection heads, tabular encoder with clinical + generated biomarkers, mask encoder, cross-layer attention, multimodal fusion, prototype head, MC-Dropout, and temperature calibration using the selected `mask_source` |
+| −SimCLR pretraining        | ImageNet init only, no OCTA pretraining                                                                                                                                                                                                       |
+| −Cross-layer attention     | Concatenate Fs, Fd, Fc directly → project to 256-d                                                                                                                                                                                            |
+| −Layer-identity embeddings | Remove e_sup, e_deep, e_cc from cross-layer attention                                                                                                                                                                                         |
+| −Tabular branch            | Remove `F_tabular` entirely: no clinical features and no generated biomarker vector; classify on `F_octa + F_mask` only                                                                                                                       |
+| −Mask branch               | Remove `F_mask`; keep tabular encoder with clinical features and generated biomarkers                                                                                                                                                         |
+| −Mask biomarkers           | Keep clinical tabular branch, but remove generated OCTA biomarker vector from tabular encoder                                                                                                                                                 |
+| Classical masks only       | Use improved classical pseudo-masks for `F_mask` and biomarkers; bypass segmentation student                                                                                                                                                  |
+| Student masks only         | Use frozen U-Net++/Attention U-Net student outputs for `F_mask` and biomarkers, allowed only after improved classical pseudo-labels pass QC                                                                                                   |
+| −Prototype head            | Standard linear head only                                                                                                                                                                                                                     |
+| −Uncertainty (MC-Dropout)  | Single deterministic forward pass                                                                                                                                                                                                             |
+| −Temperature calibration   | Uncalibrated softmax probabilities                                                                                                                                                                                                            |
+| −Label smoothing           | Hard one-hot targets                                                                                                                                                                                                                          |
+| −Class-balanced sampling   | Uniform sampling only                                                                                                                                                                                                                         |
+| Sup only                   | Single encoder; remove Deep and CC                                                                                                                                                                                                            |
+| Deep only                  | Single encoder; remove Sup and CC                                                                                                                                                                                                             |
+| CC only                    | Single encoder; remove Sup and Deep                                                                                                                                                                                                           |
+| Sup + Deep                 | Two encoders; remove CC                                                                                                                                                                                                                       |
+| Sup + Deep + CC            | Three encoders; no tabular or mask branch                                                                                                                                                                                                     |
+| Images + Tabular           | Sup + Deep + CC + trained tabular encoder with clinical + generated biomarkers; no mask encoder                                                                                                                                               |
+| Images + Tabular + Masks   | Full model confirmation: images + trained tabular encoder + trained mask encoder using selected `mask_source`                                                                                                                                 |
 
 Analyze and discuss the marginal contribution of each component.
 
@@ -1028,17 +1029,17 @@ Implement and compare against the following baselines. Use identical preprocessi
 
 Clinical-only baselines use Phase 2 clinical features only; they do not receive generated OCTA biomarkers unless explicitly named as a biomarker baseline. CNN baselines use OCTA images only and do not receive clinical features, masks, or generated biomarkers.
 
-| Baseline | Type | Input |
-|---|---|---|
-| Logistic Regression | Classical | Clinical features only |
-| Random Forest | Ensemble | Clinical features only |
-| XGBoost | Gradient boosting | Clinical features only |
-| ResNet50 | CNN | Sup image only |
-| ResNet50 (3-channel) | CNN | Sup+Deep+CC stacked as RGB |
-| EfficientNet-B0 | CNN | Sup image only |
-| Vision Transformer (ViT-S/16) | Transformer | Sup image only |
-| ConvNeXt-Tiny (single) | CNN | Sup image only |
-| Proposed — full | Multimodal | Sup + Deep + CC + clinical features + generated masks and biomarkers from selected `mask_source` |
+| Baseline                      | Type              | Input                                                                                            |
+| ----------------------------- | ----------------- | ------------------------------------------------------------------------------------------------ |
+| Logistic Regression           | Classical         | Clinical features only                                                                           |
+| Random Forest                 | Ensemble          | Clinical features only                                                                           |
+| XGBoost                       | Gradient boosting | Clinical features only                                                                           |
+| ResNet50                      | CNN               | Sup image only                                                                                   |
+| ResNet50 (3-channel)          | CNN               | Sup+Deep+CC stacked as RGB                                                                       |
+| EfficientNet-B0               | CNN               | Sup image only                                                                                   |
+| Vision Transformer (ViT-S/16) | Transformer       | Sup image only                                                                                   |
+| ConvNeXt-Tiny (single)        | CNN               | Sup image only                                                                                   |
+| Proposed — full               | Multimodal        | Sup + Deep + CC + clinical features + generated masks and biomarkers from selected `mask_source` |
 
 For CNN baselines: use identical splits, preprocessing, augmentations, optimizer family, epoch budget, and early stopping. Train only the baseline backbone and classifier head end-to-end from ImageNet weights, with no SimCLR or multimodal modules.
 
@@ -1050,9 +1051,9 @@ For CNN baselines: use identical splits, preprocessing, augmentations, optimizer
 
 For each biomarker or clinical feature:
 
-* Mann-Whitney U test: cohort A vs. cohort B (pairwise, all pairs)
-* One-way ANOVA: across all cohorts simultaneously
-* Kruskal-Wallis test: non-parametric alternative when normality is violated
+- Mann-Whitney U test: cohort A vs. cohort B (pairwise, all pairs)
+- One-way ANOVA: across all cohorts simultaneously
+- Kruskal-Wallis test: non-parametric alternative when normality is violated
 
 For generated biomarkers, state the Phase 8 `mask_source` used to extract them. Keep clinical-feature statistics separate from generated-biomarker statistics.
 
@@ -1060,10 +1061,10 @@ For generated biomarkers, state the Phase 8 `mask_source` used to extract them. 
 
 Evaluate model performance stratified by:
 
-* Sex (male vs. female)
-* Age quartile (<50, 50–60, 60–70, >70)
-* Presence of diabetes
-* Bilateral vs. unilateral eye availability
+- Sex (male vs. female)
+- Age quartile (<50, 50–60, 60–70, >70)
+- Presence of diabetes
+- Bilateral vs. unilateral eye availability
 
 Report whether model performance degrades for underrepresented subgroups.
 
@@ -1119,11 +1120,11 @@ Version 2 will extend this system with 3D angiocube features.
 
 Planned additions:
 
-* Replace 2D ConvNeXt-Tiny with shared 3D Swin-T backbone + layer-specific adapter tokens (as designed in the CVD architecture)
-* Add Retinal-MAE pretraining with layer-masked reconstruction
-* Integrate volumetric biomarker extraction (VAD, VLD, VFD per ETDRS zone)
-* Full multi-task learning: classification + biomarker regression + segmentation supervision
-* PCGrad dynamic loss weighting
+- Replace 2D ConvNeXt-Tiny with shared 3D Swin-T backbone + layer-specific adapter tokens (as designed in the CVD architecture)
+- Add Retinal-MAE pretraining with layer-masked reconstruction
+- Integrate volumetric biomarker extraction (VAD, VLD, VFD per ETDRS zone)
+- Full multi-task learning: classification + biomarker regression + segmentation supervision
+- PCGrad dynamic loss weighting
 
 Version 2 target: replace the current cross-layer attention on 3 pooled vectors with full cross-layer attention on 3D spatial feature sequences.
 

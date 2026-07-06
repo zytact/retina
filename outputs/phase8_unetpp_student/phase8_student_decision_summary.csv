@@ -1,2 +1,0 @@
-decision,justification,qc_pass_rate,student_architecture,tasks,run_training_default,output_dir,mask_source_if_used,note
-B_train_unetpp_student,"Improved classical masks reached high QC pass rate, but Step C requires explicit evaluation of U-Net++ unless classical-only is justified after montage/biomarker stability review.",,compact U-Net++,"['supdeep: vessel+FAZ heads', 'cc: flow-deficit head']",True,outputs\phase8_unetpp_student,unetpp_student,"Student is upstream/frozen for classifier; trained only against QC-passed classical_improved pseudo-labels, not disease labels."
