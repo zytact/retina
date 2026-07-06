@@ -243,3 +243,11 @@
 - Added `phase10_build_loss_bundle()` for Phase 12 training integration, with `WeightedRandomSampler` disabled by default and class-weight disabling when sampler ablation is enabled to avoid double-correcting minority classes.
 - Added `Phase10DiseaseClassifierLoss` so the default disease-classifier objective is explicitly `L_total = L_cls`, excluding segmentation-student loss and train-time calibration loss.
 - Added optional outer-fold loss-plan CSV generation when `phase2_folds` is loaded, plus a smoke-test cell path and `outputs/phase10_losses/phase10_summary.json`.
+
+### Phase 11 progress
+- Added **Phase 11 — Data Augmentation** to `main.ipynb`.
+- Implemented synchronized training-only OCTA augmentation for Sup/Deep/CC: horizontal/vertical flips, ±15° rotation, small translation/scale/shear, mild brightness/contrast jitter, and mild Gaussian noise.
+- Implemented mask-aware augmentation so Phase 8 generated masks receive the same geometric transform as the images using nearest-neighbour interpolation, with no intensity or noise corruption.
+- Added clinical-feature augmentation: small Gaussian noise on observed continuous features and random one-feature observed masking during training only; generated biomarkers are left uncorrupted.
+- Added `RastaPhase11Dataset`, `make_phase11_datasets_for_fold()`, and a Phase 11-aware override of `make_phase9_datasets_for_fold(..., use_phase11_augmentation=True)` for Phase 12 integration.
+- Added a no-image-read smoke test and summary artifacts under `outputs/phase11_data_augmentation/` when the cell is run.
