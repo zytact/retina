@@ -286,3 +286,21 @@
 - Clarified the Phase 8D fast reload output so it explicitly lists executed phase labels, states `Phase 8C included: True`, and hard-asserts required Phase 8C objects such as `Phase8UNetPlusPlusStudent`, `phase8_evaluate_student_model`, and `train_phase8_unetpp_student` before allowing Phase 8D to run.
 - Verified and hardened Phase 8D resumability: `PHASE8_STUDENT_AUTO_RESUME=True`, each run loads `last.pt`, restores model/optimizer/history, resumes from the next epoch, writes `history.csv` and `last.pt` every epoch, keeps `best.pt`, and reuses existing `test_metrics.json` when a completed checkpoint is rerun.
 - Expanded Phase 8D console visibility so every epoch prints `START epoch ...` and `END epoch ...` with train/validation loss plus Dice/F1, IoU, pixel accuracy, balanced accuracy, precision, recall/sensitivity, specificity, FPR, FNR, predicted-positive rate, target-positive rate, timing, ETA, and best Dice. Test-metric prints now show the same expanded metric set.
+
+## 2026-07-07
+
+### Phase 8D mask-source policy correction
+- Updated `PLAN.md` so downstream Phase 9+ work must use `mask_source = "unetpp_student"` for this project.
+- Clarified that `classical_improved` masks are pseudo-label targets for U-Net++ training and QC, not the operational downstream mask source.
+- Updated `main.ipynb` Phase 8 artifact merge/reload behavior so old Phase 8 CSVs with `mask_source = classical_improved` are treated as `pseudo_label_source`, while the effective downstream `mask_source` is set to `unetpp_student`.
+- Added Phase 8D output scaffolding to write `phase8_selected_mask_source_summary.*` after GPU training, making the selected downstream source explicit without pretending classical mask files are U-Net++ outputs.
+- Cleared stale outputs from the edited Phase 8 cells so old local review text does not imply classical masks are the downstream source.
+
+### Phase 9 and 10 implementation
+- Added **Phase 9 - Classification Head with Prototype Augmentation** to `main.ipynb`.
+- Implemented frozen fold-specific Phase 8D U-Net++ checkpoint loading through `Phase9FrozenUNetPPMaskGenerator`; missing checkpoints now raise an error instead of falling back to classical masks.
+- Added `RastaPhase9Dataset` with unstandardized `[0, 1]` OCTA tensors for the frozen student while preserving standardized OCTA tensors for the image encoder.
+- Added `phase9_materialize_unetpp_masks_for_fold(fold)` to run completed U-Net++ checkpoints in inference mode and write fold-specific `unetpp_student` mask PNGs, biomarkers, QC, and manifests under `outputs/phase9_classifier/unetpp_student_masks/fold_{k}/`.
+- Added Phase 9 compatibility fusion using `F_cond = LayerNorm(F_octa + Proj_tab(F_tabular))`, U-Net++ masks through the mask encoder, and `[F_cond, F_mask] -> H[512]` with no second tabular concatenation.
+- Added `Phase9PrototypeClassifier`, temperature-scaling helper, MC-dropout prediction helper, dataset builders, and `build_phase9_model_for_fold()` scaffolding.
+- Added **Phase 10 - Loss Functions** to `main.ipynb` with weighted label-smoothed CE, focal loss for severe imbalance, inverse-frequency class weights, optional weighted sampler helper, and `Phase10DiseaseClassifierLoss` where `L_total = L_cls` only.

@@ -1,0 +1,7 @@
+{
+  "default_loss": "weighted_label_smoothing_ce unless severe imbalance triggers focal_loss",
+  "label_smoothing": 0.1,
+  "segmentation_loss_in_classifier": false,
+  "severe_imbalance_ratio": 10.0,
+  "weighted_random_sampler_default": false
+}

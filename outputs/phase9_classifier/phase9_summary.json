@@ -1,0 +1,7 @@
+{
+  "mask_source": "unetpp_student",
+  "mc_dropout_passes": 30,
+  "note": "Phase 9 uses frozen Phase 8D U-Net++ masks only. No classical fallback is allowed.",
+  "prototype_temperature": 0.1,
+  "requires_unetpp_checkpoints": true
+}
