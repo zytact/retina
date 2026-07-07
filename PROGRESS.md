@@ -304,3 +304,28 @@
 - Added Phase 9 compatibility fusion using `F_cond = LayerNorm(F_octa + Proj_tab(F_tabular))`, U-Net++ masks through the mask encoder, and `[F_cond, F_mask] -> H[512]` with no second tabular concatenation.
 - Added `Phase9PrototypeClassifier`, temperature-scaling helper, MC-dropout prediction helper, dataset builders, and `build_phase9_model_for_fold()` scaffolding.
 - Added **Phase 10 - Loss Functions** to `main.ipynb` with weighted label-smoothed CE, focal loss for severe imbalance, inverse-frequency class weights, optional weighted sampler helper, and `Phase10DiseaseClassifierLoss` where `L_total = L_cls` only.
+
+### Phase 11 implementation
+- Added **Phase 11 - Data Augmentation** to `main.ipynb`.
+- Implemented synchronized train-only geometric augmentation shared across Sup/Deep/CC classifier images, U-Net++ student input images, and any materialized `unetpp_student` mask tensors.
+- Kept validation/test samples unaugmented.
+- Applied mild brightness/contrast/noise only to classifier OCTA encoder inputs, not to masks and not to U-Net++ student inputs, so frozen student inference stays stable while masks remain spatially aligned.
+- Added clinical augmentation: Gaussian noise for observed continuous features and random observed-feature masking during training only.
+- Added `RastaPhase11Dataset`, `phase11_make_datasets_for_fold()`, and optional `phase11_override_phase9_dataset_builder()` for Phase 12 integration.
+- Phase 11 requires `mask_source = "unetpp_student"` and raises if the Phase 9 materialized U-Net++ manifest is missing or invalid.
+
+### Phase 12 implementation
+- Added **Phase 12 - Training Strategy** to `main.ipynb`.
+- Implemented Stage 1 as an explicit reuse report for completed Phase 3 SimCLR backbones, with no Phase 3 rerun.
+- Implemented leakage-safe outer-fold training with a patient-grouped inner validation split from the outer-training patients for early stopping and temperature scaling.
+- Integrated Phase 9, 10, and 11 components: U-Net++ `mask_source`, Phase 11 train-only augmentation, Phase 10 classifier loss bundle, prototype updates, post-hoc temperature scaling, and calibrated outer-test prediction export.
+- Added Stage 2 training with OCTA backbones frozen and Stage 3 fine-tuning with lower backbone LR, warmup/cosine LR scaling, AMP, gradient clipping, checkpoint resume, and early stopping on inner-validation macro-F1.
+- Ensured the frozen Phase 8D U-Net++ mask generator stays in eval mode even when the parent classifier is set to train mode.
+- Kept heavy training disabled by default with `PHASE12_RUN_TRAINING = False`; call `phase12_train_cross_validation(PHASE12_FOLDS)` on the training machine. If fold-specific Phase 9 U-Net++ manifests are missing, Phase 12 can auto-materialize them from the existing Phase 8D checkpoints before training.
+
+### Phase 12 resumability/logging and split-metric update
+- Updated Phase 12 stage training to print explicit `START` and `END` lines for each stage and epoch, matching the earlier long-running training cells.
+- Stage 2 and Stage 3 histories now log train, inner-validation, and outer-test loss, macro-F1, balanced accuracy, and per-class recall every epoch. Outer-test metrics are logged for visibility only; best checkpoints and early stopping still use inner-validation macro-F1.
+- Added epoch timing, elapsed time, ETA, LR list, gradient norm mean/max, prototype alpha, prototype-initialized class count, best validation macro-F1, and stale-epoch count to the logs/history.
+- Hardened resume behavior: `last.pt` stores `early_stopped` and `completed` flags, and reruns skip already completed or early-stopped stages instead of adding extra epochs.
+- Expanded Stage 1 into a reuse audit with Sup/Deep/CC backbone existence, history existence, loss summary where available, split sizes, and `stage1_reuse_report.csv/json`.
