@@ -1,0 +1,63 @@
+{
+  "executed_cells": [
+    17,
+    18,
+    19,
+    20,
+    21,
+    23,
+    24,
+    27,
+    28,
+    29,
+    30,
+    31,
+    32
+  ],
+  "executed_phase_labels": [
+    "Phase 1/2 disk fast reload",
+    "Phase 3 config",
+    "Phase 3 dataset/augmentations",
+    "Phase 3 model/loss",
+    "Phase 3 training helpers",
+    "Phase 3 training helpers override",
+    "Phase 3 preflight definitions only",
+    "Phase 4 image encoders",
+    "Phase 5 tabular encoder",
+    "Phase 6 cross-layer attention",
+    "Phase 7 fusion",
+    "Phase 8 classical masks/biomarkers",
+    "Phase 8C U-Net++ decision + training helper definitions"
+  ],
+  "fold_counts": {
+    "0": 94,
+    "1": 93,
+    "2": 98,
+    "3": 94,
+    "4": 97
+  },
+  "mask_source_counts": {
+    "classical_improved": 476
+  },
+  "next_cell": "Phase 8D \u2014 Resumable U-Net++ segmentation-student training",
+  "patient_leakage_count": 0,
+  "phase2_rows": 476,
+  "phase8_artifact_csv": "outputs\\phase8_generated_masks\\phase8_generated_masks_biomarkers.csv",
+  "phase8_qc_pass_rate": 0.9936974789915967,
+  "phase8_rows": 476,
+  "phase8_student_auto_resume": true,
+  "phase8_student_decision": "B_train_unetpp_student",
+  "phase8_student_epochs": 60,
+  "phase8_student_use_inner_val_for_test": true,
+  "phase8c_included": true,
+  "phase8c_required_objects_loaded": [
+    "PHASE8_STUDENT_AUTO_RESUME",
+    "PHASE8_STUDENT_DECISION",
+    "PHASE8_STUDENT_USE_INNER_VAL_FOR_TEST",
+    "Phase8StudentPseudoMaskDataset",
+    "Phase8UNetPlusPlusStudent",
+    "phase8_evaluate_student_model",
+    "phase8_validate_student_decision",
+    "train_phase8_unetpp_student"
+  ]
+}

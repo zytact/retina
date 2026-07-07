@@ -1,0 +1,16 @@
+{
+  "decision": "B_train_unetpp_student",
+  "justification": "Improved classical masks reached high QC pass rate, but Step C requires explicit evaluation of U-Net++ unless classical-only is justified after montage/biomarker stability review.",
+  "mask_source_if_used": "unetpp_student",
+  "metric_note": "For binary masks, foreground F1 equals Dice at the same threshold; rerun logs validation F1/Dice plus pixel accuracy, balanced accuracy, precision, recall/sensitivity, specificity, and optional outer-fold test metrics.",
+  "note": "Student is upstream/frozen for classifier; trained only against QC-passed classical_improved pseudo-labels, not disease labels.",
+  "output_dir": "outputs\\phase8_unetpp_student",
+  "qc_pass_rate": null,
+  "run_training_default": true,
+  "student_architecture": "compact U-Net++",
+  "tasks": [
+    "supdeep: vessel+FAZ heads",
+    "cc: flow-deficit head"
+  ],
+  "validation_test_protocol": "If PHASE8_STUDENT_USE_INNER_VAL_FOR_TEST=True, each existing Phase 2 fold is held out as outer test and best epochs are selected on an inner patient-grouped validation split from the remaining folds."
+}
