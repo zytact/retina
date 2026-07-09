@@ -340,3 +340,8 @@
 - Added tabular attribution support for clinical and generated-biomarker features: KernelSHAP when `shap` is installed, with an explicitly labeled occlusion fallback when it is not.
 - Added integrated Grad-CAM plus attention consistency summaries, including per-layer correlation artifacts under `outputs/phase13_explainability/integrated/`.
 - Kept heavy explainability disabled by default in the local review copy; run `phase13_run_cross_validation(PHASE13_FOLDS)` on the training/runtime machine after Phase 12 checkpoints are available.
+
+### Phase 13 logging update
+- Added live Phase 13 progress logging to `main.ipynb`.
+- Phase 13 now prints fold start/end messages, dataset sizes, checkpoint loading, task start/end messages, batch counters, sample counters, elapsed time, ETA, and artifact paths for attention dominance, Grad-CAM, tabular attribution, integrated analysis, and cross-validation combination outputs.
+- Added configurable logging controls: `PHASE13_LOG_EVERY_N_BATCHES`, `PHASE13_LOG_EVERY_N_SAMPLES`.

@@ -1,0 +1,1725 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Phase 13 &mdash; Explainability &middot; Retina CAD</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --void: #030303;
+      --deep: #0A0A0A;
+      --surface: #111111;
+      --surface-2: #171717;
+      --line: #2A2A2A;
+      --line-soft: rgba(255,255,255,0.08);
+      --text: #F5F7FA;
+      --text-mid: #B8BEC8;
+      --text-low: #8C919A;
+      --halo: #7FB2FF;
+      --halo-soft: rgba(127,178,255,0.12);
+      --mint: #8DE6BF;
+      --amber: #D8B76A;
+      --red: #FF8A95;
+      --violet: #BDA3FF;
+      --coral: #FF9A8A;
+      --cyan: #7FD9E6;
+      --max: 1220px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--void);
+      color: var(--text);
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.72;
+      text-rendering: optimizeLegibility;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 75% 6%, rgba(127,178,255,0.07), transparent 32rem),
+        radial-gradient(circle at 20% 60%, rgba(189,163,255,0.04), transparent 28rem),
+        radial-gradient(circle at 50% 90%, rgba(141,230,191,0.03), transparent 24rem);
+      z-index: -1;
+    }
+
+    a { color: var(--text); text-decoration-color: rgba(127,178,255,0.55); text-underline-offset: 0.18em; }
+    a:hover { color: var(--halo); }
+    strong { color: var(--text); font-weight: 620; }
+
+    code, pre {
+      font-family: "SFMono-Regular", Consolas, Menlo, "Ubuntu Mono", monospace;
+    }
+    code {
+      color: #E3EEFF;
+      background: rgba(127,178,255,0.07);
+      border: 1px solid rgba(127,178,255,0.15);
+      border-radius: 7px;
+      padding: 0.12rem 0.34rem;
+      white-space: nowrap;
+      font-size: 0.88em;
+    }
+
+    .shell {
+      width: min(var(--max), calc(100% - 40px));
+      margin: 0 auto;
+    }
+
+    /* ---- masthead ---- */
+    .masthead {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      backdrop-filter: blur(14px);
+      background: rgba(3,3,3,0.72);
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .masthead .shell {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 14px 0;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      min-width: 0;
+    }
+    .mark {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 38% 36%, #EEF6FF 0 10%, var(--halo) 12% 32%, rgba(127,178,255,0.2) 34% 56%, transparent 60%);
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.08), 0 0 28px rgba(127,178,255,0.16);
+      flex: 0 0 auto;
+    }
+    .brand strong { display: block; font-size: 0.95rem; font-weight: 620; white-space: nowrap; }
+    .brand span { display: block; color: var(--text-low); font-size: 0.84rem; white-space: nowrap; }
+
+    .nav-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 18px;
+      color: var(--text-low);
+      font-size: 0.92rem;
+    }
+    .nav-links a {
+      text-decoration: none;
+      border-bottom: 1px solid transparent;
+      padding-bottom: 4px;
+      transition: color 160ms ease, border-color 160ms ease;
+    }
+    .nav-links a:hover { color: var(--text); border-color: rgba(255,255,255,0.18); }
+
+    /* ---- hero ---- */
+    .hero {
+      padding: clamp(64px, 10vw, 132px) 0 56px;
+      border-bottom: 1px solid var(--line);
+    }
+    .kicker {
+      color: var(--halo);
+      font-size: 0.92rem;
+      letter-spacing: 0.02em;
+      margin-bottom: 20px;
+    }
+    .kicker span { color: var(--text-low); }
+    h1, h2, h3, h4 { margin: 0; text-wrap: balance; }
+    h1 {
+      max-width: 14ch;
+      font-size: clamp(3.2rem, 7vw, 5.8rem);
+      line-height: 0.96;
+      font-weight: 520;
+      letter-spacing: -0.035em;
+    }
+    .subtitle {
+      margin: 28px 0 0;
+      max-width: 82ch;
+      color: var(--text-mid);
+      font-size: clamp(1.05rem, 1.6vw, 1.28rem);
+      text-wrap: pretty;
+    }
+    .hero-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 18px 32px;
+      margin-top: 38px;
+      color: var(--text-low);
+      font-size: 0.96rem;
+      border-top: 1px solid var(--line-soft);
+      padding-top: 24px;
+    }
+    .hero-meta b { color: var(--text); font-weight: 560; }
+
+    /* ---- layout ---- */
+    .layout {
+      display: grid;
+      grid-template-columns: 250px minmax(0, 1fr);
+      gap: clamp(28px, 5vw, 72px);
+      align-items: start;
+      padding: 54px 0;
+    }
+
+    /* ---- sidebar nav ---- */
+    nav.sidebar {
+      position: sticky;
+      top: 84px;
+      border-top: 1px solid var(--line);
+      padding: 6px 0 22px;
+    }
+    nav.sidebar .nav-title {
+      color: var(--text);
+      margin: 14px 0 12px;
+      font-weight: 560;
+      font-size: 0.88rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    nav.sidebar a {
+      display: block;
+      color: var(--text-low);
+      text-decoration: none;
+      padding: 6px 0;
+      font-size: 0.92rem;
+      border-bottom: 1px solid transparent;
+      transition: color 140ms ease;
+    }
+    nav.sidebar a:hover { color: var(--text); }
+    nav.sidebar a.sub { padding-left: 14px; font-size: 0.86rem; color: rgba(140,145,154,0.75); }
+    nav.sidebar a.sub:hover { color: var(--text-mid); }
+
+    /* ---- article content ---- */
+    article { min-width: 0; }
+
+    .chapter {
+      padding: clamp(50px, 7vw, 90px) 0;
+      border-top: 1px solid var(--line);
+    }
+    .chapter:first-of-type { border-top: 0; padding-top: 0; }
+
+    .chapter-head {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(200px, 340px);
+      gap: 28px;
+      align-items: end;
+      margin-bottom: 34px;
+    }
+    .chapter-head h2 {
+      font-size: clamp(2rem, 4vw, 3.65rem);
+      line-height: 1.02;
+      font-weight: 520;
+      letter-spacing: -0.028em;
+    }
+    .chapter-head p { color: var(--text-low); max-width: 72ch; margin: 0; text-wrap: pretty; }
+
+    h3 {
+      font-size: clamp(1.32rem, 2vw, 1.8rem);
+      line-height: 1.16;
+      font-weight: 560;
+      letter-spacing: -0.014em;
+      margin: 32px 0 14px;
+    }
+    h4 {
+      font-size: 1.05rem;
+      line-height: 1.25;
+      font-weight: 620;
+      color: var(--text);
+      margin: 26px 0 10px;
+    }
+    h5 {
+      font-size: 0.95rem;
+      line-height: 1.3;
+      font-weight: 620;
+      color: var(--text-mid);
+      margin: 20px 0 8px;
+      letter-spacing: 0.01em;
+    }
+
+    p { margin: 0; max-width: 72ch; color: var(--text-mid); text-wrap: pretty; }
+    p + p { margin-top: 14px; }
+    p + h3, p + h4 { margin-top: 36px; }
+    h3 + p { margin-top: 10px; }
+    h4 + p { margin-top: 8px; }
+    h5 + p { margin-top: 6px; }
+
+    ul, ol { color: var(--text-mid); padding-left: 1.25rem; margin: 12px 0 0; max-width: 72ch; }
+    li + li { margin-top: 7px; }
+    li > p:first-child { margin-top: 0; }
+
+    /* ---- components ---- */
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 22px;
+    }
+    .panel-soft {
+      background: linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.015));
+      border: 1px solid var(--line-soft);
+      border-radius: 16px;
+      padding: 22px;
+    }
+    .panel-halo {
+      background: linear-gradient(180deg, rgba(127,178,255,0.06), rgba(127,178,255,0.02));
+      border: 1px solid rgba(127,178,255,0.18);
+      border-radius: 16px;
+      padding: 22px;
+    }
+
+    .split {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(240px, 380px);
+      gap: 32px;
+      align-items: start;
+      margin: 28px 0;
+    }
+    .split-alt {
+      grid-template-columns: minmax(240px, 380px) minmax(0, 1fr);
+    }
+    .split > * { min-width: 0; }
+    .measure > * + * { margin-top: 16px; }
+    .stack > * + * { margin-top: 22px; }
+
+    /* ---- diagrams ---- */
+    .diagram {
+      margin: 28px 0;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      padding: 24px 0;
+    }
+    .diagram-label {
+      color: var(--text-low);
+      font-size: 0.86rem;
+      margin-top: 12px;
+      text-align: center;
+    }
+    .diagram svg { display: block; width: 100%; max-height: 400px; }
+
+    .flow-chain {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px 6px;
+      padding: 18px 0;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      margin: 20px 0;
+    }
+    .flow-chain .node {
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px 16px;
+      font-size: 0.92rem;
+      color: var(--text-mid);
+      white-space: nowrap;
+    }
+    .flow-chain .node.active {
+      border-color: rgba(127,178,255,0.3);
+      color: var(--text);
+    }
+    .flow-chain .arrow {
+      color: var(--text-low);
+      font-size: 1.2rem;
+      flex: 0 0 auto;
+    }
+
+    .formula-block {
+      margin: 18px 0;
+      overflow-x: auto;
+      color: #DCE8FF;
+      background: #070707;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 18px 22px;
+      line-height: 1.65;
+      font-size: 0.95rem;
+    }
+    .formula-block .desc {
+      color: var(--text-low);
+      font-size: 0.84rem;
+      margin-top: 10px;
+      border-top: 1px solid var(--line-soft);
+      padding-top: 10px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 18px 0;
+      border-top: 1px solid var(--line);
+    }
+    th, td {
+      text-align: left;
+      vertical-align: top;
+      padding: 12px 12px 12px 0;
+      border-bottom: 1px solid var(--line);
+    }
+    th { color: var(--text); font-weight: 560; font-size: 0.92rem; }
+    td { color: var(--text-mid); font-size: 0.92rem; }
+
+    .signal {
+      margin: 24px 0;
+      padding: 18px 0;
+      border-top: 1px solid rgba(127,178,255,0.35);
+      border-bottom: 1px solid rgba(127,178,255,0.35);
+      color: var(--text-mid);
+    }
+    .signal strong { color: var(--halo); }
+    .signal.warn { border-color: rgba(255,138,149,0.40); }
+    .signal.warn strong { color: var(--red); }
+    .signal.ok { border-color: rgba(141,230,191,0.40); }
+    .signal.ok strong { color: var(--mint); }
+    .signal.caution { border-color: rgba(216,183,106,0.40); }
+    .signal.caution strong { color: var(--amber); }
+
+    .term-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0 34px;
+      border-top: 1px solid var(--line);
+      margin: 24px 0;
+    }
+    .term-grid .term {
+      padding: 18px 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .term-grid .term h5 { margin: 0 0 6px; }
+    .term-grid .term p { font-size: 0.92rem; }
+
+    .metric-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0;
+      margin: 24px 0;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+    }
+    .metric-cell {
+      padding: 20px 18px;
+      border-right: 1px solid var(--line);
+    }
+    .metric-cell:last-child { border-right: 0; }
+    .metric-cell .num {
+      color: var(--text);
+      font-size: clamp(1.6rem, 2.8vw, 2.5rem);
+      line-height: 1;
+      letter-spacing: -0.03em;
+      font-weight: 560;
+    }
+    .metric-cell .cap {
+      color: var(--text-low);
+      margin-top: 6px;
+      font-size: 0.88rem;
+    }
+
+    .note-box {
+      border-left: 2px solid var(--halo);
+      padding: 12px 0 12px 18px;
+      margin: 18px 0;
+    }
+    .note-box p { margin: 0; color: var(--text-mid); font-size: 0.92rem; }
+    .note-box.caution { border-left-color: var(--amber); }
+    .note-box.warn { border-left-color: var(--red); }
+
+    .question-list { counter-reset: q; }
+    .question-list .qitem {
+      counter-increment: q;
+      padding: 16px 0;
+      border-bottom: 1px solid var(--line-soft);
+    }
+    .question-list .qitem:last-child { border-bottom: 0; }
+    .question-list .qitem::before {
+      content: "Q" counter(q);
+      color: var(--halo);
+      font-weight: 560;
+      font-size: 0.85rem;
+      letter-spacing: 0.02em;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    /* ---- legend swatches ---- */
+    .legend-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px 24px;
+      margin: 14px 0;
+    }
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-mid);
+      font-size: 0.88rem;
+    }
+    .swatch {
+      width: 12px;
+      height: 12px;
+      border-radius: 4px;
+      flex: 0 0 auto;
+    }
+    .swatch.blue   { background: var(--halo); }
+    .swatch.mint   { background: var(--mint); }
+    .swatch.amber  { background: var(--amber); }
+    .swatch.red    { background: var(--red); }
+    .swatch.violet { background: var(--violet); }
+    .swatch.cyan   { background: var(--cyan); }
+    .swatch.coral  { background: var(--coral); }
+
+    .viz-demo {
+      background: #070707;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 28px;
+      margin: 24px 0;
+      overflow: hidden;
+    }
+    .viz-demo .viz-title {
+      color: var(--text-low);
+      font-size: 0.86rem;
+      margin-bottom: 14px;
+      letter-spacing: 0.02em;
+    }
+
+    .heatmap-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin: 8px 0;
+    }
+    .heatmap-row .hm-cell {
+      aspect-ratio: 1;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.06);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.72rem;
+      color: rgba(255,255,255,0.3);
+    }
+    .heatmap-row .hm-label {
+      text-align: center;
+      font-size: 0.78rem;
+      color: var(--text-low);
+      margin-top: 4px;
+    }
+
+    /* ---- footer ---- */
+    .foot {
+      padding: 48px 0 80px;
+      color: var(--text-low);
+      border-top: 1px solid var(--line);
+      margin-top: 20px;
+    }
+    .foot p { color: var(--text-low); font-size: 0.92rem; }
+
+    /* ---- responsive ---- */
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 1fr; }
+      nav.sidebar {
+        position: relative;
+        top: auto;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0 18px;
+      }
+      nav.sidebar .nav-title { grid-column: 1 / -1; }
+      .chapter-head, .split { grid-template-columns: 1fr; }
+      .term-grid { grid-template-columns: 1fr; }
+      .metric-row { grid-template-columns: repeat(2, 1fr); }
+      .metric-cell:nth-child(even) { border-right: 0; }
+      .heatmap-row { grid-template-columns: repeat(2, 1fr); }
+      .brand span { display: none; }
+    }
+    @media (max-width: 540px) {
+      .metric-row { grid-template-columns: 1fr; }
+      .metric-cell { border-right: 0; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ====== MASTHEAD ====== -->
+<header class="masthead">
+  <div class="shell">
+    <div class="brand">
+      <div class="mark"></div>
+      <div>
+        <strong>Retina CAD</strong>
+        <span>RASTA &middot; OCTA &middot; Explainability</span>
+      </div>
+    </div>
+    <nav class="nav-links">
+      <a href="architecture-overview-guide.html">Architecture</a>
+      <a href="phase-4-to-8-explainer.html">Pipeline</a>
+      <a href="segmentation-pseudo-masks-explainer.html">Masks</a>
+      <a href="attention-architecture-explainer.html">Attention</a>
+    </nav>
+  </div>
+</header>
+
+<!-- ====== HERO ====== -->
+<section class="hero">
+  <div class="shell">
+    <div class="kicker">Phase 13 <span>&middot; Explainability</span></div>
+    <h1>Opening the Black Box</h1>
+    <p class="subtitle">
+      Understanding why a model makes its prediction is as important as the prediction itself&mdash;especially in
+      medical imaging. This phase builds a comprehensive explainability suite: spatial heatmaps per retinal layer,
+      cross-layer attention analysis, clinical-feature attribution, and an integrated synthesis that connects all
+      three explanation modalities.
+    </p>
+    <div class="hero-meta">
+      <span><b>Methods</b> Grad-CAM &middot; Attention Rollout &middot; SHAP &middot; Integrated Analysis</span>
+      <span><b>Targets</b> SVC &middot; DVC &middot; CC &middot; Clinical Features &middot; Biomarkers</span>
+    </div>
+  </div>
+</section>
+
+<!-- ====== MAIN LAYOUT ====== -->
+<div class="shell">
+<div class="layout">
+
+<!-- ====== SIDEBAR ====== -->
+<nav class="sidebar">
+  <div class="nav-title">Contents</div>
+  <a href="#intro">Why Explainability Matters</a>
+  <a href="#gradcam" class="sub">Grad-CAM &mdash; Spatial Heatmaps</a>
+  <a href="#attention" class="sub">Attention &mdash; Layer Dominance</a>
+  <a href="#shap" class="sub">SHAP &mdash; Clinical Attribution</a>
+  <a href="#integrated" class="sub">Integrated Synthesis</a>
+  <a href="#implementation">Technical Implementation</a>
+  <a href="#reading">Clinical Interpretation Guide</a>
+  <a href="#limitations">Limitations &amp; Caveats</a>
+  <a href="#references">References</a>
+</nav>
+
+<!-- ====== ARTICLE ====== -->
+<article>
+
+<!-- ============================================================ -->
+<!-- INTRO -->
+<!-- ============================================================ -->
+<section class="chapter" id="intro">
+
+  <div class="chapter-head">
+    <h2>Why Explainability Matters</h2>
+    <p>Medical AI cannot be a black box. Regulators, clinicians, and patients all need to understand&mdash;at
+    minimum&mdash;what drove a model's decision.</p>
+  </div>
+
+  <p>
+    Deep learning models for medical image analysis are often described as "black boxes": they map pixels to
+    predictions through millions of learned parameters in a way that is opaque to human inspection. For a
+    retinal screening tool that predicts coronary artery disease risk from OCTA images, this opacity is not
+    acceptable. A clinician who sees a "high risk" prediction needs to know: <em>Which part of the retina drove
+    that decision? Was it the superficial capillary layer, the deep capillary layer, or the choriocapillaris?
+    Which clinical risk factors contributed most?</em>
+  </p>
+
+  <p>
+    Explainability in medical AI serves several distinct purposes:
+  </p>
+
+  <ul>
+    <li><strong>Clinical trust</strong> &mdash; Clinicians are far more likely to trust and adopt a system
+      whose reasoning they can examine and verify against their own expertise.</li>
+    <li><strong>Diagnostic insight</strong> &mdash; The explanations themselves may reveal novel imaging
+      biomarkers. If the model consistently focuses on a specific vascular region in patients with
+      familial hypercholesterolemia, that region may warrant further clinical investigation.</li>
+    <li><strong>Bias detection</strong> &mdash; Heatmaps can reveal shortcut learning. A model that
+      focuses on the image border, a watermark, or a patient ID label is not learning clinically relevant
+      features&mdash;it is cheating. Explainability exposes this.</li>
+    <li><strong>Regulatory compliance</strong> &mdash; Frameworks such as the EU AI Act and FDA guidance
+      for AI/ML-enabled medical devices increasingly require transparent and interpretable model behavior.</li>
+    <li><strong>Error analysis</strong> &mdash; When the model is wrong, explainability helps answer
+      <em>why</em>. Was it distracted by an artifact? Did it overweigh a particular clinical feature?
+      Understanding failure modes guides targeted improvements.</li>
+  </ul>
+
+  <div class="signal">
+    <strong>Three complementary views.</strong> This phase implements three distinct explanation
+    modalities&mdash;spatial (where in the image), attentional (which retinal layer), and
+    feature-based (which clinical variables)&mdash;and then integrates them into a unified
+    diagnostic narrative for each patient.
+  </div>
+
+  <p>
+    No single explanation method is perfect. Each has blind spots. By combining Grad-CAM (spatial attribution),
+    attention-dominance analysis (layer attribution), and SHAP (feature attribution), we triangulate on the
+    model's reasoning from three independent angles. When they agree, we can be more confident. When they
+    disagree, that tension itself is informative.
+  </p>
+
+  <p>
+    The sections that follow explain each method in detail: what it is, how it works mathematically, what it
+    produces visually, how to interpret the outputs, and what they mean specifically for the Retina CAD project.
+  </p>
+
+</section>
+
+<!-- ============================================================ -->
+<!-- GRAD-CAM -->
+<!-- ============================================================ -->
+<section class="chapter" id="gradcam">
+
+  <div class="chapter-head">
+    <h2>Grad-CAM &mdash; Spatial Heatmaps Per Layer</h2>
+    <p>Gradient-weighted Class Activation Mapping answers the most basic question: <em>which pixels
+    mattered most?</em></p>
+  </div>
+
+  <h3>What is Grad-CAM?</h3>
+
+  <p>
+    Grad-CAM (Gradient-weighted Class Activation Mapping) is a technique that produces a coarse localization
+    heatmap highlighting the regions of an input image that were most influential for a particular class
+    prediction. It was introduced by Selvaraju et al. (2017) and has become a standard explainability tool in
+    computer vision, especially for medical imaging.
+  </p>
+
+  <p>
+    Unlike some older methods (like occlusion sensitivity, which requires many forward passes), Grad-CAM
+    requires only a single forward and backward pass through the network, making it computationally efficient
+    enough to run on every test sample.
+  </p>
+
+  <h4>How it works: the intuition</h4>
+
+  <p>
+    Deep convolutional networks learn increasingly abstract features as information flows through their layers.
+    Early layers detect edges and texture; middle layers detect shapes and patterns; the final convolutional
+    layer before global average pooling contains the highest-level spatial feature maps&mdash;each channel
+    activates in response to a particular visual concept (e.g., "vessel-like structures," "dark regions," or
+    "textured areas").
+  </p>
+
+  <p>
+    Grad-CAM works by asking: "Which of these high-level feature maps are most important for predicting class
+    X?" It measures importance by computing the gradient of the class score with respect to each feature map.
+    A feature map that has a strong positive gradient for class X is one that the model considers evidence
+    <em>for</em> class X. The heatmap is a weighted combination of these feature maps, showing where the
+    model looked to make its decision.
+  </p>
+
+  <div class="formula-block">
+    <strong>Grad-CAM computation</strong><br><br>
+    For a given class <em>c</em> and feature map <em>A<sup>k</sup></em> at the final convolutional layer:<br><br>
+    <strong>&alpha;<sub>k</sub><sup>c</sup></strong> = 1/Z &middot; &sum;<sub>i</sub> &sum;<sub>j</sub>
+    &part;<em>y<sup>c</sup></em> / &part;<em>A<sup>k</sup><sub>ij</sub></em><br><br>
+    <strong>L<sup>c</sup><sub>Grad-CAM</sub></strong> = ReLU( &sum;<sub>k</sub> &alpha;<sub>k</sub><sup>c</sup>
+    &middot; <em>A<sup>k</sup></em> )<br><br>
+    <span class="desc">
+      &alpha;<sub>k</sub><sup>c</sup> is the importance weight for feature map <em>k</em> with respect to
+      class <em>c</em>, computed by global-average-pooling the gradients. The final heatmap is a weighted
+      sum of feature maps, passed through ReLU to show only positive (evidence-for) regions. The heatmap is
+      then upsampled to the input image resolution.
+    </span>
+  </div>
+
+  <h4>Why the ReLU?</h4>
+
+  <p>
+    Grad-CAM applies ReLU after summing weighted feature maps. This zeroes out negative contributions&mdash;
+    pixels whose presence would push the model <em>away</em> from class <em>c</em>. The result is a heatmap
+    that shows only regions that provide positive evidence for the target class. This is clinically
+    appropriate: we want to see what the model <em>uses</em> to diagnose a condition, not what it uses to
+    rule it out (though that can also be informative, and the raw un-ReLU'd map is available for inspection).
+  </p>
+
+  <h3>Why Grad-CAM for Retina CAD?</h3>
+
+  <p>
+    In the Retina CAD project, each OCTA scan has three layers: Superficial Vascular Complex (SVC), Deep
+    Vascular Complex (DVC), and Choriocapillaris (CC). These layers are processed by separate encoders
+    because they have fundamentally different vascular architecture. Grad-CAM is applied independently to
+    each encoder's final convolutional feature map.
+  </p>
+
+  <p>This produces three distinct heatmaps per patient, per prediction:</p>
+
+  <ul>
+    <li><strong>SVC heatmap</strong> &mdash; Shows which regions of the superficial vascular plexus drove
+      the classification. In diseases affecting arteriolar density or capillary dropout (e.g., hypertensive
+      retinopathy, diabetic microangiopathy), the SVC heatmap typically highlights regions with abnormal
+      vessel morphology.</li>
+    <li><strong>DVC heatmap</strong> &mdash; Highlights regions in the deep capillary layer. DVC pathology
+      is often associated with deeper microvascular changes. The DVC is particularly sensitive to
+      diabetic retinopathy and venous occlusive disease.</li>
+    <li><strong>CC heatmap</strong> &mdash; Shows regions of choriocapillaris perfusion that influenced
+      the decision. CC flow deficits are associated with choroidal ischemia and may correlate with
+      systemic cardiovascular risk.</li>
+  </ul>
+
+  <div class="panel-soft">
+    <strong>Clinical intuition:</strong> In a patient with familial hypercholesterolemia (FAMILIPO
+    cohort), you might expect the SVC heatmap to highlight peripapillary or macular arterioles (where
+    atherosclerosis manifests), while the CC heatmap might highlight patchy perfusion deficits. In a
+    control patient (RETINORM), the heatmaps would ideally be diffuse or focus on anatomically normal
+    features&mdash;or the model might rely more on clinical features, producing weaker spatial
+    attention.
+  </div>
+
+  <h3>What the outputs look like</h3>
+
+  <p>
+    For each patient and each layer, the system produces:
+  </p>
+
+  <div class="viz-demo">
+    <div class="viz-title">Per-layer heatmap overlay &mdash; conceptual layout</div>
+    <div class="heatmap-row">
+      <div>
+        <div class="hm-cell" style="background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 30%, #3a3a5e 60%, #6a4a7e 100%);">SVC</div>
+        <div class="hm-label">Original</div>
+      </div>
+      <div>
+        <div class="hm-cell" style="background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 30%, #3a3a5e 60%, #6a4a7e 100%);">SVC</div>
+        <div class="hm-label">Grad-CAM</div>
+      </div>
+      <div>
+        <div class="hm-cell" style="background: linear-gradient(135deg, #0d0d0d 0%, #1a2e1a 30%, #3a5e3a 60%, #4a7e4a 100%);">DVC</div>
+        <div class="hm-label">Original</div>
+      </div>
+      <div>
+        <div class="hm-cell" style="background: linear-gradient(135deg, #0d0d0d 0%, #1a2e1a 30%, #3a5e3a 60%, #4a7e4a 100%);">DVC</div>
+        <div class="hm-label">Grad-CAM</div>
+      </div>
+    </div>
+    <div class="heatmap-row" style="grid-template-columns: 1fr 1fr;">
+      <div>
+        <div class="hm-cell" style="background: linear-gradient(135deg, #0f0f0f 0%, #2e1a1a 30%, #5e3a3a 60%, #7e4a4a 100%);">CC</div>
+        <div class="hm-label">Original</div>
+      </div>
+      <div>
+        <div class="hm-cell" style="background: linear-gradient(135deg, #0f0f0f 0%, #2e1a1a 30%, #5e3a3a 60%, #7e4a4a 100%);">CC</div>
+        <div class="hm-label">Grad-CAM</div>
+      </div>
+    </div>
+    <div class="diagram-label">
+      Simulated layout. Actual heatmaps are overlaid on the original OCTA en-face image using a
+      colormap (viridis or hot) where bright regions indicate high attribution.
+    </div>
+  </div>
+
+  <p>
+    Each heatmap is saved as:
+  </p>
+  <ul>
+    <li>A <strong>PNG overlay</strong> &mdash; The original OCTA image with a semi-transparent colormap
+      overlay, suitable for clinical review and publication figures.</li>
+    <li>A <strong>raw .npy array</strong> &mdash; The numerical heatmap values (at original feature-map
+      resolution, upsampled to 224&times;224), enabling quantitative analysis: "What fraction of the
+      heatmap's mass falls within the FAZ region?"</li>
+    <li>A <strong>summary CSV</strong> &mdash; Per-patient, per-layer metadata including the predicted
+      class, true label, heatmap mean/max intensity, and spatial metrics.</li>
+  </ul>
+
+  <h4>Class-targeted vs. predicted-class heatmaps</h4>
+
+  <p>
+    The system supports two modes:
+  </p>
+  <ul>
+    <li><strong>Predicted-class mode:</strong> Grad-CAM is computed for the class the model actually
+      predicted. This answers: "Why did you choose this diagnosis?"</li>
+    <li><strong>Class-targeted mode:</strong> Grad-CAM is computed for a specific class of interest
+      (e.g., MRCC), regardless of what the model predicted. This answers: "What evidence <em>would</em>
+      you need to see to diagnose this condition in this patient?"</li>
+  </ul>
+
+  <p>
+    Both modes are diagnostically useful and are generated during the Phase 13 explainability run.
+  </p>
+
+  <h3>Cross-cohort heatmap comparison</h3>
+
+  <p>
+    One of the most informative analyses is comparing typical heatmap patterns across cohorts. For each
+    cohort (RETINORM, ORNET, FAMILIPO, MRCC), the system aggregates heatmaps from all correctly classified
+    patients to identify cohort-specific spatial patterns.
+  </p>
+
+  <div class="split">
+    <div class="measure">
+      <p><strong>Expected patterns by cohort:</strong></p>
+      <ul>
+        <li><strong>RETINORM (Control)</strong> &mdash; Diffuse, low-intensity heatmaps across all layers.
+          The model may rely more on clinical features ("no cardiovascular risk factors") than on spatial
+          features, producing weaker Grad-CAM signals.</li>
+        <li><strong>ORNET (Sleep Apnea)</strong> &mdash; Possible SVC and DVC hotspots in the macular
+          region, consistent with known effects of intermittent hypoxia on retinal microvasculature.</li>
+        <li><strong>FAMILIPO (Hypercholesterolemia)</strong> &mdash; SVC heatmaps may highlight arteriolar
+          regions. CC heatmaps may show peripapillary flow-deficit patterns reflecting choroidal
+          atherosclerosis.</li>
+        <li><strong>MRCC (Cardiac surgery / CAD)</strong> &mdash; The most severe cardiovascular cohort.
+          Likely multi-layer involvement: SVC capillary dropout, DVC rarefaction, and CC flow deficits
+          all contributing to the prediction.</li>
+      </ul>
+    </div>
+    <div class="panel-soft measure">
+      <strong>Why this matters.</strong> If the expected cohort-specific patterns match clinical knowledge,
+      it validates that the model learned biologically plausible features. If they do not&mdash;if the
+      model focuses on image artifacts, watermarks, or unexpected regions&mdash;it signals shortcut learning
+      that must be addressed before deployment.
+    </div>
+  </div>
+
+</section>
+
+<!-- ============================================================ -->
+<!-- ATTENTION -->
+<!-- ============================================================ -->
+<section class="chapter" id="attention">
+
+  <div class="chapter-head">
+    <h2>Attention Rollout &mdash; Layer Dominance Analysis</h2>
+    <p>Which retinal layer does the model rely on most? The cross-layer attention module reveals each
+    layer's contribution to every prediction.</p>
+  </div>
+
+  <h3>The cross-layer attention mechanism</h3>
+
+  <p>
+    Before explainability, recall how the model processes retinal layers. Phase 6 of the pipeline implements
+    a cross-layer attention module that operates on the three encoded layer tokens:
+  </p>
+
+  <div class="flow-chain">
+    <span class="node active">SVC token</span>
+    <span class="arrow">&rarr;</span>
+    <span class="node">Layer-identity embedding</span>
+    <span class="arrow">&rarr;</span>
+    <span class="node active">DVC token</span>
+    <span class="arrow">&rarr;</span>
+    <span class="node">Layer-identity embedding</span>
+    <span class="arrow">&rarr;</span>
+    <span class="node active">CC token</span>
+    <span class="arrow">&rarr;</span>
+    <span class="node">Layer-identity embedding</span>
+    <span class="arrow">&rarr;</span>
+    <span class="node">Multi-head Self-Attention</span>
+    <span class="arrow">&rarr;</span>
+    <span class="node">Mean Pool &rarr; F<sub>octa</sub></span>
+  </div>
+
+  <p>
+    The three tokens (each 256-dimensional) are stacked into a sequence S = [T<sub>Sup</sub>;
+    T<sub>Deep</sub>; T<sub>CC</sub>] and pass through a transformer encoder block with 8 attention
+    heads. The attention weight matrix A &isin; &#8477;<sup>3&times;3</sup> captures how much each
+    layer "attends to" every other layer.
+  </p>
+
+  <div class="formula-block">
+    <strong>Multi-head self-attention on layer tokens</strong><br><br>
+    Given token sequence S &isin; &#8477;<sup>3 &times; 256</sup>:<br><br>
+    Attention(<em>Q, K, V</em>) = softmax(<em>QK<sup>T</sup></em> / &radic;256) &middot; <em>V</em><br><br>
+    Head<sub>h</sub> = Attention(<em>SW<sub>h</sub><sup>Q</sup></em>, <em>SW<sub>h</sub><sup>K</sup></em>,
+    <em>SW<sub>h</sub><sup>V</sup></em>)<br><br>
+    MultiHead(<em>S</em>) = Concat(Head<sub>1</sub>, ..., Head<sub>8</sub>) &middot; W<sup>O</sup><br><br>
+    <span class="desc">
+      Each head produces a 3&times;3 attention matrix, where entry (i, j) represents how much layer i
+      "attends to" layer j. The matrices are averaged across heads to produce a single per-sample
+      3&times;3 attention matrix.
+    </span>
+  </div>
+
+  <h3>Layer-dominance scores</h3>
+
+  <p>
+    From the per-sample attention matrix A &isin; &#8477;<sup>3&times;3</sup>, we compute a
+    <strong>layer-dominance score</strong> for each retinal layer:
+  </p>
+
+  <div class="formula-block">
+    <strong>Layer-dominance score</strong><br><br>
+    dominance<sub>k</sub> = (1/N<sub>queries</sub>) &middot; &sum;<sub>i</sub> A<sub>ik</sub><br><br>
+    for k &isin; {Sup, Deep, CC}<br><br>
+    <span class="desc">
+      The dominance score for layer k is the average attention that all query tokens (rows) pay to
+      layer k (column k). A higher score means that, across all three tokens attending to each other,
+      layer k's features received the most "attention weight."
+    </span>
+  </div>
+
+  <p>
+    This produces three scores per sample that sum to 1.0. A dominance of (0.5, 0.3, 0.2) means the
+    SVC contributed roughly half of the layer-attention signal, while CC contributed the least.
+  </p>
+
+  <h4>Clinical interpretation of dominance scores</h4>
+
+  <p>
+    Layer dominance tells us which retinal layer's encoded features the model found most informative
+    for classifying a particular patient. When aggregated across a cohort, it tests hypotheses about
+    disease pathophysiology:
+  </p>
+
+  <div class="split">
+    <div class="measure stack">
+      <div class="panel-soft">
+        <strong>Hypothetical cohort dominance profile</strong>
+        <table>
+          <tr><th>Cohort</th><th>Sup</th><th>Deep</th><th>CC</th><th>Interpretation</th></tr>
+          <tr><td>RETINORM</td><td>0.38</td><td>0.34</td><td>0.28</td><td>Near-uniform; no layer dominates in healthy controls</td></tr>
+          <tr><td>ORNET</td><td>0.42</td><td>0.38</td><td>0.20</td><td>SVC+Deep dominant; CC less relevant in sleep apnea</td></tr>
+          <tr><td>FAMILIPO</td><td>0.45</td><td>0.28</td><td>0.27</td><td>SVC strongly dominant; atherosclerosis in superficial arterioles</td></tr>
+          <tr><td>MRCC</td><td>0.35</td><td>0.30</td><td>0.35</td><td>CC elevation; choroidal perfusion deficits in severe CAD</td></tr>
+        </table>
+        <div style="color: var(--text-low); font-size: 0.86rem; margin-top: 10px;">
+          These are illustrative. Actual dominance scores depend on the trained model and data distribution.
+        </div>
+      </div>
+    </div>
+    <div class="measure stack">
+      <p><strong>Why this matters clinically:</strong></p>
+      <ul>
+        <li><strong>SVC dominance</strong> suggests the model identifies disease primarily through
+          superficial vascular changes&mdash;arteriolar narrowing, capillary dropout, or tortuosity
+          visible in the superficial plexus.</li>
+        <li><strong>Deep dominance</strong> suggests deeper capillary changes, often associated with
+          venous insufficiency or diabetic microangiopathy.</li>
+        <li><strong>CC dominance</strong> highlights choroidal perfusion. In cardiovascular disease,
+          choroidal flow deficits may parallel systemic endothelial dysfunction, making the CC a
+          "window" into systemic vascular health.</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>Patient-level vs. cohort-level analysis</h3>
+
+  <p>
+    The system computes dominance at both levels:
+  </p>
+  <ul>
+    <li><strong>Per-patient:</strong> Each patient receives (dominance<sub>Sup</sub>,
+      dominance<sub>Deep</sub>, dominance<sub>CC</sub>) for their prediction. This enables individual
+      case review&mdash;"Why did this specific patient get flagged as high risk? The model focused on
+      the CC."</li>
+    <li><strong>Cohort-level:</strong> Dominance scores are averaged across all correctly classified
+      patients in each cohort, with confidence intervals. This tests whether the model consistently
+      relies on the same layers for each disease group.</li>
+  </ul>
+
+  <div class="signal caution">
+    <strong>Important caveat.</strong> Attention dominance is a proxy, not proof. It measures what the
+    model <em>attends to</em>, not necessarily what is causally important. Layer-ablation experiments
+    (Phase 15: "Sup only," "Deep only," "CC only") provide stronger causal evidence. Dominance analysis
+    is best used to generate hypotheses that can be tested with ablations.
+  </div>
+
+  <p>
+    The attention analysis outputs include:
+  </p>
+  <ul>
+    <li><strong>Per-sample attention matrices</strong> &mdash; Saved as .npy arrays for re-analysis.</li>
+    <li><strong>Cohort dominance summary</strong> &mdash; CSV with per-cohort mean, std, and 95% CI
+      for each layer.</li>
+    <li><strong>Patient-level dominance CSV</strong> &mdash; Each row is a patient with their Sup,
+      Deep, CC dominance scores and predicted/true labels.</li>
+    <li><strong>Dominance-visualization plots</strong> &mdash; Stacked bar charts or ternary
+      diagrams showing the distribution of layer attention across cohorts.</li>
+  </ul>
+
+  <h3>Sample-level analysis: supra-threshold attention</h3>
+
+  <p>
+    Beyond the mean dominance score, the system also flags patients where a single layer's dominance
+    exceeds a threshold (e.g., &gt; 0.5), indicating the model heavily relied on that layer alone.
+    These "single-layer-reliance" cases are clinically interesting: they may represent patients whose
+    disease has a particularly strong signature in one vascular compartment.
+  </p>
+
+</section>
+
+<!-- ============================================================ -->
+<!-- SHAP -->
+<!-- ============================================================ -->
+<section class="chapter" id="shap">
+
+  <div class="chapter-head">
+    <h2>SHAP &mdash; Clinical Feature Attribution</h2>
+    <p>Which clinical risk factors drive each prediction? SHAP values attribute the model's output to
+    individual input features, grounded in cooperative game theory.</p>
+  </div>
+
+  <h3>What is SHAP?</h3>
+
+  <p>
+    SHAP (SHapley Additive exPlanations) is a unified framework for interpreting model predictions based
+    on Shapley values from cooperative game theory (Lundberg &amp; Lee, 2017). In this framework, each
+    input feature is a "player" in a coalition game, and the "payout" is the model's prediction. The
+    Shapley value for a feature tells us how much that feature contributed to the difference between the
+    actual prediction and the average prediction.
+  </p>
+
+  <div class="formula-block">
+    <strong>Shapley value for feature i</strong><br><br>
+    &phi;<sub>i</sub> = &sum;<sub>S &sube; F \ {i}</sub>
+    |S|! (|F| - |S| - 1)! / |F|! &middot; [f<sub>S &cup; {i}</sub>(x<sub>S &cup; {i}</sub>) - f<sub>S</sub>(x<sub>S</sub>)]<br><br>
+    <span class="desc">
+      Where F is the set of all features, S is a subset of features not containing i, and f<sub>S</sub>
+      is the model's prediction conditioned on the features in S. The Shapley value is the average
+      marginal contribution of feature i across all possible feature subsets. For efficiency, the
+      system uses KernelSHAP, an approximation that samples feature subsets rather than enumerating
+      all 2<sup>|F|</sup> combinations.
+    </span>
+  </div>
+
+  <p>
+    <strong>The key property that makes SHAP valuable:</strong> Shapley values are the only attribution
+    method that satisfies four desirable axioms&mdash;efficiency (the sum of all Shapley values plus the
+    baseline equals the prediction), symmetry (equal-contribution features get equal values), dummy (a
+    feature that never changes the prediction gets zero attribution), and additivity (the attributions of
+    a sum of models equal the sum of individual model attributions).
+  </p>
+
+  <h3>What features does SHAP analyze?</h3>
+
+  <p>
+    The tabular encoder in the Retina CAD model takes two groups of features:
+  </p>
+
+  <div class="term-grid">
+    <div class="term">
+      <h5>Clinical features</h5>
+      <p>Age, sex, BMI, smoking status (never/former/current), hypertension, diabetes, dyslipidemia,
+        plus additional cardiovascular covariates from the RASTA spreadsheet (stroke, vascular disease,
+        CHA2DS2-VASc components).</p>
+    </div>
+    <div class="term">
+      <h5>Generated OCTA biomarkers</h5>
+      <p>Vessel density (Sup, Deep), vessel skeleton density, FAZ area/perimeter/circularity/centroid
+        distance (Sup, Deep), CC flow-deficit percentage/count/mean area/median area.</p>
+    </div>
+  </div>
+
+  <p>
+    SHAP attributions are computed <strong>separately</strong> for clinical features and generated
+    biomarkers. This prevents the larger number of biomarker features from diluting the clinical signal
+    and allows independent interpretation of each modality.
+  </p>
+
+  <h3>Visualizations produced</h3>
+
+  <p>The SHAP analysis generates several types of plots, each serving a different analytical purpose:</p>
+
+  <h4>Per-patient waterfall plots</h4>
+
+  <p>
+    A waterfall plot shows the prediction for a single patient as an additive decomposition. It starts at
+    the model's expected (average) output (E[f(x)]), then shows each feature pushing the prediction up or
+    down by its Shapley value. The final value is the model's actual prediction for that patient.
+  </p>
+
+  <div class="viz-demo">
+    <div class="viz-title">Waterfall plot &mdash; conceptual example for a single patient</div>
+    <div style="font-family: ui-monospace, SFMono-Regular, monospace; font-size: 0.85rem; color: var(--text-mid); line-height: 2;">
+      E[f(x)] = 0.25 (baseline)<br>
+      <span style="color: var(--halo);">+ Age = 72 &rarr; +0.18</span><br>
+      <span style="color: var(--red);">+ Hypertension = 1 &rarr; +0.12</span><br>
+      <span style="color: var(--mint);">- Smoking = 0 &rarr; -0.03</span><br>
+      <span style="color: var(--halo);">+ Vessel density (Sup) = 0.31 &rarr; +0.09</span><br>
+      <span style="color: var(--red);">+ CC flow deficit = 0.22 &rarr; +0.14</span><br>
+      <span style="color: var(--mint);">- BMI = 24.3 &rarr; -0.02</span><br>
+      <span style="border-top: 1px solid var(--line); display: inline-block; width: 100%;"></span><br>
+      <strong style="color: var(--text);">f(x) = 0.73</strong> &larr; predicted risk score
+    </div>
+    <div class="diagram-label">
+      In this hypothetical example, advanced age, hypertension, and elevated Sup vessel density
+      and CC flow deficit all pushed the prediction upward. Note that SHAP shows <em>direction</em>
+      (positive = pushes toward the cohort, negative = pushes away).
+    </div>
+  </div>
+
+  <h4>Population beeswarm plots</h4>
+
+  <p>
+    A beeswarm (or summary) plot shows the SHAP values for every feature across all patients. Each dot
+    represents one patient. The x-axis is the SHAP value (impact on model output), feature values are
+    color-coded (red = high, blue = low), and features are ranked by their overall importance (mean
+    absolute SHAP value).
+  </p>
+
+  <div class="split">
+    <div class="panel-soft measure">
+      <strong>Reading a beeswarm plot</strong>
+      <ul>
+        <li><strong>Top features</strong> are the most influential overall (largest mean |SHAP|).</li>
+        <li><strong>Spread</strong> indicates variability: a wide spread means the feature sometimes
+          pushes predictions up, sometimes down.</li>
+        <li><strong>Color gradient</strong> shows direction: if high feature values (red) cluster on the
+          positive side, the feature has a monotonic positive relationship with the outcome.</li>
+        <li><strong>Gaps or clusters</strong> may reveal nonlinear relationships or threshold effects
+          (e.g., age &gt; 65 suddenly increases CAD risk).</li>
+      </ul>
+    </div>
+    <div class="measure">
+      <p><strong>What we expect to learn:</strong></p>
+      <ul>
+        <li>Which clinical features are most discriminative for each cohort.</li>
+        <li>Whether generated biomarkers (vessel density, FAZ area, CC flow deficit) add independent
+          predictive value beyond traditional risk factors.</li>
+        <li>Whether the model learned expected relationships (e.g., older age, hypertension, and
+          diabetes should increase predicted risk for MRCC) or unexpected ones (a red flag for
+          data or labeling issues).</li>
+        <li>Whether there are features with near-zero SHAP values across all patients&mdash;candidates
+          for removal in a simplified model.</li>
+      </ul>
+    </div>
+  </div>
+
+  <h4>Force plots</h4>
+
+  <p>
+    Force plots are an alternative visualization that "pushes" the prediction from the base value. They
+    are particularly useful for clinical case review: a single force plot communicates both the
+    direction and magnitude of each feature's contribution at a glance.
+  </p>
+
+  <p>
+    The system generates force plots for representative patients from each cohort, selected as the
+    patients whose SHAP profiles are closest to the cohort's mean SHAP profile (the "typical" case)
+    and those farthest from it (the "atypical" case).
+  </p>
+
+  <h3>SHAP for generated biomarkers: validating the mask pipeline</h3>
+
+  <p>
+    One particularly important use of SHAP is validating that the self-generated segmentation masks
+    (Phase 8) produce clinically meaningful biomarkers. If vessel density, FAZ area, and CC flow deficit
+    have high SHAP values, it confirms that the automated mask pipeline captures informative features.
+    If they have near-zero SHAP values despite the model achieving good classification performance, it
+    suggests the model relies on image features that are not captured by the summary biomarkers&mdash;
+    which is itself an informative finding.
+  </p>
+
+</section>
+
+<!-- ============================================================ -->
+<!-- INTEGRATED -->
+<!-- ============================================================ -->
+<section class="chapter" id="integrated">
+
+  <div class="chapter-head">
+    <h2>Integrated Analysis</h2>
+    <p>The three explanation modalities are strongest when combined. The integrated analysis correlates
+    spatial heatmaps, layer dominance, and feature attributions into a cohesive diagnostic narrative.</p>
+  </div>
+
+  <h3>Cross-modal consistency</h3>
+
+  <p>
+    Each explanation method has blind spots. Grad-CAM sees spatial regions but not clinical features.
+    SHAP sees clinical features but not spatial locations. Attention dominance sees which layer matters
+    but not where in that layer. The integrated analysis brings them together.
+  </p>
+
+  <div class="split">
+    <div class="measure">
+      <h4>Grad-CAM &harr; Attention dominance</h4>
+      <p>
+        If the attention-dominance analysis says "SVC is the dominant layer for FAMILIPO patients,"
+        the integrated analysis checks: do the SVC Grad-CAM heatmaps for FAMILIPO patients show
+        stronger, more focused activation than the Deep or CC heatmaps? If both methods agree, it is
+        strong evidence that the model genuinely relies on SVC features. If they disagree&mdash;
+        if attention says SVC is dominant but the CC heatmap is the only one with meaningful
+        structure&mdash;it deserves investigation.
+      </p>
+    </div>
+    <div class="measure stack">
+      <div class="panel-halo">
+        <strong>Correlation metrics produced:</strong>
+        <ul>
+          <li>Per-layer Grad-CAM mean intensity vs. per-layer dominance score (Pearson r)</li>
+          <li>Fraction of patients where the layer with the highest Grad-CAM intensity matches
+            the layer with the highest dominance score</li>
+          <li>Per-cohort consistency matrices</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <h4>Grad-CAM &harr; SHAP</h4>
+
+  <p>
+    This is the most clinically informative cross-reference. For a patient where SHAP indicates that
+    "CC flow deficit" is a strong positive contributor, the integrated analysis checks the CC Grad-CAM
+    heatmap: does the spatial pattern of activation correspond to regions of flow deficit visible in the
+    CC scan? If so, the model is using the same pathology the clinician would see. If the SHAP signal
+    is strong but the heatmap shows diffuse or anatomically implausible activation, the model may be
+    relying on spurious correlations.
+  </p>
+
+  <h4>Attention dominance &harr; SHAP</h4>
+
+  <p>
+    If the SVC layer dominates attention, do SVC-derived biomarkers (Sup vessel density, Sup FAZ area)
+    also have high SHAP values? A consistent picture across both modalities strengthens the case that
+    superficial vascular changes are genuinely driving the classification.
+  </p>
+
+  <h3>The integrated patient report</h3>
+
+  <p>
+    For each patient, the system produces a unified explainability report that brings all three
+    modalities together:
+  </p>
+
+  <div class="panel-soft" style="margin: 18px 0;">
+    <strong style="display: block; margin-bottom: 10px;">Example patient report &mdash; MRCC cohort</strong>
+    <table>
+      <tr><th>Modality</th><th>Finding</th></tr>
+      <tr>
+        <td>Prediction</td>
+        <td>MRCC with 87% confidence (entropy 0.34)</td>
+      </tr>
+      <tr>
+        <td>Grad-CAM (Sup)</td>
+        <td>Strong bilateral perifoveal activation, moderate peripapillary signal</td>
+      </tr>
+      <tr>
+        <td>Grad-CAM (Deep)</td>
+        <td>Moderate diffuse activation, slightly weaker than Sup</td>
+      </tr>
+      <tr>
+        <td>Grad-CAM (CC)</td>
+        <td>Patchy inferotemporal flow-deficit region with strong negative activation</td>
+      </tr>
+      <tr>
+        <td>Layer dominance</td>
+        <td>Sup: 0.44, Deep: 0.31, CC: 0.25</td>
+      </tr>
+      <tr>
+        <td>Top SHAP features</td>
+        <td>Age (+0.18), CC flow deficit (+0.14), Hypertension (+0.12), Sup vessel density (+0.09)</td>
+      </tr>
+      <tr>
+        <td>Integrated assessment</td>
+        <td>Multi-layer involvement with SVC emphasis. SHAP and Grad-CAM both highlight CC flow
+          deficit, consistent with choroidal hypoperfusion in advanced cardiovascular disease.</td>
+      </tr>
+    </table>
+  </div>
+
+  <h3>Cohort-level integrated fingerprints</h3>
+
+  <p>
+    At the cohort level, the integrated analysis produces "explainability fingerprints"&mdash;multivariate
+    profiles that combine layer dominance, Grad-CAM spatial metrics (e.g., fraction of heatmap mass within
+    the central 30&deg; field), and top SHAP features. These fingerprints can reveal whether each cohort
+    has a distinct explainability signature, which would validate both the model and the biological
+    hypothesis underlying the project.
+  </p>
+
+  <div class="signal">
+    <strong>Scientific value.</strong> Consistent explainability fingerprints across cohorts would
+    provide evidence that the model has learned biologically meaningful and cohort-specific features,
+    not dataset-level shortcuts. Inconsistent or overlapping fingerprints would warrant investigation
+    into whether the four cohort labels are actually separable in the OCTA domain.
+  </div>
+
+</section>
+
+<!-- ============================================================ -->
+<!-- TECHNICAL IMPLEMENTATION -->
+<!-- ============================================================ -->
+<section class="chapter" id="implementation">
+
+  <div class="chapter-head">
+    <h2>Technical Implementation</h2>
+    <p>How the explainability pipeline is implemented in the notebook: from trained checkpoints to
+    publication-ready visualizations.</p>
+  </div>
+
+  <h3>Overview of the pipeline</h3>
+
+  <div class="flow-chain">
+    <span class="node">Load fold model</span>
+    <span class="arrow">&rarr;</span>
+    <span class="node">Load temperature</span>
+    <span class="arrow">&rarr;</span>
+    <span class="node active">Grad-CAM</span>
+    <span class="arrow">&rarr;</span>
+    <span class="node active">Attention</span>
+    <span class="arrow">&rarr;</span>
+    <span class="node active">SHAP</span>
+    <span class="arrow">&rarr;</span>
+    <span class="node">Integrated</span>
+  </div>
+
+  <h4>Step 1: Model loading</h4>
+
+  <p>
+    Phase 13 loads the trained Phase 12 fold models from checkpoint files. Each fold has its own model
+    (5 folds total) with the corresponding temperature-scaling parameter from post-hoc calibration.
+    Models are set to evaluation mode with the frozen U-Net++ segmentation student also in eval mode.
+  </p>
+
+  <h4>Step 2: Grad-CAM generation</h4>
+
+  <p>
+    For each patient in the held-out test set of each fold:
+  </p>
+  <ol>
+    <li>Forward pass through the Sup encoder: capture the final spatial feature map (7&times;7&times;768)
+      before global average pooling.</li>
+    <li>Compute gradients of the predicted-class score (or a specified target class) with respect to
+      the feature map.</li>
+    <li>Global-average-pool the gradients to get per-channel importance weights.</li>
+    <li>Compute the weighted sum of feature maps, apply ReLU, upsample to 224&times;224.</li>
+    <li>Overlay on the original OCTA image with a colormap (viridis or hot).</li>
+    <li>Repeat for Deep and CC encoders.</li>
+    <li>Save the overlay PNG and the raw .npy heatmap.</li>
+  </ol>
+
+  <p>
+    The system generates heatmaps for correctly classified and misclassified patients separately, enabling
+    comparison and error analysis.
+  </p>
+
+  <h4>Step 3: Attention extraction</h4>
+
+  <p>
+    During the forward pass through the Phase 6 cross-layer attention module, the per-sample attention
+    matrix A &isin; &#8477;<sup>3&times;3</sup> is extracted (averaged across 8 heads). The layer-dominance
+    scores are computed as described above. Results are aggregated per cohort and saved.
+  </p>
+
+  <h4>Step 4: SHAP computation</h4>
+
+  <p>
+    SHAP is applied to the trained tabular encoder using KernelSHAP (from the <code>shap</code> Python
+    library). Because SHAP can be computationally expensive for large feature sets, the system:
+  </p>
+  <ul>
+    <li>Computes SHAP values for a representative subset of patients per cohort (e.g., 50 per cohort)
+      rather than all patients.</li>
+    <li>If <code>shap</code> is not installed in the runtime environment, falls back to occlusion-based
+      feature attribution, which perturbs each feature individually and measures the change in model
+      output.</li>
+    <li>Saves per-patient SHAP values, global feature importance (mean |SHAP|), and the visualization
+      plots (beeswarm, waterfall, force).</li>
+  </ul>
+
+  <h4>Step 5: Integrated analysis</h4>
+
+  <p>
+    The outputs from Steps 2&ndash;4 are loaded and cross-referenced:
+  </p>
+  <ul>
+    <li>For each patient, the system checks whether the layer with the strongest Grad-CAM signal matches
+      the layer with the highest dominance score.</li>
+    <li>Cross-cohort consistency matrices are computed.</li>
+    <li>An integrated summary CSV is produced with all explanation metrics per patient, and cohort-level
+      fingerprints are written.</li>
+  </ul>
+
+  <h3>Output directory structure</h3>
+
+  <div style="font-family: ui-monospace, SFMono-Regular, monospace; font-size: 0.88rem; color: var(--text-mid); line-height: 1.7; background: #070707; border-radius: 14px; padding: 18px; margin: 18px 0;">
+    outputs/phase13_explainability/<br>
+    &nbsp;&nbsp;gradcam/<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;fold_0/ &middot;&middot;&middot; fold_4/<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;overlays/ &nbsp;&nbsp;&nbsp;# PNG heatmap overlays<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;raw/ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;# .npy heatmap arrays<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;phase13_gradcam_summary.csv<br>
+    &nbsp;&nbsp;attention/<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;phase13_attention_dominance.csv<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;phase13_cohort_dominance.csv<br>
+    &nbsp;&nbsp;tabular_attribution/<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;shap_values.npy<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;shap_summary_plots.png<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;phase13_feature_importance.csv<br>
+    &nbsp;&nbsp;integrated/<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;phase13_integrated_summary.csv<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;phase13_cross_modal_consistency.csv<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;phase13_cohort_fingerprints.csv<br>
+    &nbsp;&nbsp;phase13_combined_summary.csv
+  </div>
+
+  <h3>Configuration knobs</h3>
+
+  <table>
+    <tr><th>Parameter</th><th>Default</th><th>Purpose</th></tr>
+    <tr><td>PHASE13_FOLDS</td><td>[0, 1, 2, 3, 4]</td><td>Which fold models to analyze</td></tr>
+    <tr><td>PHASE13_LOG_EVERY_N_BATCHES</td><td>10</td><td>Logging frequency during batch processing</td></tr>
+    <tr><td>PHASE13_LOG_EVERY_N_SAMPLES</td><td>50</td><td>Logging frequency during sample-level Grad-CAM</td></tr>
+    <tr><td>PHASE13_N_SHAP_SAMPLES</td><td>50</td><td>Patients per cohort for SHAP computation</td></tr>
+    <tr><td>PHASE13_GRADCAM_TARGET</td><td>"predicted"</td><td>"predicted", "true", or specific class name</td></tr>
+    <tr><td>PHASE13_SAVE_RAW_HEATMAPS</td><td>True</td><td>Save raw .npy heatmap arrays</td></tr>
+    <tr><td>PHASE13_SAVE_OVERLAYS</td><td>True</td><td>Save PNG overlay images</td></tr>
+  </table>
+
+</section>
+
+<!-- ============================================================ -->
+<!-- CLINICAL INTERPRETATION -->
+<!-- ============================================================ -->
+<section class="chapter" id="reading">
+
+  <div class="chapter-head">
+    <h2>Clinical Interpretation Guide</h2>
+    <p>A practical guide for clinicians reviewing the explainability outputs: what to look for, how to
+    distinguish genuine biological signal from noise, and when to flag concerns.</p>
+  </div>
+
+  <h3>Evaluating a Grad-CAM heatmap</h3>
+
+  <div class="question-list">
+    <div class="qitem">
+      <strong style="color: var(--text);">Is the heatmap focused on anatomically plausible regions?</strong>
+      <p style="margin: 6px 0 0; color: var(--text-mid); font-size: 0.92rem;">
+        A valid heatmap should highlight regions where OCTA shows vascular structures: the macular
+        region, peripapillary area, and visible vessel arcs. Heatmaps that fire on the image border,
+        on uniform background regions, or on known artifacts (watermarks, scan circles, patient IDs)
+        are red flags.
+      </p>
+    </div>
+    <div class="qitem">
+      <strong style="color: var(--text);">Does the layer with the strongest activation match clinical expectations?</strong>
+      <p style="margin: 6px 0 0; color: var(--text-mid); font-size: 0.92rem;">
+        SVC-dominant diseases (e.g., hypertensive retinopathy, arteriolar changes) should show SVC
+        heatmaps with strong focal activation. CC-dominant diseases (e.g., choroidal ischemia) should
+        show CC heatmaps with patchy flow-deficit patterns. If the model consistently relies on an
+        unexpected layer, it may be learning a confound.
+      </p>
+    </div>
+    <div class="qitem">
+      <strong style="color: var(--text);">Are incorrect predictions explainable?</strong>
+      <p style="margin: 6px 0 0; color: var(--text-mid); font-size: 0.92rem;">
+        When the model misclassifies a patient, the heatmap should ideally show why: perhaps the OCTA
+        image has an unusual artifact, or the patient has atypical anatomy. A heatmap that looks
+        reasonable despite a wrong prediction suggests the model's error is not spatial but may be
+        related to clinical features.
+      </p>
+    </div>
+  </div>
+
+  <h3>Evaluating layer dominance</h3>
+  <ul>
+    <li><strong>Cohort consistency:</strong> Are dominance patterns consistent within a cohort (low
+      variance) or widely variable? High variance within a cohort suggests the model is not learning
+      a consistent layer-specific signature.</li>
+    <li><strong>Cohort separation:</strong> Do different cohorts have measurably different dominance
+      profiles? If all four cohorts show essentially the same pattern (e.g., all SVC-dominant), the
+      layer-dominance analysis adds no discriminative insight.</li>
+    <li><strong>Clinical plausibility:</strong> Does the dominance pattern match known pathophysiology?
+      The hypothesis that MRCC patients show elevated CC dominance should be consistent with clinical
+      knowledge about choroidal involvement in cardiovascular disease.</li>
+  </ul>
+
+  <h3>Evaluating SHAP attributions</h3>
+  <ul>
+    <li><strong>Directionality:</strong> Do high-risk features (older age, hypertension, diabetes) push
+      predictions toward the cardiovascular-disease-related cohorts (FAMILIPO, MRCC)? If age is
+      negatively correlated with MRCC risk, something is wrong.</li>
+    <li><strong>Feature ranking:</strong> Do the expected top features appear at the top? Age and
+      hypertension are well-established cardiovascular risk factors and should rank highly for
+      CAD-relevant cohorts.</li>
+    <li><strong>Biomarker contribution:</strong> Do OCTA biomarkers add value beyond traditional risk
+      factors? If vessel density and flow-deficit features consistently have near-zero SHAP values,
+      the mask pipeline may not be extracting clinically useful information.</li>
+    <li><strong>Spurious correlations:</strong> If a clinically unrelated feature (e.g., sex, when
+      cardiovascular risk is known to be independent of sex after adjusting for other factors) appears
+      at the top of the SHAP ranking, it warrants investigation.</li>
+  </ul>
+
+  <h3>When to be concerned</h3>
+
+  <div class="note-box warn">
+    <strong>Red flags that suggest the model is not learning clinically meaningful features:</strong>
+    <ul>
+      <li>Grad-CAM consistently highlights image borders, corners, or known artifacts.</li>
+      <li>Layer-dominance scores are nearly identical across all four cohorts.</li>
+      <li>SHAP values show a single feature dominating all predictions (e.g., the model is essentially
+        just thresholding age).</li>
+      <li>The integrated analysis shows no correlation between spatial heatmaps and SHAP attributions
+        that should be related (e.g., high CC flow-deficit SHAP but no CC heatmap activation).</li>
+    </ul>
+  </div>
+
+  <div class="note-box caution">
+    <strong>Yellow flags that warrant further investigation:</strong>
+    <ul>
+      <li>A single cohort has very different explainability patterns from the others (may be a data
+        quality issue in that cohort).</li>
+      <li>Misclassified patients have systematically different heatmap patterns from correctly classified
+        ones (may reveal a subphenotype the model cannot distinguish).</li>
+      <li>OCTA biomarkers have high SHAP values that cannot be verified against the raw images (may be
+        artifacts of the mask generation pipeline rather than true biological signal).</li>
+    </ul>
+  </div>
+
+</section>
+
+<!-- ============================================================ -->
+<!-- LIMITATIONS -->
+<!-- ============================================================ -->
+<section class="chapter" id="limitations">
+
+  <div class="chapter-head">
+    <h2>Limitations &amp; Caveats</h2>
+    <p>Every explainability method has blind spots. Understanding them is essential for honest
+    interpretation.</p>
+  </div>
+
+  <div class="term-grid">
+    <div class="term">
+      <h5>Grad-CAM is localization, not segmentation</h5>
+      <p>Grad-CAM produces coarse heatmaps at the resolution of the final feature map (7&times;7 for
+        ConvNeXt-Tiny, upsampled to 224&times;224). It cannot resolve fine vascular detail, and the
+        heatmap is a <em>saliency map</em>, not a segmentation mask. Bright regions indicate "important
+        for the decision," not necessarily "contains pathology."</p>
+    </div>
+    <div class="term">
+      <h5>Attention is not explanation</h5>
+      <p>Following the well-known critique by Jain &amp; Wallace (2019) and others, attention weights
+        are a <em>correlational</em> signal, not a <em>causal</em> one. A layer may have high attention
+        weight because its features are easy to attend to, not because they drive the prediction. The
+        Phase 15 layer-ablation experiments are the stronger causal test.</p>
+    </div>
+    <div class="term">
+      <h5>SHAP is approximate and background-dependent</h5>
+      <p>KernelSHAP is an approximation that samples feature subsets. The results depend on the
+        choice of background distribution (the reference dataset used to represent "feature absent").
+        SHAP also assumes feature independence, which clinical features violate (age and hypertension
+        are correlated, BMI and diabetes are correlated). Correlated features can have their shared
+        importance arbitrarily divided between them.</p>
+    </div>
+    <div class="term">
+      <h5>Model confidence is not model accuracy</h5>
+      <p>A high-confidence prediction with a clean Grad-CAM heatmap can still be wrong. The
+        temperature-scaled probabilities indicate confidence on the training distribution but
+        are not calibrated for out-of-distribution inputs. MC-Dropout entropy provides uncertainty
+        quantification, but uncertainty ≠ error.</p>
+    </div>
+    <div class="term">
+      <h5>Multiple comparision in feature attribution</h5>
+      <p>When examining SHAP values for N clinical features across K cohorts, the probability of
+        finding a "significant-looking" feature by chance increases. SHAP analysis should be
+        treated as hypothesis-generating, and any interesting findings should be validated with
+        hold-out data or independent studies.</p>
+    </div>
+    <div class="term">
+      <h5>Integrated analysis inherits all limitations</h5>
+      <p>The integrated analysis compounds the limitations of each individual method. If Grad-CAM
+        and SHAP disagree, determining which one is "correct" requires external validation (e.g.,
+        clinical expert review, ablation experiments). Consistency between methods is encouraging
+        but not proof of correctness.</p>
+    </div>
+  </div>
+
+  <div class="signal ok">
+    <strong>Best practice:</strong> Explainability is for <em>hypothesis generation</em> and
+    <em>trust building</em>, not for causal proof. Strong gradient signals, consistent attention
+    patterns, and plausible SHAP values together form a body of evidence that the model has learned
+    something meaningful. But the gold standard remains prospective clinical validation on
+    independent datasets.
+  </div>
+
+</section>
+
+<!-- ============================================================ -->
+<!-- REFERENCES -->
+<!-- ============================================================ -->
+<section class="chapter" id="references">
+
+  <div class="chapter-head">
+    <h2>References</h2>
+    <p>Key papers and resources underpinning the explainability methods used in this phase.</p>
+  </div>
+
+  <div style="border-top: 1px solid var(--line); padding-top: 18px;">
+
+    <table>
+      <tr><th>Method</th><th>Reference</th></tr>
+      <tr>
+        <td>Grad-CAM</td>
+        <td>Selvaraju, R. R., Cogswell, M., Das, A., Vedantam, R., Parikh, D., &amp; Batra, D. (2017).
+          Grad-CAM: Visual Explanations from Deep Networks via Gradient-Based Localization.
+          <em>IEEE ICCV</em>. <span style="color: var(--text-low);">arXiv:1610.02391</span></td>
+      </tr>
+      <tr>
+        <td>Grad-CAM++</td>
+        <td>Chattopadhay, A., Sarkar, A., Howlader, P., &amp; Balasubramanian, V. N. (2018).
+          Grad-CAM++: Generalized Gradient-Based Visual Explanations for Deep Convolutional Networks.
+          <em>IEEE WACV</em>. <span style="color: var(--text-low);">arXiv:1710.11063</span></td>
+      </tr>
+      <tr>
+        <td>SHAP</td>
+        <td>Lundberg, S. M., &amp; Lee, S.-I. (2017). A Unified Approach to Interpreting Model Predictions.
+          <em>NeurIPS</em>. <span style="color: var(--text-low);">arXiv:1705.07874</span></td>
+      </tr>
+      <tr>
+        <td>Attention and explanation critique</td>
+        <td>Jain, S., &amp; Wallace, B. C. (2019). Attention is not Explanation.
+          <em>NAACL</em>. <span style="color: var(--text-low);">arXiv:1902.10186</span></td>
+      </tr>
+      <tr>
+        <td>Attention as explanation defense</td>
+        <td>Wiegreffe, S., &amp; Pinter, Y. (2019). Attention is not not Explanation.
+          <em>EMNLP</em>. <span style="color: var(--text-low);">arXiv:1908.04626</span></td>
+      </tr>
+      <tr>
+        <td>Concepts in medical AI explainability</td>
+        <td>Singh, A., Sengupta, S., &amp; Lakshminarayanan, V. (2020). Explainable Deep Learning
+          Models in Medical Image Analysis. <em>Journal of Imaging</em>, 6(6), 52.</td>
+      </tr>
+      <tr>
+        <td>OCTA explainability review</td>
+        <td>Munk, M. R., et al. (2022). OCT Angiography in Clinical Practice: Current State and
+          Future Directions. <em>Retina</em>, 42(1), 1-16.</td>
+      </tr>
+      <tr>
+        <td>MC-Dropout uncertainty</td>
+        <td>Gal, Y., &amp; Ghahramani, Z. (2016). Dropout as a Bayesian Approximation: Representing
+          Model Uncertainty in Deep Learning. <em>ICML</em>. <span style="color: var(--text-low);">arXiv:1506.02142</span></td>
+      </tr>
+      <tr>
+        <td>Temperature scaling</td>
+        <td>Guo, C., Pleiss, G., Sun, Y., &amp; Weinberger, K. Q. (2017). On Calibration of Modern
+          Neural Networks. <em>ICML</em>. <span style="color: var(--text-low);">arXiv:1706.04599</span></td>
+      </tr>
+    </table>
+
+  </div>
+
+</section>
+
+<!-- ====== FOOTER ====== -->
+<footer class="foot">
+  <div class="shell">
+    <p><strong>Retina CAD &mdash; RASTA OCTA Coronary Artery Disease Prediction</strong></p>
+    <p style="margin-top: 8px;">
+      Phase 13 Explainability. This document is part of the Retina CAD project documentation suite.
+      For a high-level overview, see the
+      <a href="architecture-overview-guide.html">Architecture Overview</a>.
+      For the full pipeline through Phase 12, see the
+      <a href="phase-4-to-8-explainer.html">Pipeline Explainer</a>.
+      For attention architecture details, see the
+      <a href="attention-architecture-explainer.html">Attention Explainer</a>.
+    </p>
+    <p style="margin-top: 20px; font-size: 0.84rem; color: var(--text-low);">
+      Last updated July 2026 &middot; Design follows the Retina CAD Design System
+    </p>
+  </div>
+</footer>
+
+</article>
+
+</div><!-- .layout -->
+</div><!-- .shell -->
+
+</body>
+</html>
