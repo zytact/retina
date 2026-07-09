@@ -1,0 +1,52 @@
+{
+  "fold": 3,
+  "layers": [
+    {
+      "backbone_exists": true,
+      "backbone_path": "outputs\\phase3_octa_simclr\\simclr_fold_train_fold3_sup_backbone.pt",
+      "best_loss": 1.542210578918457,
+      "epochs": 100,
+      "final_loss": 1.869104027748108,
+      "first_loss": 5.474377870559692,
+      "fold": 3,
+      "history_exists": true,
+      "history_path": "outputs\\phase3_octa_simclr\\simclr_fold_train_fold3_sup_history.csv",
+      "layer": "sup",
+      "loss_decrease_first_to_best": 3.9321672916412354
+    },
+    {
+      "backbone_exists": true,
+      "backbone_path": "outputs\\phase3_octa_simclr\\simclr_fold_train_fold3_deep_backbone.pt",
+      "best_loss": 2.0736905336380005,
+      "epochs": 100,
+      "final_loss": 2.1451836824417114,
+      "first_loss": 5.502538442611694,
+      "fold": 3,
+      "history_exists": true,
+      "history_path": "outputs\\phase3_octa_simclr\\simclr_fold_train_fold3_deep_history.csv",
+      "layer": "deep",
+      "loss_decrease_first_to_best": 3.428847908973694
+    },
+    {
+      "backbone_exists": true,
+      "backbone_path": "outputs\\phase3_octa_simclr\\simclr_fold_train_fold3_cc_backbone.pt",
+      "best_loss": 2.780647397041321,
+      "epochs": 100,
+      "final_loss": 3.009220242500305,
+      "first_loss": 5.519109010696411,
+      "fold": 3,
+      "history_exists": true,
+      "history_path": "outputs\\phase3_octa_simclr\\simclr_fold_train_fold3_cc_history.csv",
+      "layer": "cc",
+      "loss_decrease_first_to_best": 2.7384616136550903
+    }
+  ],
+  "mask_source": "unetpp_student",
+  "phase3_scope": "fold_train",
+  "split_sizes": {
+    "inner_val": 77,
+    "outer_test": 94,
+    "train": 305
+  },
+  "status": "completed_by_reusing_existing_phase3_backbones_no_training_in_phase12"
+}

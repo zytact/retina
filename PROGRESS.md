@@ -329,3 +329,14 @@
 - Added epoch timing, elapsed time, ETA, LR list, gradient norm mean/max, prototype alpha, prototype-initialized class count, best validation macro-F1, and stale-epoch count to the logs/history.
 - Hardened resume behavior: `last.pt` stores `early_stopped` and `completed` flags, and reruns skip already completed or early-stopped stages instead of adding extra epochs.
 - Expanded Stage 1 into a reuse audit with Sup/Deep/CC backbone existence, history existence, loss summary where available, split sizes, and `stage1_reuse_report.csv/json`.
+
+## 2026-07-09
+
+### Phase 13 progress
+- Added **Phase 13 - Explainability** to `main.ipynb` after completed Phase 12 training.
+- Implemented trained fold-model loading from Phase 12 checkpoints with fold temperature reuse.
+- Added Grad-CAM generation for Sup, Deep, and CC final spatial maps, including predicted-class, true-label, or explicit per-class targets, per-sample overlay PNGs, per-layer `.npy` heatmaps, and summary CSVs under `outputs/phase13_explainability/gradcam/`.
+- Added cross-layer attention dominance extraction from Phase 6 attention weights, with per-sample and cohort-level summaries under `outputs/phase13_explainability/attention/`.
+- Added tabular attribution support for clinical and generated-biomarker features: KernelSHAP when `shap` is installed, with an explicitly labeled occlusion fallback when it is not.
+- Added integrated Grad-CAM plus attention consistency summaries, including per-layer correlation artifacts under `outputs/phase13_explainability/integrated/`.
+- Kept heavy explainability disabled by default in the local review copy; run `phase13_run_cross_validation(PHASE13_FOLDS)` on the training/runtime machine after Phase 12 checkpoints are available.

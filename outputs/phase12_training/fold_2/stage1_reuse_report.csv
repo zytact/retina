@@ -1,0 +1,4 @@
+fold,layer,backbone_path,backbone_exists,history_path,history_exists,epochs,first_loss,final_loss,best_loss,loss_decrease_first_to_best
+2,sup,outputs\phase3_octa_simclr\simclr_fold_train_fold2_sup_backbone.pt,True,outputs\phase3_octa_simclr\simclr_fold_train_fold2_sup_history.csv,True,100,5.499317407608032,2.1686208248138428,1.8002082109451294,3.699109196662903
+2,deep,outputs\phase3_octa_simclr\simclr_fold_train_fold2_deep_backbone.pt,True,outputs\phase3_octa_simclr\simclr_fold_train_fold2_deep_history.csv,True,100,5.470395088195801,2.2024863958358765,1.9747419357299805,3.4956531524658203
+2,cc,outputs\phase3_octa_simclr\simclr_fold_train_fold2_cc_backbone.pt,True,outputs\phase3_octa_simclr\simclr_fold_train_fold2_cc_history.csv,True,100,5.460360050201416,2.694711446762085,2.694711446762085,2.765648603439331

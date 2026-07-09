@@ -1,0 +1,21 @@
+{
+  "auto_materialize_unetpp_masks": true,
+  "early_stop_patience": 15,
+  "folds": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "inner_validation_fraction": 0.2,
+  "mask_source": "unetpp_student",
+  "note": "Run phase12_train_cross_validation(PHASE12_FOLDS) on the training machine. Missing Phase 9 U-Net++ manifests can be materialized automatically from existing Phase 8D checkpoints.",
+  "run_training_default": true,
+  "stage1": "reuse completed Phase 3 SimCLR backbones",
+  "stage2_epochs": 15,
+  "stage2_lr": 0.0003,
+  "stage3_backbone_lr": 3e-05,
+  "stage3_epochs": 100,
+  "stage3_head_lr": 0.0003
+}

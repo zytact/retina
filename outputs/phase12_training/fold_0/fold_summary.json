@@ -1,0 +1,16 @@
+{
+  "fold": 0,
+  "imbalance_ratio": 5.105263157894737,
+  "loss_name": "weighted_label_smoothing_ce",
+  "mask_source": "unetpp_student",
+  "n_inner_val": 77,
+  "n_outer_test": 94,
+  "n_train": 305,
+  "stage2_epochs_recorded": 15,
+  "stage3_epochs_recorded": 59,
+  "temperature": 2.6773898601531982,
+  "test_balanced_accuracy": 0.6539008620689655,
+  "test_macro_f1": 0.6600104085349987,
+  "val_balanced_accuracy": 0.7949671172816952,
+  "val_macro_f1": 0.8141014928698752
+}
