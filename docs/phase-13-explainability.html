@@ -649,9 +649,10 @@
 
   <div class="signal">
     <strong>Three complementary views.</strong> This phase implements three distinct explanation
-    modalities&mdash;spatial (where in the image), attentional (which retinal layer), and
-    feature-based (which clinical variables)&mdash;and then integrates them into a unified
-    diagnostic narrative for each patient.
+    modalities&mdash;spatial / Grad-CAM (<code>gradcam/</code>: which pixels in the image),
+    attentional (<code>attention/</code>: which retinal layer), and feature-based
+    (<code>tabular_attribution/</code>: which clinical variables)&mdash;and then integrates them
+    (<code>integrated/</code>) into a unified diagnostic narrative for each patient.
   </div>
 
   <p>
@@ -1428,24 +1429,26 @@
   <h3>Output directory structure</h3>
 
   <div style="font-family: ui-monospace, SFMono-Regular, monospace; font-size: 0.88rem; color: var(--text-mid); line-height: 1.7; background: #070707; border-radius: 14px; padding: 18px; margin: 18px 0;">
+    <span style="color: var(--text-low);"># top-level output root</span><br>
     outputs/phase13_explainability/<br>
-    &nbsp;&nbsp;gradcam/<br>
+    &nbsp;&nbsp;gradcam/ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: var(--text-low);"># spatial: per-layer Grad-CAM heatmaps</span><br>
     &nbsp;&nbsp;&nbsp;&nbsp;fold_0/ &middot;&middot;&middot; fold_4/<br>
-    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;overlays/ &nbsp;&nbsp;&nbsp;# PNG heatmap overlays<br>
-    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;raw/ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;# .npy heatmap arrays<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;overlays/ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: var(--text-low);"># PNG heatmap overlays (Sup, Deep, CC per sample)</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;raw/ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: var(--text-low);"># .npy raw heatmap arrays</span><br>
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;phase13_gradcam_summary.csv<br>
-    &nbsp;&nbsp;attention/<br>
-    &nbsp;&nbsp;&nbsp;&nbsp;phase13_attention_dominance.csv<br>
+    &nbsp;&nbsp;attention/ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: var(--text-low);"># attentional: cross-layer dominance scores</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;fold_0/ &middot;&middot;&middot; fold_4/<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;phase13_attention_dominance.csv &nbsp;&nbsp;<span style="color: var(--text-low);"># per-sample Sup/Deep/CC dominance</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;phase13_all_attention_dominance.csv<br>
     &nbsp;&nbsp;&nbsp;&nbsp;phase13_cohort_dominance.csv<br>
-    &nbsp;&nbsp;tabular_attribution/<br>
-    &nbsp;&nbsp;&nbsp;&nbsp;shap_values.npy<br>
-    &nbsp;&nbsp;&nbsp;&nbsp;shap_summary_plots.png<br>
-    &nbsp;&nbsp;&nbsp;&nbsp;phase13_feature_importance.csv<br>
-    &nbsp;&nbsp;integrated/<br>
-    &nbsp;&nbsp;&nbsp;&nbsp;phase13_integrated_summary.csv<br>
-    &nbsp;&nbsp;&nbsp;&nbsp;phase13_cross_modal_consistency.csv<br>
-    &nbsp;&nbsp;&nbsp;&nbsp;phase13_cohort_fingerprints.csv<br>
-    &nbsp;&nbsp;phase13_combined_summary.csv
+    &nbsp;&nbsp;tabular_attribution/ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: var(--text-low);"># feature-based: SHAP / occlusion attributions</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;fold_0/ &middot;&middot;&middot; fold_4/<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;phase13_tabular_attributions.csv &nbsp;&nbsp;<span style="color: var(--text-low);"># per-sample feature scores</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;phase13_all_tabular_attributions.csv<br>
+    &nbsp;&nbsp;integrated/ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: var(--text-low);"># integrated: cross-modal consistency</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;fold_0/ &middot;&middot;&middot; fold_4/<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;phase13_integrated_summary.csv<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;phase13_all_integrated_summary.csv
   </div>
 
   <h3>Configuration knobs</h3>
