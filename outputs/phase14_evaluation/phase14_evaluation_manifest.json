@@ -1,0 +1,20 @@
+{
+  "source_oof_path": "outputs\\phase12_training\\phase12_all_outer_test_predictions.csv",
+  "mc_dropout_path": "outputs\\phase14_evaluation\\phase14_mc_dropout_outer_test_predictions.csv",
+  "mc_dropout_merged": true,
+  "classes": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "label_names": {
+    "0": "RETINORM",
+    "1": "ORNET",
+    "2": "FAMILIPO",
+    "3": "MRCC"
+  },
+  "bootstrap_samples": 1000,
+  "bootstrap_method": "stratified patient-cluster bootstrap; eye-level samples retain all sampled bilateral eyes",
+  "metric_scope": "out-of-fold outer-test predictions only"
+}

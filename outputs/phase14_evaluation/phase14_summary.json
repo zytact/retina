@@ -1,0 +1,10 @@
+{
+  "oof_source": "outputs\\phase12_training\\phase12_all_outer_test_predictions.csv",
+  "output_dir": "outputs\\phase14_evaluation",
+  "bootstrap_samples": 1000,
+  "bootstrap_unit": "stratified patient cluster",
+  "eye_level_and_patient_level": true,
+  "patient_prediction_rule": "mean calibrated OD/OS probabilities",
+  "mc_dropout_passes": 30,
+  "note": "Run phase14_generate_mc_dropout_predictions() after Phase 13 fast reload, then phase14_evaluate_predictions() on the training machine."
+}
