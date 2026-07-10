@@ -1,9 +1,9 @@
-<svg width="1600" height="980" viewBox="0 0 1600 980" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
-  <title id="title">Retina CAD high-level architecture diagram</title>
-  <desc id="desc">A high-level system diagram showing data inputs, OCTA representation learning, multimodal fusion, prediction, and explainability for the Retina CAD project.</desc>
+<svg width="1600" height="1040" viewBox="0 0 1600 1040" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Retina CAD architecture diagram — full pipeline</title>
+  <desc id="desc">End-to-end diagram: OCTA and clinical inputs, layer-specific encoders, multimodal fusion, prototype-augmented classifier with uncertainty, calibration, explainability, and evaluation suite.</desc>
 
   <defs>
-    <linearGradient id="bgGrad" x1="180" y1="80" x2="1420" y2="900" gradientUnits="userSpaceOnUse">
+    <linearGradient id="bgGrad" x1="180" y1="80" x2="1420" y2="960" gradientUnits="userSpaceOnUse">
       <stop stop-color="#07090D"/>
       <stop offset="1" stop-color="#030303"/>
     </linearGradient>
@@ -11,22 +11,18 @@
       <stop stop-color="#15181E"/>
       <stop offset="1" stop-color="#0D1015"/>
     </linearGradient>
-    <linearGradient id="haloGrad" x1="0" y1="0" x2="1" y2="1">
-      <stop stop-color="#8FC4FF"/>
-      <stop offset="1" stop-color="#6B9BFF"/>
-    </linearGradient>
     <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
       <feGaussianBlur stdDeviation="16" result="blur"/>
-      <feMerge>
-        <feMergeNode in="blur"/>
-        <feMergeNode in="SourceGraphic"/>
-      </feMerge>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
     </filter>
     <filter id="panelShadow" x="-20%" y="-20%" width="140%" height="160%">
       <feDropShadow dx="0" dy="18" stdDeviation="22" flood-color="#000000" flood-opacity="0.35"/>
     </filter>
     <marker id="arrow" markerWidth="12" markerHeight="12" refX="9" refY="6" orient="auto">
       <path d="M1 1L10 6L1 11" stroke="#8EA4C8" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="9" refY="6" orient="auto">
+      <path d="M1 1L10 6L1 11" stroke="#7FB2FF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
     </marker>
     <style>
       .display { font: 600 46px ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; fill: #F5F7FA; letter-spacing: -0.03em; }
@@ -35,134 +31,159 @@
       .small { font: 500 15px ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; fill: #CBD6E5; }
       .micro { font: 500 13px ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; fill: #7E8A9C; letter-spacing: 0.02em; }
       .pill { font: 600 14px ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; letter-spacing: 0.02em; }
-      .line { stroke: rgba(255,255,255,0.10); stroke-width: 1; }
       .arrow { stroke: #8EA4C8; stroke-width: 2.2; fill: none; marker-end: url(#arrow); }
-      .accentArrow { stroke: #7FB2FF; stroke-width: 2.6; fill: none; marker-end: url(#arrow); }
+      .accentArrow { stroke: #7FB2FF; stroke-width: 2.6; fill: none; marker-end: url(#arrowBlue); }
     </style>
   </defs>
 
-  <rect width="1600" height="980" fill="url(#bgGrad)"/>
-  <circle cx="1350" cy="120" r="180" fill="#7FB2FF" opacity="0.10" filter="url(#softGlow)"/>
-  <circle cx="190" cy="830" r="170" fill="#7FB2FF" opacity="0.06" filter="url(#softGlow)"/>
+  <rect width="1600" height="1040" fill="url(#bgGrad)"/>
+  <circle cx="1340" cy="110" r="180" fill="#7FB2FF" opacity="0.10" filter="url(#softGlow)"/>
+  <circle cx="180" cy="880" r="170" fill="#7FB2FF" opacity="0.06" filter="url(#softGlow)"/>
 
   <text x="90" y="110" class="display">Retina CAD Architecture</text>
-  <text x="90" y="150" class="body">High-level view for advisor-facing explanation: from OCTA inputs to multimodal CAD prediction</text>
+  <text x="90" y="150" class="body">Full pipeline: curated OCTA and clinical inputs through layer-specific encoding, multimodal fusion, prototype-augmented prediction, and evaluation</text>
 
-  <rect x="90" y="205" width="160" height="34" rx="17" fill="#111822" stroke="#263243"/>
-  <text x="118" y="228" class="pill" fill="#7FB2FF">CURRENT CORE PIPELINE</text>
+  <rect x="90" y="205" width="1420" height="34" rx="17" fill="#111822" stroke="#263243"/>
+  <text x="588" y="228" class="pill" fill="#7FB2FF">IMPLEMENTED  &middot;  PHASES 1 THROUGH 13</text>
 
-  <rect x="90" y="280" width="265" height="500" rx="24" fill="url(#panelGrad)" stroke="#242B35" filter="url(#panelShadow)"/>
-  <text x="120" y="332" class="section">1. Inputs and curation</text>
-  <text x="120" y="366" class="body">Leakage-safe dataset setup before modeling.</text>
+  <!-- Column 1: Inputs and curation -->
+  <rect x="90" y="270" width="265" height="580" rx="24" fill="url(#panelGrad)" stroke="#242B35" filter="url(#panelShadow)"/>
+  <text x="120" y="320" class="section">1. Inputs and curation</text>
+  <text x="120" y="354" class="body">Leakage-safe dataset setup.</text>
 
-  <rect x="120" y="402" width="205" height="74" rx="16" fill="#12161D" stroke="#273140"/>
-  <text x="140" y="430" class="small">OCTA image inputs</text>
-  <text x="140" y="454" class="micro">Sup, Deep, CC</text>
-  <text x="140" y="472" class="micro">OD/OS treated as eye-level samples</text>
+  <rect x="120" y="400" width="205" height="74" rx="16" fill="#12161D" stroke="#273140"/>
+  <text x="140" y="428" class="small">OCTA image inputs</text>
+  <text x="140" y="452" class="micro">Sup, Deep, CC</text>
+  <text x="140" y="470" class="micro">OD/OS as eye-level samples</text>
 
   <rect x="120" y="498" width="205" height="74" rx="16" fill="#12161D" stroke="#273140"/>
   <text x="140" y="526" class="small">Clinical metadata</text>
   <text x="140" y="550" class="micro">Age, sex, BMI, smoking,</text>
   <text x="140" y="568" class="micro">hypertension, diabetes, more</text>
 
-  <rect x="120" y="594" width="205" height="148" rx="16" fill="#12161D" stroke="#273140"/>
-  <text x="140" y="622" class="small">Preprocessing and QC</text>
-  <text x="140" y="646" class="micro">Patient-level fold assignment</text>
+  <rect x="120" y="596" width="205" height="150" rx="16" fill="#12161D" stroke="#273140"/>
+  <text x="140" y="624" class="small">Preprocessing and QC</text>
+  <text x="140" y="648" class="micro">Patient-level fold assignment</text>
   <text x="140" y="668" class="micro">Percentile normalization + CLAHE</text>
-  <text x="140" y="690" class="micro">Resize to 224 × 224</text>
-  <text x="140" y="712" class="micro">Corruption / low-quality exclusion</text>
+  <text x="140" y="688" class="micro">Resize to 224 × 224</text>
+  <text x="140" y="708" class="micro">Missing-value mask tokens</text>
+  <text x="140" y="728" class="micro">Corruption / low-quality exclusion</text>
 
-  <rect x="405" y="280" width="305" height="500" rx="24" fill="url(#panelGrad)" stroke="#242B35" filter="url(#panelShadow)"/>
-  <text x="435" y="332" class="section">2. Layer-specific OCTA learning</text>
-  <text x="435" y="366" class="body">Each retinal layer gets its own encoder.</text>
+  <!-- Column 2: Layer-specific OCTA learning -->
+  <rect x="395" y="270" width="305" height="580" rx="24" fill="url(#panelGrad)" stroke="#242B35" filter="url(#panelShadow)"/>
+  <text x="425" y="320" class="section">2. OCTA representation learning</text>
+  <text x="425" y="354" class="body">Each retinal layer learns independently.</text>
 
-  <rect x="435" y="402" width="245" height="98" rx="16" fill="#12161D" stroke="#273140"/>
-  <text x="455" y="430" class="small">Self-supervised adaptation</text>
-  <text x="455" y="454" class="micro">SimCLR on OCTA images</text>
-  <text x="455" y="476" class="micro">OD/OS bilateral positives when available</text>
+  <rect x="425" y="400" width="245" height="98" rx="16" fill="#12161D" stroke="#273140"/>
+  <text x="445" y="428" class="small">Self-supervised adaptation</text>
+  <text x="445" y="452" class="micro">SimCLR on OCTA images</text>
+  <text x="445" y="474" class="micro">OD/OS bilateral positives</text>
 
-  <rect x="435" y="522" width="245" height="130" rx="16" fill="#12161D" stroke="#273140"/>
-  <text x="455" y="550" class="small">Independent image encoders</text>
-  <text x="455" y="574" class="micro">ConvNeXt-Tiny for Sup</text>
-  <text x="455" y="596" class="micro">ConvNeXt-Tiny for Deep</text>
-  <text x="455" y="618" class="micro">ConvNeXt-Tiny for CC</text>
-  <text x="455" y="640" class="micro">No shared weights across layers</text>
+  <rect x="425" y="520" width="245" height="130" rx="16" fill="#12161D" stroke="#273140"/>
+  <text x="445" y="548" class="small">Independent backbones</text>
+  <text x="445" y="572" class="micro">ConvNeXt-Tiny for Sup</text>
+  <text x="445" y="594" class="micro">ConvNeXt-Tiny for Deep</text>
+  <text x="445" y="616" class="micro">ConvNeXt-Tiny for CC</text>
+  <text x="445" y="638" class="micro">No shared weights</text>
 
-  <rect x="435" y="674" width="245" height="68" rx="16" fill="#111B2A" stroke="#3A5578"/>
-  <text x="455" y="702" class="small">Output: 3 visual tokens</text>
-  <text x="455" y="724" class="micro">Fs, Fd, Fc in 256-d feature space</text>
+  <rect x="425" y="672" width="245" height="66" rx="16" fill="#111B2A" stroke="#3A5578"/>
+  <text x="445" y="700" class="small">Projection heads</text>
+  <text x="445" y="722" class="micro">768 → 512 → 256-d per layer</text>
 
-  <rect x="760" y="280" width="335" height="500" rx="24" fill="url(#panelGrad)" stroke="#242B35" filter="url(#panelShadow)"/>
-  <text x="790" y="332" class="section">3. Biology-aware multimodal fusion</text>
-  <text x="790" y="366" class="body">Fuse retinal layers first, then fuse modalities.</text>
+  <!-- Column 3: Multimodal fusion -->
+  <rect x="740" y="270" width="345" height="580" rx="24" fill="url(#panelGrad)" stroke="#242B35" filter="url(#panelShadow)"/>
+  <text x="770" y="320" class="section">3. Biology-aware multimodal fusion</text>
+  <text x="770" y="354" class="body">Layers interact first, then fuse with context.</text>
 
-  <rect x="790" y="402" width="275" height="88" rx="16" fill="#12161D" stroke="#273140"/>
-  <text x="810" y="430" class="small">Cross-layer attention</text>
-  <text x="810" y="454" class="micro">Models interactions across Sup, Deep, CC</text>
-  <text x="810" y="476" class="micro">Produces layer-aware OCTA state F_octa</text>
+  <rect x="770" y="400" width="285" height="88" rx="16" fill="#12161D" stroke="#273140"/>
+  <text x="790" y="428" class="small">Cross-layer attention (Phase 6)</text>
+  <text x="790" y="452" class="micro">Layer-identity embeddings + 8-head</text>
+  <text x="790" y="474" class="micro">transformer → F_octa ∈ R^256</text>
 
-  <rect x="790" y="512" width="275" height="88" rx="16" fill="#12161D" stroke="#273140"/>
-  <text x="810" y="540" class="small">Tabular encoder</text>
-  <text x="810" y="564" class="micro">Clinical features + generated biomarkers</text>
-  <text x="810" y="586" class="micro">Missingness handled explicitly</text>
+  <rect x="770" y="508" width="285" height="88" rx="16" fill="#12161D" stroke="#273140"/>
+  <text x="790" y="536" class="small">Tabular encoder (Phase 5)</text>
+  <text x="790" y="560" class="micro">Clinical features + biomarkers</text>
+  <text x="790" y="582" class="micro">Learned missing-value tokens</text>
 
-  <rect x="790" y="622" width="275" height="120" rx="16" fill="#12161D" stroke="#273140"/>
-  <text x="810" y="650" class="small">Pseudo-mask branch</text>
-  <text x="810" y="674" class="micro">Classical vessel / FAZ / CC flow masks</text>
-  <text x="810" y="696" class="micro">Optional U-Net++ student refinement</text>
-  <text x="810" y="718" class="micro">Mask encoder adds morphology signal</text>
+  <rect x="770" y="616" width="285" height="120" rx="16" fill="#12161D" stroke="#273140"/>
+  <text x="790" y="644" class="small">U-Net++ mask branch (Phase 8)</text>
+  <text x="790" y="668" class="micro">Classical masks → U-Net++ student</text>
+  <text x="790" y="690" class="micro">Mask encoder → F_mask ∈ R^128</text>
+  <text x="790" y="712" class="micro">Vessel, FAZ, CC flow biomarkers</text>
 
-  <rect x="1145" y="280" width="235" height="500" rx="24" fill="url(#panelGrad)" stroke="#242B35" filter="url(#panelShadow)"/>
-  <text x="1175" y="332" class="section">4. CAD predictor</text>
-  <text x="1175" y="366" class="body">Joint decision state across modalities.</text>
+  <rect x="770" y="756" width="285" height="72" rx="16" fill="#111B2A" stroke="#3A5578"/>
+  <text x="790" y="784" class="small">Fusion (Phase 7 + 9 compat)</text>
+  <text x="790" y="806" class="micro">F_cond = F_octa + Proj_tab(F_tabular)</text>
+  <text x="790" y="824" class="micro">H = Concat(F_cond, F_mask) → R^512</text>
 
-  <rect x="1175" y="416" width="175" height="104" rx="16" fill="#111B2A" stroke="#3A5578"/>
-  <text x="1195" y="444" class="small">Cross-attention fusion</text>
-  <text x="1195" y="468" class="micro">F_octa queries</text>
-  <text x="1195" y="486" class="micro">clinical context</text>
-  <text x="1195" y="504" class="micro">+ mask features</text>
+  <!-- Column 4: Prediction and trust -->
+  <rect x="1125" y="270" width="225" height="580" rx="24" fill="url(#panelGrad)" stroke="#242B35" filter="url(#panelShadow)"/>
+  <text x="1155" y="320" class="section">4. Prediction &amp; trust</text>
+  <text x="1155" y="354" class="body">Prototype-augmented, calibrated, explainable.</text>
 
-  <rect x="1175" y="546" width="175" height="74" rx="16" fill="#12161D" stroke="#273140"/>
-  <text x="1195" y="574" class="small">Unified representation</text>
-  <text x="1195" y="598" class="micro">512-d multimodal state</text>
+  <rect x="1155" y="400" width="165" height="86" rx="16" fill="#12161D" stroke="#273140"/>
+  <text x="1175" y="428" class="small">Prototype classifier (Phase 9)</text>
+  <text x="1175" y="452" class="micro">Linear 512→256→128→N</text>
+  <text x="1175" y="472" class="micro">+ EMA class prototypes</text>
 
-  <rect x="1175" y="646" width="175" height="96" rx="16" fill="#12161D" stroke="#273140"/>
-  <text x="1195" y="674" class="small">Classification head</text>
-  <text x="1195" y="698" class="micro">CAD cohort probabilities</text>
-  <text x="1195" y="720" class="micro">per eye / sample</text>
+  <rect x="1155" y="506" width="165" height="66" rx="16" fill="#12161D" stroke="#273140"/>
+  <text x="1175" y="534" class="small">MC Dropout uncertainty</text>
+  <text x="1175" y="556" class="micro">30 forward passes</text>
+  <text x="1175" y="574" class="micro">Entropy flagging</text>
 
-  <rect x="1280" y="205" width="170" height="34" rx="17" fill="#18150E" stroke="#4A3A18"/>
-  <text x="1305" y="228" class="pill" fill="#FFCC7F">NEXT EVAL LAYER</text>
+  <rect x="1155" y="592" width="165" height="50" rx="16" fill="#12161D" stroke="#273140"/>
+  <text x="1175" y="614" class="small">Temperature calibration</text>
+  <text x="1175" y="634" class="micro">ECE, Brier score</text>
 
-  <rect x="1400" y="280" width="110" height="500" rx="24" fill="url(#panelGrad)" stroke="#3B3422" filter="url(#panelShadow)"/>
-  <text x="1426" y="332" class="section" transform="rotate(90 1426 332)">5. Trust layer</text>
+  <rect x="1155" y="662" width="165" height="96" rx="16" fill="#12161D" stroke="#273140"/>
+  <text x="1175" y="690" class="small">Explainability (Phase 13)</text>
+  <text x="1175" y="714" class="micro">Grad-CAM per layer</text>
+  <text x="1175" y="734" class="micro">Layer-dominance analysis</text>
+  <text x="1175" y="754" class="micro">SHAP / occlusion</text>
 
-  <rect x="1422" y="410" width="66" height="86" rx="14" fill="#15130F" stroke="#4A3A18"/>
-  <text x="1434" y="438" class="micro" fill="#FFCC7F">Calibration</text>
-  <text x="1434" y="458" class="micro" fill="#FFCC7F">temperature</text>
-  <text x="1434" y="478" class="micro" fill="#FFCC7F">scaling</text>
+  <rect x="1155" y="778" width="165" height="50" rx="16" fill="#111B2A" stroke="#3A5578"/>
+  <text x="1175" y="800" class="small">Cohort probabilities</text>
+  <text x="1175" y="820" class="micro">4-class output</text>
 
-  <rect x="1422" y="518" width="66" height="86" rx="14" fill="#15130F" stroke="#4A3A18"/>
-  <text x="1434" y="546" class="micro" fill="#FFCC7F">Uncertainty</text>
-  <text x="1434" y="566" class="micro" fill="#FFCC7F">MC dropout</text>
-  <text x="1434" y="586" class="micro" fill="#FFCC7F">reliability</text>
+  <!-- Evaluation column (narrow) -->
+  <rect x="1390" y="270" width="120" height="580" rx="24" fill="url(#panelGrad)" stroke="#242B35" filter="url(#panelShadow)"/>
+  <text x="1416" y="320" class="section" transform="rotate(90 1416 320)">5. Evaluation</text>
 
-  <rect x="1422" y="626" width="66" height="96" rx="14" fill="#15130F" stroke="#4A3A18"/>
-  <text x="1434" y="654" class="micro" fill="#FFCC7F">Explainability</text>
-  <text x="1434" y="674" class="micro" fill="#FFCC7F">Grad-CAM</text>
-  <text x="1434" y="694" class="micro" fill="#FFCC7F">attention</text>
-  <text x="1434" y="714" class="micro" fill="#FFCC7F">ablations</text>
+  <rect x="1410" y="400" width="80" height="78" rx="14" fill="#12161D" stroke="#273140"/>
+  <text x="1422" y="428" class="micro" fill="#7DD9A7">Ablations</text>
+  <text x="1422" y="448" class="micro" fill="#7DD9A7">15 configs</text>
+  <text x="1422" y="466" class="micro" fill="#7DD9A7">each fold</text>
 
-  <path d="M355 530H393" class="arrow"/>
-  <path d="M710 530H748" class="accentArrow"/>
-  <path d="M1095 530H1133" class="accentArrow"/>
-  <path d="M1380 530H1388" class="arrow"/>
+  <rect x="1410" y="498" width="80" height="78" rx="14" fill="#12161D" stroke="#273140"/>
+  <text x="1422" y="526" class="micro" fill="#7DD9A7">Baselines</text>
+  <text x="1422" y="546" class="micro" fill="#7DD9A7">8 models</text>
+  <text x="1422" y="566" class="micro" fill="#7DD9A7">compared</text>
 
-  <path d="M327 438C370 438 376 438 405 438" class="line"/>
-  <path d="M327 534C370 534 376 534 405 534" class="line"/>
-  <path d="M327 650C370 650 376 650 405 650" class="line"/>
+  <rect x="1410" y="596" width="80" height="80" rx="14" fill="#12161D" stroke="#273140"/>
+  <text x="1422" y="624" class="micro" fill="#7DD9A7">Stats</text>
+  <text x="1422" y="644" class="micro" fill="#7DD9A7">5-fold CV</text>
+  <text x="1422" y="664" class="micro" fill="#7DD9A7">bootstrap CI</text>
 
-  <rect x="90" y="835" width="1420" height="95" rx="20" fill="#0E1218" stroke="#232D3B"/>
-  <text x="120" y="875" class="small">How to describe it in one sentence</text>
-  <text x="120" y="905" class="body">Separate encoders learn each OCTA layer, cross-layer attention models retinal interactions, multimodal fusion adds clinical and biomarker context, and the final system aims to deliver calibrated, interpretable CAD predictions.</text>
+  <rect x="1410" y="696" width="80" height="68" rx="14" fill="#12161D" stroke="#273140"/>
+  <text x="1422" y="724" class="micro" fill="#7DD9A7">Fairness</text>
+  <text x="1422" y="744" class="micro" fill="#7DD9A7">subgroups</text>
+
+  <!-- Arrows between columns -->
+  <path d="M355 560H382" class="arrow"/>
+  <path d="M700 560H727" class="accentArrow"/>
+  <path d="M1085 560H1112" class="accentArrow"/>
+  <path d="M1350 560H1377" class="arrow"/>
+
+  <!-- Vertical connector lines: col 1 → col 2 -->
+  <path d="M327 438C360 438 363 438 395 438" class="line"/>
+  <path d="M327 560C360 560 363 560 395 560" class="line"/>
+  <path d="M327 700C360 700 363 700 395 700" class="line"/>
+
+  <!-- Training strategy footer -->
+  <rect x="90" y="890" width="1420" height="100" rx="20" fill="#0E1218" stroke="#232D3B"/>
+  <text x="120" y="926" class="small">End-to-end training strategy (Phase 12)</text>
+  <text x="120" y="956" class="body">
+    <tspan x="120" dy="0">Stage 1: SimCLR pretraining (completed, reused)  ·  Stage 2: Backbones frozen, train downstream heads  ·  Stage 3: End-to-end fine-tuning</tspan>
+    <tspan x="120" dy="24">5-fold patient-grouped CV with inner validation  ·  AdamW, cosine warm restarts, AMP  ·  Resumable checkpoints, reproducibility seeding</tspan>
+  </text>
 </svg>

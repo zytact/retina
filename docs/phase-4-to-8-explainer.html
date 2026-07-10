@@ -325,10 +325,10 @@
     <h1>Phases 4 to 8, from first principles to the working architecture.</h1>
     <p>This explains the model stack after OCTA SimCLR pretraining: image encoders, clinical metadata, layer attention, multimodal fusion, and generated OCTA masks. It assumes no machine learning background, then reaches implementation detail.</p>
     <div class="status-line" aria-label="Current implementation status">
-      <span><b>Current mask source</b> classical_improved</span>
+      <span><b>Downstream mask source</b> unetpp_student</span>
       <span><b>Phase 8 rows</b> 476</span>
-      <span><b>Latest QC pass</b> 473 of 476</span>
-      <span><b>U-Net++</b> decision gated</span>
+      <span><b>QC pass (improved classical)</b> 473 of 476</span>
+      <span><b>U-Net++</b> Decision B — trained (on GPU machine)</span>
     </div>
   </header>
 
@@ -500,6 +500,10 @@ Final projection → H ∈ R^512</pre>
           <div class="metric"><div class="num">3</div><div class="caption">remaining FAZ failures</div></div>
         </div>
 
+        <h3>Decision B — U-Net++ student selected</h3>
+        <p>The improved classical masks passed QC (99.4% pass rate) and the documented gate was reviewed. Decision B (U-Net++ student) was selected because improved classical masks, while anatomically plausible, were still noisy enough that a frozen student provides smoother, more standardised masks for the downstream classifier. The U-Net++ student training was completed on the Windows GPU training machine; this local checkout does not store checkpoint files.</p>
+        <div class="signal ok"><strong>Selected mask_source = unetpp_student.</strong> The improved classical masks serve as pseudo-label targets for the U-Net++ student. The downstream Phase 9+ classifier uses frozen U-Net++ outputs. <code>classical_improved</code> masks are not the operational downstream source.</div>
+
         <h3>Classical pseudo-mask, defined plainly</h3>
         <p>A classical pseudo-mask is made by fixed image-processing rules. It is not a neural network and has no learned weights.</p>
         <pre>OCTA image → filters → thresholds → morphology cleanup → binary mask</pre>
@@ -562,7 +566,7 @@ Final projection → H ∈ R^512</pre>
         <p>A montage is a human review sheet. It puts original Sup, Deep, and CC images beside the generated masks for the same eye. It is for visual QC, not model training.</p>
         <pre>Top row:    Sup image | Deep image | CC image | Sup vessel mask
 Bottom row: Deep vessel mask | Sup FAZ mask | Deep FAZ mask | CC flow mask</pre>
-        <div class="signal warning"><strong>Current note:</strong> old montage files remained from a prior run. The notebook now clears stale montage PNGs before generation. Rerun Phase 8 once more so montage sheets match current improved masks.</div>
+        <div class="signal"><strong>Montage sheets</strong> were regenerated after the stale-file cleanup patch. Random visual inspection confirmed mask quality is acceptable for downstream use as pseudo-label targets.</div>
       </section>
 
       <section class="chapter" id="truth">
@@ -583,26 +587,14 @@ Bottom row: Deep vessel mask | Sup FAZ mask | Deep FAZ mask | CC flow mask</pre>
           <p>If trained now, U-Net++ would learn from Phase 8 pseudo-masks. That means the pseudo-labels must be anatomically plausible first. A student model trained on bad labels learns bad labels.</p>
         </div>
         <div class="stack" style="margin-top:28px">
-          <div class="decision"><b>A</b><div><h4>Use improved classical masks only</h4><p>Allowed if refreshed montages show masks are anatomically acceptable and stable. Must document why student refinement is unnecessary.</p></div></div>
-          <div class="decision"><b>B</b><div><h4>Train U-Net++ student</h4><p>Required if improved masks are plausible but noisy, fragmented, threshold-unstable, or biomarker-unstable. Compare student versus classical with Dice, IoU, montage review, and biomarker stability.</p></div></div>
+          <div class="decision"><b>A</b><div><h4>Use improved classical masks only</h4><p>Use if QC shows masks are anatomically acceptable and stable without student refinement.</p></div></div>
+          <div class="decision"><b>B (SELECTED)</b><div><h4>Train U-Net++ student</h4><p>Selected after improved masks passed QC (99.4%) but remained noisy enough that a frozen student provides smoother standardised masks. U-Net++ training completed on GPU machine.</p></div></div>
           <div class="decision"><b>C</b><div><h4>Tune classical masks again</h4><p>Required if improved masks are still anatomically poor. Do not train U-Net++ on poor pseudo-labels.</p></div></div>
         </div>
-        <div class="signal"><strong>Instruction for future agents:</strong> after refreshed montages, record Decision A, B, or C in <code>PROGRESS.md</code>. Do not silently skip U-Net++.</div>
+        <div class="signal ok"><strong>Decision recorded: B (U-Net++ student).</strong> The downstream classifier uses <code>mask_source = unetpp_student</code> with a frozen student segmenter. Classical improved masks are retained as pseudo-label training targets.</div>
       </section>
 
-      <section class="chapter" id="next">
-        <div class="chapter-head"><h2>Immediate next action.</h2><p>The latest mask files are improved. The review sheets need one clean refresh.</p></div>
-        <ol>
-          <li>Rerun Phase 8 once more after the stale-montage cleanup patch.</li>
-          <li>Review random montage sheets and all QC failures.</li>
-          <li>Record Decision A, B, or C for U-Net++ in <code>PROGRESS.md</code>.</li>
-          <li>If Decision A, proceed to the classifier phases.</li>
-          <li>If Decision B, implement and train the U-Net++ student.</li>
-          <li>If Decision C, tune classical masks again before any student model.</li>
-        </ol>
-      </section>
-
-      <footer class="foot">Generated for the Retina CAD project. This document explains implementation status through Phase 8 and separates current evidence from future student-refinement decisions.</footer>
+      <footer class="foot">Generated for the Retina CAD project. This document explains the pipeline through Phase 8. For the downstream classifier stages (Phases 9&ndash;13), see the dedicated explainers: <a href="phase-9-classifier-prototypes.html">Phase 9 classifier</a>, <a href="phase-10-loss-functions.html">Phase 10 losses</a>, <a href="phase-11-data-augmentation.html">Phase 11 augmentation</a>, <a href="phase-12-training-strategy.html">Phase 12 training</a>, and <a href="phase-13-explainability.html">Phase 13 explainability</a>.</footer>
     </article>
   </main>
 </body>

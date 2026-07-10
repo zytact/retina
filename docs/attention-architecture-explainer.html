@@ -423,7 +423,7 @@
         <div class="mark" aria-hidden="true"></div>
         <div>
           <strong>Retina CAD architecture</strong>
-          <span>planned full V1 architecture</span>
+          <span>full V1 architecture (implemented through Phase 13)</span>
         </div>
       </div>
       <nav class="nav" aria-label="Page sections">
@@ -441,7 +441,7 @@
         <div>
           <div class="signal">Plain-language model briefing</div>
           <h1>How the model learns what to look at.</h1>
-          <p class="lead">This page explains the planned full Version 1 architecture: OCTA-SimCLR adaptation, three independent image encoders, cross-layer self-attention, clinical and biomarker encoding, generated mask refinement, multimodal fusion, prototype classification, uncertainty, and calibration.</p>
+          <p class="lead">This page explains the full Version 1 architecture: OCTA-SimCLR adaptation, three independent image encoders, cross-layer self-attention, clinical and biomarker encoding, generated mask refinement, multimodal fusion, prototype classification, uncertainty, and calibration &mdash; all implemented through Phase 13.</p>
         </div>
         <aside class="quiet-panel hero-note" aria-label="Core idea">
           <h2>Attention is weighted relevance.</h2>
@@ -478,7 +478,7 @@
           <article class="definition">
             <h3>Cross-attention</h3>
             <div>
-              <p>Cross-attention means the query comes from one source, while keys and values come from another. In the planned Phase 7 fusion block, <span class="mono">F_octa</span> asks a question, and <span class="mono">F_tabular</span> supplies clinical context plus generated OCTA biomarkers as keys and values.</p>
+              <p>Cross-attention means the query comes from one source, while keys and values come from another. In the Phase 7 fusion block, <span class="mono">F_octa</span> asks a question, and <span class="mono">F_tabular</span> supplies clinical context plus generated OCTA biomarkers as keys and values.</p>
               <p>It asks: “given this OCTA pattern, which clinical facts should change the interpretation?” The same retinal finding may matter differently in a diabetic, hypertensive, or normotensive patient.</p>
             </div>
           </article>
@@ -490,7 +490,7 @@
       <div class="shell">
         <div class="section-head">
           <h2>Architecture map.</h2>
-          <p>The canvas separates the planned model into its main branches so nothing is hidden inside one box: OCTA encoders, cross-layer attention, clinical encoder, generated-mask pipeline, biomarker stream, fusion, classifier, prototypes, uncertainty, calibration, explainability, and evaluation.</p>
+          <p>The canvas separates the full model into its main branches so nothing is hidden inside one box: OCTA encoders, cross-layer attention, clinical encoder, generated-mask pipeline, biomarker stream, fusion, classifier, prototypes, uncertainty, calibration, explainability, and evaluation.</p>
         </div>
         <div class="canvas-toolbar">
           <div class="legend" aria-label="Diagram legend">
@@ -656,7 +656,7 @@
             </tr>
           </tbody>
         </table>
-        <p class="footer-note">This is the planned full architecture, not a progress report. Implementation status belongs in PROGRESS.md. The explainer intentionally shows roadmap components such as U-Net++ refinement, prototype logits, uncertainty, calibration, and explainability so reviewers see the complete design.</p>
+        <p class="footer-note">This architecture is fully implemented through Phase 13. For companion explainers, see <a href="phase-9-classifier-prototypes.html">Phase 9 (classifier/prototypes)</a>, <a href="phase-10-loss-functions.html">Phase 10 (losses)</a>, <a href="phase-11-data-augmentation.html">Phase 11 (augmentation)</a>, <a href="phase-12-training-strategy.html">Phase 12 (training)</a>, and <a href="architecture-overview-guide.html">architecture overview</a>.</p>
       </div>
     </section>
   </main>
@@ -776,7 +776,7 @@
         ctx.beginPath(); ctx.moveTo(48, y); ctx.lineTo(1508, y); ctx.stroke();
       }
 
-      label('Retina CAD model, planned full V1 architecture', 54, 38, 30, C.text, 560);
+      label('Retina CAD model, full V1 architecture (implemented)', 54, 38, 30, C.text, 560);
       wrap('The diagram is split by responsibility: OCTA representation, tabular context, weak segmentation, fusion, decision head, and review outputs.', 54, 78, 1120, 22, 16, C.mid);
 
       label('OCTA image path', 70, 136, 18, C.blue, 620);

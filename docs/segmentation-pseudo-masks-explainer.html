@@ -455,7 +455,7 @@
         <div class="fade-up">
           <div class="hero-note">Plan update: self-generated segmentation, not manual annotation</div>
           <h1>We generate the masks ourselves.</h1>
-          <p class="lead">RASTA does not ship with hand-drawn vessel, FAZ, or choriocapillaris masks. The segmentation branch therefore starts as deterministic pseudo-mask generation, may add a frozen student later, and only then feeds mask features into CAD classification.</p>
+          <p class="lead">RASTA does not ship with hand-drawn vessel, FAZ, or choriocapillaris masks. The segmentation branch therefore starts as deterministic pseudo-mask generation, trains a frozen U-Net++ student on those pseudo-labels, and feeds the student-refined masks into downstream disease classification.</p>
         </div>
         <dl class="status fade-up delay-1">
           <div class="status-block">
@@ -504,7 +504,7 @@
       <div class="shell">
         <div class="section-head fade-up">
           <h2>Where the student model belongs.</h2>
-          <p>The student is an optional cleanup stage. It learns the pseudo-mask grammar first, then freezes. It is not a second path for disease supervision, and it should not be trained jointly with the classifier unless a separate experiment proves the masks stay stable.</p>
+          <p>The student is a learned cleanup stage. It learns the pseudo-mask grammar first, then freezes. It is not a second path for disease supervision, and it should not be trained jointly with the classifier unless a separate experiment proves the masks stay stable. For this project, <strong>Decision B (U-Net++ student)</strong> was selected after improved classical pseudo-masks passed QC (99.4% pass rate) but remained noisy enough that a frozen student provides smoother standardised masks for the downstream classifier.</p>
         </div>
         <div class="process">
           <div class="sequence fade-up delay-1" aria-label="Pseudo-mask pipeline">
@@ -517,8 +517,8 @@
               <p>Create deterministic vessel, FAZ, and choriocapillaris flow-deficit masks without CAD labels.</p>
             </div>
             <div class="step">
-              <strong>3. Train optional student</strong>
-              <p>Use Attention U-Net or U-Net++ style segmentation only to imitate those pseudo-masks.</p>
+              <strong>3. Train U-Net++ student</strong>
+              <p>U-Net++ trained against QC-passed improved classical pseudo-masks. The frozen student produces standardised masks for the downstream classifier. Training completed on the Windows GPU machine; checkpoints remain there.</p>
             </div>
             <div class="step">
               <strong>4. Freeze and measure</strong>
@@ -551,7 +551,7 @@
       <div class="shell">
         <div class="section-head fade-up">
           <h2>Attention U-Net or U-Net++.</h2>
-          <p>Both remain valid. The default stays conservative: classical masks first, then a lighter student if visual review says the pseudo-labels are stable enough to support it.</p>
+          <p>Both remain valid architectures. For this project, <strong>U-Net++ was selected</strong> because the improved classical pseudo-masks passed QC and the stronger multi-scale refinement of U-Net++ was expected to produce smoother vessel boundaries and more stable FAZ contours. The student training was completed on the separate GPU machine.</p>
         </div>
         <div class="compare">
           <article class="choice fade-up delay-1">
@@ -573,12 +573,13 @@
             </ul>
           </article>
           <article class="choice fade-up delay-3">
-            <h3>Default policy</h3>
-            <p>Start without a student. Add one only if montage review, QC counts, and ablations show a real improvement.</p>
+            <h3>Project decision: B &mdash; U-Net++ student</h3>
+            <p>Improved classical masks passed QC with 99.4% pass rate. The U-Net++ student was trained on those pseudo-labels and is now frozen for downstream classifier use.</p>
             <ul>
-              <li>Compare classical vs student masks directly</li>
-              <li>Freeze segmentation before CAD training</li>
-              <li>Keep joint training as a later experiment</li>
+              <li><strong>mask_source:</strong> unetpp_student (downstream classifier)</li>
+              <li><strong>pseudo_label_source:</strong> classical_improved (student training targets)</li>
+              <li>Student frozen during disease-classifier training (Stages 2 and 3)</li>
+              <li>Joint training kept as a later optional experiment</li>
             </ul>
           </article>
         </div>
@@ -614,7 +615,7 @@
           </article>
           <article class="dataset fade-up delay-3">
             <h3><span class="mono">mask_source</span></h3>
-            <p>Use <span class="mono">classical</span> or <span class="mono">student</span> so every downstream run remains auditable.</p>
+            <p>Use <span class="mono">classical_improved</span>, <span class="mono">unetpp_student</span>, or <span class="mono">attention_unet_student</span> so every downstream run remains auditable. Current project value: <span class="mono">unetpp_student</span>.</p>
           </article>
           <article class="dataset fade-up delay-3">
             <h3><span class="mono">qc_flags</span></h3>
@@ -623,6 +624,15 @@
         </div>
       </div>
     </section>
+
+    <footer style="border-top:1px solid var(--line);padding:32px 0;color:var(--text-low);font-size:0.9rem">
+      <div class="shell">
+        This document covers the segmentation pipeline (Phase 8). For downstream usage of these masks in the classifier, see
+        <a href="phase-9-classifier-prototypes.html" style="color:var(--halo)">Phase 9 classifier</a>,
+        <a href="phase-12-training-strategy.html" style="color:var(--halo)">Phase 12 training</a>, and
+        <a href="architecture-overview-guide.html" style="color:var(--halo)">architecture overview</a>.
+      </div>
+    </footer>
   </main>
 </body>
 </html>

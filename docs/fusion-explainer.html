@@ -654,7 +654,7 @@
           <div class="kicker-row">
             <span class="marker-line"><span class="dot" style="color: var(--halo)"></span>Intermediate fusion, not raw-data fusion</span>
             <span class="marker-line"><span class="dot" style="color: var(--success)"></span>Repo built through phases 1 to 3</span>
-            <span class="marker-line"><span class="dot" style="color: var(--planned)"></span>Pseudo-mask + fusion branches are planned next</span>
+            <span class="marker-line"><span class="dot built"></span>Full pipeline implemented through Phase 13</span>
           </div>
           <h1>Fusion means the model learns from images, generated masks, biomarkers, and clinical context together.</h1>
           <p class="lead">
@@ -684,11 +684,11 @@
         <aside class="hero-side" aria-labelledby="quick-answer">
           <h2 id="quick-answer">Short answer</h2>
           <p>
-            The planned model now has three evidence streams. One reads the three OCTA images, one generates/encodes segmentation masks and biomarkers, and one reads clinical variables plus those biomarkers as tabular context. These streams meet in fusion, then continue as one prediction pathway.
+            The implementation has three evidence streams. One reads the three OCTA images, one generates/encodes segmentation masks and biomarkers (via U-Net++ student), and one reads clinical variables plus those biomarkers as tabular context. These streams meet in fusion, then continue through a prototype-augmented classifier with uncertainty, calibration, and explainability.
           </p>
           <div class="meta-row">
-            <span class="marker-line"><span class="dot built"></span>Current notebook: dataset audit, preprocessing, SimCLR pretraining</span>
-            <span class="marker-line"><span class="dot planned"></span>Planned next: pseudo-mask generation, optional segmentation student, encoders, fusion, classifier</span>
+            <span class="marker-line"><span class="dot built"></span>Implemented through Phase 13: data pipeline, SimCLR, encoders, cross-layer attention, masks, fusion, classifier, training, explainability</span>
+            <span class="marker-line"><span class="dot built"></span>In progress: tabulated results, ablation comparisons, baseline experiments, statistical validation</span>
             <span class="marker-line"><span class="dot watch"></span>Important: this page separates implemented work from architecture intent</span>
           </div>
         </aside>
@@ -743,13 +743,13 @@
         <div class="section-top">
           <div>
             <span class="label">Architecture view</span>
-            <h2 class="section-title">Where fusion sits in the planned pipeline</h2>
+            <h2 class="section-title">Where fusion sits in the pipeline</h2>
             <p class="section-copy">
-              Click the steps below. The diagram highlights one part of the pathway at a time. Solid marks show work already built in the notebook. Dashed marks show the updated planned stages from <span class="monoish">PLAN.md</span>, including self-generated masks.
+              Click the steps below. The diagram highlights one part of the pathway at a time. All stages through explainability and evaluation are implemented.
             </p>
           </div>
           <aside class="section-aside">
-            The current repository has implemented the data path up to preprocessing and layer-specific SimCLR pretraining. The new pseudo-mask generation, segmentation student, and fusion block are not coded yet. They are defined in the architecture plan.
+            The full pipeline is now implemented: data curation, SimCLR pretraining, image encoders, cross-layer attention, tabular encoder, U-Net++ mask generation, multimodal fusion, prototype-augmented classifier, MC-Dropout uncertainty, temperature calibration, and explainability (Grad-CAM, layer-dominance, SHAP). Tabulated results and baseline comparisons are in progress.
           </aside>
         </div>
 
@@ -765,8 +765,8 @@
           <div class="stage-grid">
             <div>
               <svg viewBox="0 0 1040 620" aria-labelledby="diagram-title diagram-desc" role="img">
-                <title id="diagram-title">Planned Retina CAD fusion pathway</title>
-                <desc id="diagram-desc">Three OCTA image layers flow through separate image encoders, generated pseudo-masks flow through a mask encoder and biomarker extractor, clinical plus biomarker values flow through a tabular encoder, then all join at fusion and continue to classifier and uncertainty outputs.</desc>
+                <title id="diagram-title">Retina CAD fusion pathway (implemented)</title>
+                <desc id="diagram-desc">Three OCTA image layers flow through separate image encoders, generated pseudo-masks flow through a U-Net++ student and mask encoder, clinical plus biomarker values flow through a tabular encoder, then all join at fusion and continue to prototype-augmented classifier with MC-Dropout uncertainty, temperature calibration, and explainability.</desc>
                 <defs>
                   <linearGradient id="strokeBlue" x1="0" y1="0" x2="1" y2="1">
                     <stop offset="0%" stop-color="#7fb2ff" />
@@ -814,7 +814,7 @@
                   <path d="M240 162 H316" stroke="#7dd9a7" stroke-width="3" stroke-linecap="round" />
                   <path d="M240 272 H316" stroke="#7dd9a7" stroke-width="3" stroke-linecap="round" />
                   <path d="M240 382 H316" stroke="#7dd9a7" stroke-width="3" stroke-linecap="round" />
-                  <text x="250" y="146" fill="#7dd9a7" font-size="12">built through preprocessing and pretraining</text>
+                  <text x="250" y="146" fill="#7dd9a7" font-size="12">implemented through Phase 13</text>
 
                   <rect x="316" y="124" width="156" height="76" rx="38" fill="#0f1114" stroke="rgba(127,178,255,0.22)" stroke-dasharray="8 8" />
                   <rect x="316" y="234" width="156" height="76" rx="38" fill="#0f1114" stroke="rgba(127,178,255,0.22)" stroke-dasharray="8 8" />
@@ -822,7 +822,7 @@
                   <text x="366" y="168" fill="#f5f7fa" font-size="17" font-weight="600">Encoder</text>
                   <text x="343" y="278" fill="#f5f7fa" font-size="17" font-weight="600">Encoder</text>
                   <text x="343" y="388" fill="#f5f7fa" font-size="17" font-weight="600">Encoder</text>
-                  <text x="332" y="448" fill="#8c919a" font-size="14">planned phase 4</text>
+                  <text x="332" y="448" fill="#8c919a" font-size="14">phase 4 implemented</text>
 
                   <path d="M472 162 H544" stroke="#7fb2ff" stroke-width="3" stroke-linecap="round" stroke-dasharray="8 8" />
                   <path d="M472 272 H544" stroke="#7fb2ff" stroke-width="3" stroke-linecap="round" stroke-dasharray="8 8" />
@@ -913,8 +913,8 @@
 
               <div class="flow-body" data-stage-copy="5">
                 <h3 class="flow-title">Step 5, output</h3>
-                <p>The fused representation goes to the classifier head. That head predicts disease cohort probabilities.</p>
-                <p data-level="intermediate">The planned output also includes uncertainty, calibration, and explainability. So the model should say not only <em>what</em> it predicts, but also how certain it is and what evidence drove the prediction.</p>
+                <p>The fused representation goes to the prototype-augmented classifier head. That head predicts disease cohort probabilities with learned class prototypes that improve rare-cohort generalisation.</p>
+                <p data-level="intermediate">The output also includes MC-Dropout uncertainty (epistemic variance and entropy), post-hoc temperature calibration (ECE, Brier score), and full explainability (Grad-CAM per layer, layer-dominance analysis from attention weights, SHAP/occlusion for clinical features).</p>
               </div>
             </aside>
           </div>
@@ -933,7 +933,7 @@
             </p>
           </div>
           <aside class="section-aside">
-            According to <span class="monoish">PROGRESS.md</span>, current implementation stops at phase 3. Pseudo-mask generation, the optional segmentation student, and phases 4+ fusion/classification remain planned work.
+            The full pipeline is implemented through Phase 13. For details on each stage, see <a href="phase-9-classifier-prototypes.html">classifier</a>, <a href="phase-10-loss-functions.html">losses</a>, <a href="phase-11-data-augmentation.html">augmentation</a>, <a href="phase-12-training-strategy.html">training</a>, <a href="phase-13-explainability.html">explainability</a>.
           </aside>
         </div>
 
@@ -954,29 +954,29 @@
             The notebook currently returns separate layer tensors and placeholder masks. It must be updated to generate/load Sup/Deep vessel masks, Sup/Deep FAZ masks, CC flow masks, biomarkers, patient id, eye, and fold.
           </li>
           <li>
-            <span class="status-tag built">Built now</span>
+            <span class="status-tag built">Built</span>
             <strong>Layer-specific SimCLR pretraining</strong>
-            The project already pretrains layer-specific image backbones, which later feed the multimodal model.
+            The project pretrained layer-specific image backbones (100 epochs per layer per fold, completed).
           </li>
           <li>
-            <span class="status-tag planned">Planned next</span>
+            <span class="status-tag built">Built</span>
             <strong>Per-layer ConvNeXt encoders and cross-layer attention</strong>
-            This stage converts each layer into a 256-d token, then fuses the three retinal layers into one OCTA representation.
+            Three independent ConvNeXt-Tiny encoders (Sup, Deep, CC) each produce 256-d tokens. Layer-identity embeddings and 8-head transformer produce F_octa.
           </li>
           <li>
-            <span class="status-tag planned">Planned next</span>
+            <span class="status-tag built">Built</span>
             <strong>Pseudo-mask generation, tabular encoder, and multimodal fusion block</strong>
-            This is the main image-plus-mask-plus-tabular fusion stage described on this page.
+            The main image-plus-mask-plus-tabular fusion stage. Tabular encoder processes clinical + biomarker features with learned missing tokens. Fusion combines F_octa (conditioned on F_tabular) with F_mask.
           </li>
           <li>
-            <span class="status-tag planned">Planned next</span>
-            <strong>Self-generated segmentation masks</strong>
-            Classical pseudo-mask generation will create Sup/Deep vessel masks, Sup/Deep FAZ masks, and CC flow-deficit masks; an optional frozen student can refine them after QC.
+            <span class="status-tag built">Built</span>
+            <strong>Self-generated segmentation masks (U-Net++ student)</strong>
+            Classical pseudo-mask generation creates Sup/Deep vessel/FAZ masks and CC flow-deficit masks. U-Net++ student refines them (Decision B). QC pass rate 99.4% on improved classical masks.
           </li>
           <li>
-            <span class="status-tag planned">Planned next</span>
+            <span class="status-tag built">Built</span>
             <strong>Classifier, prototype logits, and uncertainty</strong>
-            The fused state will feed the final disease classifier and uncertainty-aware output logic.
+            The fused state feeds a prototype-augmented classifier with MC-Dropout uncertainty and temperature calibration. Full explainability (Grad-CAM, layer-dominance, SHAP) is also implemented.
           </li>
           <li>
             <span class="status-tag watch">Read carefully</span>
@@ -1022,7 +1022,7 @@
             <tr data-level="basic intermediate advanced">
               <td><strong>Intermediate fusion</strong></td>
               <td>Learn modality-specific features first, then combine the learned features.</td>
-              <td>This is the planned choice. It lets the image branch stay image-aware, the mask branch stay vascular-structure-aware, and the tabular branch stay clinically meaningful before they meet.</td>
+              <td>This is the implemented design. The image branch stays image-aware, the mask branch encodes vascular structure, and the tabular branch provides clinical context before fusion.</td>
             </tr>
             <tr data-level="advanced">
               <td><strong>Practical effect</strong></td>
@@ -1053,7 +1053,7 @@
           <div>
             <h3>1. Separate encoders for the three retinal layers</h3>
             <p data-level="basic">Each OCTA layer shows a different depth of retinal vasculature. So each gets its own image encoder.</p>
-            <p data-level="intermediate">The planned backbone is ConvNeXt-Tiny, pretrained on ImageNet, then adapted with OCTA SimCLR. After pooling, each branch produces a 256-d token.</p>
+            <p data-level="intermediate">The backbone is ConvNeXt-Tiny, pretrained on ImageNet, then adapted with OCTA SimCLR. After pooling, each branch produces a 256-d token.</p>
             <details>
               <summary>Why not share one encoder across all layers?</summary>
               <p>The plan argues that the layers reflect different physiological compartments and different textures. Shared weights may force one filter bank to fit all three patterns, which can wash out layer-specific signal.</p>
@@ -1114,7 +1114,7 @@
         <div class="callout" data-level="advanced">
           <strong>Advanced nuance</strong>
           <p>
-            There are now three fusion moments in the planned architecture. First, fusion across retinal layers creates <span class="monoish">F_octa</span>. Second, generated masks produce both <span class="monoish">F_mask</span> and biomarkers. Third, multimodal fusion combines <span class="monoish">F_octa</span>, <span class="monoish">F_mask</span>, and <span class="monoish">F_tabular</span>.
+            There are three fusion moments in the architecture. First, cross-layer attention across retinal layers creates <span class="monoish">F_octa</span>. Second, generated masks pass through the U-Net++ student and mask encoder to produce <span class="monoish">F_mask</span> and biomarkers. Third, multimodal fusion combines <span class="monoish">F_octa</span> (conditioned on <span class="monoish">F_tabular</span>) with <span class="monoish">F_mask</span>.
           </p>
         </div>
       </div>

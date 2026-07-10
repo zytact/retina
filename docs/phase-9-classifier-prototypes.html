@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Phase 9 — Classifier &amp; Prototype Augmentation &middot; Retina CAD</title>
+  <style>
+    :root {
+      --void: #030303; --deep: #0A0A0A; --surface: #111111;
+      --surface-2: #171717; --line: #2A2A2A; --line-soft: rgba(255,255,255,0.08);
+      --text: #F5F7FA; --text-mid: #B8BEC8; --text-low: #8C919A;
+      --halo: #7FB2FF; --halo-soft: rgba(127,178,255,0.12);
+      --mint: #8DE6BF; --amber: #D8B76A; --violet: #BDA3FF;
+      --max: 1180px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0; background: var(--void); color: var(--text);
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      font-size: 16px; line-height: 1.72;
+    }
+    body::before {
+      content: ""; position: fixed; inset: 0; pointer-events: none;
+      background: radial-gradient(circle at 78% 4%, rgba(127,178,255,0.07), transparent 28rem),
+                  radial-gradient(circle at 10% 70%, rgba(189,163,255,0.04), transparent 24rem);
+      z-index: -1;
+    }
+    a { color: var(--text); text-decoration-color: rgba(127,178,255,0.55); text-underline-offset: 0.18em; }
+    a:hover { color: var(--halo); }
+    .shell { width: min(var(--max), calc(100% - 40px)); margin: 0 auto; }
+
+    .masthead {
+      position: sticky; top: 0; z-index: 20;
+      background: rgba(3,3,3,0.78); backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--line-soft);
+    }
+    .masthead .shell {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 18px; padding: 14px 0;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+    .mark {
+      width: 32px; height: 32px; border-radius: 50%; flex: 0 0 auto;
+      background: radial-gradient(circle at 38% 38%, #eff6ff 0 10%, var(--halo) 12% 32%, rgba(127,178,255,0.24) 34% 56%, transparent 58%);
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.1), 0 0 32px rgba(127,178,255,0.18);
+    }
+    .brand strong, .brand span { display: block; }
+    .brand strong { font-size: 0.95rem; font-weight: 620; }
+    .brand span { font-size: 0.84rem; color: var(--text-mid); }
+    nav { display: flex; gap: 16px; flex-wrap: wrap; }
+    nav a { color: var(--text-mid); text-decoration: none; font-size: 0.92rem; padding-bottom: 4px; border-bottom: 1px solid transparent; transition: color 160ms, border-color 160ms; }
+    nav a:hover { color: var(--text); border-color: var(--line); }
+
+    header { padding: clamp(60px, 9vw, 100px) 0 44px; border-bottom: 1px solid var(--line); }
+    .kicker { display: inline-flex; align-items: center; gap: 10px; color: var(--text-mid); font-size: 0.92rem; margin-bottom: 20px; }
+    .kicker::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: var(--halo); box-shadow: 0 0 18px rgba(127,178,255,0.42); }
+    h1 { margin: 0; font-size: clamp(2.8rem, 6vw, 4.8rem); line-height: 0.96; letter-spacing: -0.033em; font-weight: 540; text-wrap: balance; }
+    .lead { margin: 24px 0 0; max-width: 72ch; color: var(--text-mid); font-size: clamp(1rem, 1.4vw, 1.12rem); text-wrap: pretty; }
+
+    section { padding: clamp(50px, 7vw, 80px) 0; border-bottom: 1px solid var(--line-soft); }
+    .section-head { display: grid; grid-template-columns: minmax(0, 0.72fr) minmax(280px, 1fr); gap: clamp(24px, 5vw, 60px); align-items: start; margin-bottom: 32px; }
+    h2 { margin: 0; font-size: clamp(1.8rem, 3.5vw, 3rem); line-height: 1; letter-spacing: -0.03em; font-weight: 530; text-wrap: balance; }
+    .section-head p { margin: 0; color: var(--text-mid); max-width: 72ch; text-wrap: pretty; }
+
+    .diagram-box {
+      background: #090A0C; border: 1px solid var(--line); border-radius: 18px;
+      padding: 28px 24px; margin: 20px 0;
+    }
+    .diagram-box svg { display: block; max-width: 100%; height: auto; margin: 0 auto; }
+    .diagram-caption { margin-top: 16px; color: var(--text-mid); font-size: 0.9rem; text-align: center; max-width: 72ch; margin-left: auto; margin-right: auto; }
+
+    .narrative { display: grid; grid-template-columns: minmax(160px, 0.34fr) minmax(0, 1fr); gap: clamp(18px, 4vw, 48px); padding: 22px 0; border-bottom: 1px solid var(--line-soft); }
+    .narrative:last-child { border-bottom: 0; }
+    .narrative h3 { margin: 0; font-size: 1.05rem; line-height: 1.25; font-weight: 620; }
+    .narrative p { margin: 0; color: var(--text-mid); max-width: 78ch; }
+    .narrative p + p { margin-top: 10px; }
+    code { font-family: "SFMono-Regular", Consolas, Menlo, monospace; color: #E3EEFF; background: rgba(127,178,255,0.07); border: 1px solid rgba(127,178,255,0.15); border-radius: 7px; padding: 0.12rem 0.34rem; white-space: nowrap; font-size: 0.88em; }
+
+    .split-panel { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 24px; }
+    .split-panel > div { border: 1px solid var(--line-soft); border-radius: 14px; padding: 20px; background: rgba(255,255,255,0.015); }
+    .split-panel h3 { margin: 0 0 10px; font-size: 1rem; font-weight: 600; }
+    .split-panel ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+    .split-panel li { padding: 6px 0; border-bottom: 1px solid var(--line-soft); color: var(--text-mid); font-size: 0.92rem; }
+    .split-panel li:last-child { border-bottom: 0; }
+    .split-panel li strong { color: var(--text); font-weight: 550; }
+
+    @media (max-width: 860px) {
+      .section-head, .narrative, .split-panel { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="masthead">
+    <div class="shell">
+      <div class="brand"><div class="mark"></div><div><strong>Retina CAD</strong><span>Phase 9 explainer</span></div></div>
+      <nav><a href="#why">Why</a><a href="#head">Head</a><a href="#prototypes">Prototypes</a><a href="#uncertainty">Uncertainty</a><a href="#calibration">Calibration</a></nav>
+    </div>
+  </div>
+
+  <header>
+    <div class="shell">
+      <div class="kicker">Phase 9</div>
+      <h1>Classification head with prototype augmentation</h1>
+      <p class="lead">The final layer that maps the fused multimodal representation to disease cohort probabilities. Includes a hybrid parametric + non-parametric prototype mechanism for rare-class generalisation, Monte Carlo Dropout for uncertainty, and post-hoc temperature scaling for calibration.</p>
+    </div>
+  </header>
+
+  <section id="why">
+    <div class="shell">
+      <div class="section-head">
+        <h2>Why the classifier matters</h2>
+        <p>By Phase 9, the pipeline has produced a 512-dimensional unified multimodal state H containing OCTA features, clinical and biomarker context, and generated mask structure. The classifier must turn this into clinically useful predictions.</p>
+      </div>
+      <div class="narrative">
+        <h3>The challenge</h3>
+        <div>
+          <p>The RASTA dataset has four disease cohorts with imbalanced class frequencies. A standard linear classifier tends to bias toward majority classes, producing poor recall for rare cohorts. A simple softmax layer also gives no indication of prediction reliability or calibration quality.</p>
+          <p>Phase 9 addresses three distinct requirements simultaneously: <strong>classification accuracy</strong> for imbalanced cohorts, <strong>uncertainty quantification</strong> for clinical triage, and <strong>calibration</strong> so the probabilities are clinically meaningful.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="head">
+    <div class="shell">
+      <div class="section-head">
+        <h2>Standard classifier head</h2>
+        <p>The base is a 3-layer MLP projecting from the 512-d multimodal state to class logits, with GELU activations and dropout for regularisation.</p>
+      </div>
+      <div class="diagram-box">
+        <svg viewBox="0 0 720 150" width="720" height="150" role="img" aria-label="Standard classifier head architecture">
+          <rect width="720" height="150" fill="none"/>
+          <rect x="10" y="42" width="100" height="50" rx="10" fill="#111B2A" stroke="#3A5578"/>
+          <text x="60" y="72" text-anchor="middle" fill="#CBD6E5" font-size="14" font-weight="500">H ∈ R^512</text>
+          <text x="110" y="46" fill="#8C919A" font-size="13" font-weight="500" dominant-baseline="middle">→</text>
+          <rect x="130" y="30" width="120" height="74" rx="10" fill="#12161D" stroke="#273140"/>
+          <text x="190" y="52" text-anchor="middle" fill="#CBD6E5" font-size="13" font-weight="500">Linear 512→256</text>
+          <text x="190" y="72" text-anchor="middle" fill="#8C919A" font-size="12">GELU · Dropout 0.3</text>
+          <text x="250" y="46" fill="#8C919A" font-size="13" font-weight="500" dominant-baseline="middle">→</text>
+          <rect x="270" y="30" width="120" height="74" rx="10" fill="#12161D" stroke="#273140"/>
+          <text x="330" y="52" text-anchor="middle" fill="#CBD6E5" font-size="13" font-weight="500">Linear 256→128</text>
+          <text x="330" y="72" text-anchor="middle" fill="#8C919A" font-size="12">GELU · Dropout 0.3</text>
+          <text x="390" y="46" fill="#8C919A" font-size="13" font-weight="500" dominant-baseline="middle">→</text>
+          <rect x="410" y="30" width="120" height="74" rx="10" fill="#12161D" stroke="#273140"/>
+          <text x="470" y="52" text-anchor="middle" fill="#CBD6E5" font-size="13" font-weight="500">Linear 128→4</text>
+          <text x="470" y="72" text-anchor="middle" fill="#8C919A" font-size="12">Class logits</text>
+          <text x="530" y="46" fill="#8C919A" font-size="13" font-weight="500" dominant-baseline="middle">→</text>
+          <rect x="550" y="30" width="100" height="74" rx="10" fill="#111B2A" stroke="#3A5578"/>
+          <text x="600" y="60" text-anchor="middle" fill="#CBD6E5" font-size="14" font-weight="500">Softmax</text>
+          <text x="600" y="80" text-anchor="middle" fill="#8C919A" font-size="12">Probabilities</text>
+          <path d="M650 67 L670 67" stroke="#7FB2FF" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <div class="diagram-caption">Standard 3-layer classifier head. The 128-dimensional penultimate embedding is also used for prototype-based logits.</div>
+      </div>
+      <div class="narrative">
+        <h3>GELU over ReLU</h3>
+        <div><p>GELU's smooth gradient near zero preserves information for near-zero features. ReLU would hard-zero them, discarding gradient signal. This matters for clinical features with small z-scores and for the prototype similarity computation in the penultimate space.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="prototypes">
+    <div class="shell">
+      <div class="section-head">
+        <h2>Prototype-augmented logits</h2>
+        <p>A hybrid classification head that combines a standard linear layer with non-parametric prototype similarity. The prototype branch acts as a regulariser and improves rare-class generalisation.</p>
+      </div>
+      <div class="diagram-box">
+        <svg viewBox="0 0 700 200" width="700" height="200" role="img" aria-label="Prototype augmentation diagram">
+          <rect width="700" height="200" fill="none"/>
+          <rect x="10" y="55" width="120" height="40" rx="10" fill="#111B2A" stroke="#3A5578"/>
+          <text x="70" y="79" text-anchor="middle" fill="#CBD6E5" font-size="14" font-weight="500">z ∈ R^128</text>
+
+          <path d="M130 75 L170 75" stroke="#8EA4C8" stroke-width="1.8" marker-end="url(#a)"/>
+          <rect x="180" y="20" width="160" height="50" rx="10" fill="#12161D" stroke="#273140"/>
+          <text x="260" y="48" text-anchor="middle" fill="#CBD6E5" font-size="13" font-weight="500">Linear 128 → 4 <tspan fill="#8C919A" font-size="12">(standard)</tspan></text>
+          <path d="M340 45 L380 45" stroke="#8EA4C8" stroke-width="1.8" marker-end="url(#a)"/>
+          <rect x="390" y="20" width="100" height="50" rx="10" fill="#12161D" stroke="#273140"/>
+          <text x="440" y="52" text-anchor="middle" fill="#CBD6E5" font-size="14" font-weight="500">logit_std</text>
+
+          <path d="M130 75 L170 90" stroke="#BDA3FF" stroke-width="1.8" marker-end="url(#a2)"/>
+          <rect x="180" y="70" width="160" height="50" rx="10" fill="#14111A" stroke="#4A3A78"/>
+          <text x="260" y="98" text-anchor="middle" fill="#CBD6E5" font-size="13" font-weight="500">-||z - P_k||² / τ <tspan fill="#8C919A" font-size="12">(prototype)</tspan></text>
+          <path d="M340 95 L380 95" stroke="#BDA3FF" stroke-width="1.8" marker-end="url(#a2)"/>
+          <rect x="390" y="80" width="100" height="50" rx="10" fill="#14111A" stroke="#4A3A78"/>
+          <text x="440" y="112" text-anchor="middle" fill="#CBD6E5" font-size="14" font-weight="500">logit_proto</text>
+
+          <path d="M490 55 L520 55 L520 105 L520 55" stroke="#7FB2FF" stroke-width="1.8" fill="none"/>
+          <rect x="530" y="55" width="100" height="50" rx="10" fill="#111B2A" stroke="#3A5578"/>
+          <text x="580" y="84" text-anchor="middle" fill="#CBD6E5" font-size="13" font-weight="500">logit_std + α · logit_proto</text>
+
+          <text x="70" y="130" text-anchor="middle" fill="#7E8A9C" font-size="12" font-weight="500">P_k: EMA class prototypes</text>
+          <text x="70" y="148" text-anchor="middle" fill="#7E8A9C" font-size="12" font-weight="500">α: learned scalar (softplus)</text>
+          <text x="70" y="166" text-anchor="middle" fill="#7E8A9C" font-size="12" font-weight="500">τ = 0.1</text>
+
+          <defs>
+            <marker id="a" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0 0L8 4L0 8" stroke="#8EA4C8" stroke-width="1.6" fill="none"/></marker>
+            <marker id="a2" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0 0L8 4L0 8" stroke="#BDA3FF" stroke-width="1.6" fill="none"/></marker>
+          </defs>
+        </svg>
+        <div class="diagram-caption">Standard and prototype logits are added. The prototype weight α is a learned scalar via softplus, initialised near zero so the standard head dominates early in training.</div>
+      </div>
+      <div class="narrative">
+        <h3>EMA prototype update</h3>
+        <div><p>During training, class prototypes P_k are maintained as exponential moving averages of class-conditional penultimate embeddings. After the first classifier epoch, they are initialised from the actual class means. Updates happen only for classes present in the current batch. At inference, the squared Euclidean distance to each prototype provides a non-parametric classification signal that complements the linear head.</p></div>
+      </div>
+      <div class="narrative">
+        <h3>Why it works for rare cohorts</h3>
+        <div><p>Linear classifiers learn decision boundaries that maximise margin, which tends to push minority class boundaries toward the majority. Prototype-based similarity is not margin-based: a rare-class sample close to its class prototype scores high regardless of how many other samples exist. This is especially helpful for cohorts like MRCC or FAMILIPO where fewer than 20% of samples belong to the class.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="uncertainty">
+    <div class="shell">
+      <div class="section-head">
+        <h2>Monte Carlo Dropout uncertainty</h2>
+        <p>At inference, dropout is kept active and N forward passes are run. The variance across passes estimates the model's epistemic uncertainty for each prediction.</p>
+      </div>
+      <div class="split-panel">
+        <div>
+          <h3>Procedure</h3>
+          <ul>
+            <li><strong>30 forward passes</strong> with dropout active</li>
+            <li><strong>Mean prediction</strong> <code>P(y|x) = (1/30) Σ softmax(f_t(x))</code></li>
+            <li><strong>Epistemic variance</strong> per class: <code>σ²_k = Var_t[softmax(f_t(x))_k]</code></li>
+            <li><strong>Predictive entropy</strong>: <code>H = -Σ P_k log P_k</code></li>
+          </ul>
+        </div>
+        <div>
+          <h3>Clinical value</h3>
+          <ul>
+            <li><strong>High entropy → flag for review</strong>: predictions where the model is uncertain can be sent to a human reader rather than acted upon automatically</li>
+            <li><strong>Coverage analysis</strong>: accuracy in the top confidence bin is typically much higher than in the bottom bin, enabling trust thresholds for automated screening</li>
+            <li><strong>Per-class uncertainty</strong>: some cohorts may consistently produce higher uncertainty, indicating a need for better features or more data</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="calibration">
+    <div class="shell">
+      <div class="section-head">
+        <h2>Post-hoc temperature scaling</h2>
+        <p>A single scalar T is learned on the validation set to minimise the negative log-likelihood of <code>softmax(logits / T)</code>. This improves probability calibration without changing the model's ranking decisions.</p>
+      </div>
+      <div class="narrative">
+        <h3>Metrics</h3>
+        <div>
+          <p>After fitting T, the model reports <strong>Expected Calibration Error (ECE)</strong> across 10 bins and the <strong>Brier score</strong>. A reliability diagram visualises whether predicted probabilities match observed frequencies. Temperature scaling is deliberately not optimised to minimise ECE directly — that would risk overfitting the calibration set. Instead, cross-entropy on the validation logits is the objective, and ECE is reported as an evaluation metric only.</p>
+          <p style="margin-top:10px;">Temperature scaling is also fold-specific: each cross-validation fold learns its own T from the inner validation split and applies it to the outer test predictions before aggregation.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</body>
+</html>

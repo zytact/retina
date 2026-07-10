@@ -345,3 +345,31 @@
 - Added live Phase 13 progress logging to `main.ipynb`.
 - Phase 13 now prints fold start/end messages, dataset sizes, checkpoint loading, task start/end messages, batch counters, sample counters, elapsed time, ETA, and artifact paths for attention dominance, Grad-CAM, tabular attribution, integrated analysis, and cross-validation combination outputs.
 - Added configurable logging controls: `PHASE13_LOG_EVERY_N_BATCHES`, `PHASE13_LOG_EVERY_N_SAMPLES`.
+
+### Phase 13 class-balanced explainability correction
+- Fixed the explainability sample-selection bias that made capped Grad-CAM and tabular attribution examples come mostly/all from the first sorted cohort (`RETINORM`).
+- Added class-balanced deterministic example selection for Grad-CAM and tabular attribution using `PHASE13_CLASS_BALANCED_EXAMPLES=True`.
+- Changed default Grad-CAM targets to `PHASE13_GRADCAM_TARGETS = ['pred', 'label', 'all_classes']`, so reruns generate predicted-class, true-label, and explicit per-class heatmaps.
+- Added `label_name`, `pred_name`, `target_class`, `target_name`, and separate predicted-vs-target probabilities to Grad-CAM summaries and overlay titles.
+- Updated integrated Grad-CAM/attention correlation artifacts to preserve target-mode/class context instead of averaging all targets together silently.
+- Required real KernelSHAP by default for tabular attribution with `PHASE13_REQUIRE_REAL_SHAP=True`; added `shap` to project dependencies and refreshed `uv.lock`.
+- Note: existing Phase 13 output CSVs/images were produced before this correction and remain stale until Phase 13 is rerun on the training/runtime machine.
+
+### Phase 13 OOM hardening and output review
+- Reviewed newly copied partial Phase 13 outputs. The rerun completed fold 0 attention and Grad-CAM, but stopped before combined cross-validation summaries/tabular outputs; only fold 0 artifacts are present locally.
+- Confirmed fold 0 Grad-CAM selection is now class-balanced: 24 samples total, 6 each from RETINORM, ORNET, FAMILIPO, and MRCC. Fold 0 selected-sample predictions are not all RETINORM: FAMILIPO 8, RETINORM 7, ORNET 7, MRCC 2.
+- Created a local contact sheet for visual review at `outputs/phase13_explainability/gradcam/fold_0/phase13_gradcam_contact_sheet_true_class_examples.png`.
+- Hardened Phase 13 against 8 GB GPU OOM: Grad-CAM now defaults to batch size 1, tabular attribution iteration to batch size 1, KernelSHAP prediction calls are chunked with `PHASE13_SHAP_PREDICT_BATCH_SIZE=4`, and CUDA cache cleanup is called after Grad-CAM batches/targets, tabular samples, and folds.
+- The previous CUDA OOM is most likely from KernelSHAP or repeated image batches during tabular explanation, not from class-balanced Grad-CAM itself. Recommended runtime setting for 8 GB GPUs remains `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True` before launching Jupyter/Python.
+- Added a dedicated **FAST RELOAD / SUMMARY - Everything Phase 13 needs through Phase 12** cell immediately before Phase 13. It sets `PYTORCH_CUDA_ALLOC_CONF` for the restarted kernel, executes prerequisite definition/artifact-loading cells through Phase 12 with all heavy work disabled, suppresses incidental summary-file writes during reload, disables Phase 12 auto-materialization of U-Net++ masks, checks existing fold checkpoints/manifests, and leaves the runtime ready to run the Phase 13 cell without rerunning earlier notebook cells or regenerating outputs.
+
+## 2026-07-10
+
+### Phase 14 progress
+- Added **Phase 14 - Evaluation Metrics** to `main.ipynb`. It scores only Phase 12 outer-fold OOF predictions and writes a dedicated evaluation bundle under `outputs/phase14_evaluation/`.
+- Implemented deterministic calibrated eye-level metrics and patient-level metrics, with patient predictions formed by averaging OD/OS probabilities. Both are accompanied by 95% stratified patient-cluster bootstrap confidence intervals (1,000 samples by default), so bilateral eyes are not treated as independent inference units.
+- Implemented macro one-vs-rest ROC-AUC, macro/weighted F1, balanced accuracy, macro PR-AUC, per-class precision/recall/sensitivity/specificity/F1/AUC, true-class-normalized confusion matrices, top-2 accuracy, ECE-10, multiclass Brier score, reliability-bin CSVs, and reliability diagrams.
+- Added checkpoint-based 30-pass MC-dropout artifact generation that enables only dropout modules while keeping normalisation and the frozen U-Net++ mask generator in evaluation mode. This writes separate held-out predictions, entropy, and classwise epistemic variance, then merges them only after strict OOF identity validation. It supports entropy-versus-accuracy quartiles and top-30%-confidence coverage analysis without replacing the authoritative deterministic OOF metrics.
+- Added reusable paired model-comparison utilities for Phase 16 baselines: exact McNemar test, per-class one-vs-rest DeLong AUC test, Bonferroni correction, and Cohen's h. Added a disabled-by-default, no-file smoke test.
+- Kept evaluation and MC-dropout disabled by default in the local review checkout. On the Windows training machine, run the existing Phase 13 fast-reload cell, then `phase14_generate_mc_dropout_predictions()` and `phase14_evaluate_predictions()` after all Phase 12 fold checkpoints are available.
+- Added detailed live progress logging: MC-dropout logs each fold and batch with completed samples, elapsed time, batch duration, and ETA; optional five-pass milestones can be enabled. Evaluation logs each validation/output step, eye/patient primary metrics, every 10 bootstrap replicates by default with ETA, per-fold summaries, and final artifact locations.

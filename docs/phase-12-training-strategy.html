@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Phase 12 — Training Strategy &middot; Retina CAD</title>
+  <style>
+    :root {
+      --void: #030303; --deep: #0A0A0A; --surface: #111111;
+      --surface-2: #171717; --line: #2A2A2A; --line-soft: rgba(255,255,255,0.08);
+      --text: #F5F7FA; --text-mid: #B8BEC8; --text-low: #8C919A;
+      --halo: #7FB2FF; --halo-soft: rgba(127,178,255,0.12);
+      --mint: #8DE6BF; --amber: #D8B76A; --violet: #BDA3FF;
+      --max: 1180px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0; background: var(--void); color: var(--text);
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      font-size: 16px; line-height: 1.72;
+    }
+    body::before {
+      content: ""; position: fixed; inset: 0; pointer-events: none;
+      background: radial-gradient(circle at 78% 4%, rgba(127,178,255,0.07), transparent 28rem),
+                  radial-gradient(circle at 10% 70%, rgba(189,163,255,0.04), transparent 24rem);
+      z-index: -1;
+    }
+    a { color: var(--text); text-decoration-color: rgba(127,178,255,0.55); text-underline-offset: 0.18em; }
+    a:hover { color: var(--halo); }
+    .shell { width: min(var(--max), calc(100% - 40px)); margin: 0 auto; }
+
+    .masthead {
+      position: sticky; top: 0; z-index: 20;
+      background: rgba(3,3,3,0.78); backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--line-soft);
+    }
+    .masthead .shell {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 18px; padding: 14px 0;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+    .mark {
+      width: 32px; height: 32px; border-radius: 50%; flex: 0 0 auto;
+      background: radial-gradient(circle at 38% 38%, #eff6ff 0 10%, var(--halo) 12% 32%, rgba(127,178,255,0.24) 34% 56%, transparent 58%);
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.1), 0 0 32px rgba(127,178,255,0.18);
+    }
+    .brand strong, .brand span { display: block; }
+    .brand strong { font-size: 0.95rem; font-weight: 620; }
+    .brand span { font-size: 0.84rem; color: var(--text-mid); }
+    nav { display: flex; gap: 16px; flex-wrap: wrap; }
+    nav a { color: var(--text-mid); text-decoration: none; font-size: 0.92rem; padding-bottom: 4px; border-bottom: 1px solid transparent; transition: color 160ms, border-color 160ms; }
+    nav a:hover { color: var(--text); border-color: var(--line); }
+
+    header { padding: clamp(60px, 9vw, 100px) 0 44px; border-bottom: 1px solid var(--line); }
+    .kicker { display: inline-flex; align-items: center; gap: 10px; color: var(--text-mid); font-size: 0.92rem; margin-bottom: 20px; }
+    .kicker::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: var(--halo); box-shadow: 0 0 18px rgba(127,178,255,0.42); }
+    h1 { margin: 0; font-size: clamp(2.8rem, 6vw, 4.8rem); line-height: 0.96; letter-spacing: -0.033em; font-weight: 540; text-wrap: balance; }
+    .lead { margin: 24px 0 0; max-width: 72ch; color: var(--text-mid); font-size: clamp(1rem, 1.4vw, 1.12rem); text-wrap: pretty; }
+
+    section { padding: clamp(50px, 7vw, 80px) 0; border-bottom: 1px solid var(--line-soft); }
+    .section-head { display: grid; grid-template-columns: minmax(0, 0.72fr) minmax(280px, 1fr); gap: clamp(24px, 5vw, 60px); align-items: start; margin-bottom: 32px; }
+    h2 { margin: 0; font-size: clamp(1.8rem, 3.5vw, 3rem); line-height: 1; letter-spacing: -0.03em; font-weight: 530; text-wrap: balance; }
+    .section-head p { margin: 0; color: var(--text-mid); max-width: 72ch; text-wrap: pretty; }
+
+    .stage-grid { display: grid; gap: 20px; margin-top: 24px; }
+    .stage-card { border: 1px solid var(--line); border-radius: 16px; padding: 24px; background: rgba(255,255,255,0.015); }
+    .stage-card h3 { margin: 0 0 4px; font-size: 1.1rem; font-weight: 620; display: flex; align-items: center; gap: 10px; }
+    .stage-card .subtitle { color: var(--text-mid); font-size: 0.9rem; margin-bottom: 12px; }
+    .stage-card .params { display: flex; flex-wrap: wrap; gap: 8px 16px; margin: 10px 0; }
+    .stage-card .params span { font-size: 0.85rem; color: var(--text-low); }
+    .stage-card .params strong { color: var(--text); font-weight: 500; }
+    .stage-card p { margin: 0; color: var(--text-mid); max-width: 78ch; }
+    .dot-1 { color: var(--halo); }
+    .dot-2 { color: var(--mint); }
+    .dot-3 { color: var(--violet); }
+
+    .narrative { display: grid; grid-template-columns: minmax(160px, 0.34fr) minmax(0, 1fr); gap: clamp(18px, 4vw, 48px); padding: 22px 0; border-bottom: 1px solid var(--line-soft); }
+    .narrative:last-child { border-bottom: 0; }
+    .narrative h3 { margin: 0; font-size: 1.05rem; line-height: 1.25; font-weight: 620; }
+    .narrative p { margin: 0; color: var(--text-mid); max-width: 78ch; }
+    .narrative p + p { margin-top: 10px; }
+    code { font-family: "SFMono-Regular", Consolas, Menlo, monospace; color: #E3EEFF; background: rgba(127,178,255,0.07); border: 1px solid rgba(127,178,255,0.15); border-radius: 7px; padding: 0.12rem 0.34rem; white-space: nowrap; font-size: 0.88em; }
+
+    .cv-flow { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin: 20px 0; }
+    .cv-fold { border: 1px solid var(--line-soft); border-radius: 12px; padding: 14px; text-align: center; }
+    .cv-fold strong { display: block; font-size: 0.95rem; margin-bottom: 4px; }
+    .cv-fold span { color: var(--text-mid); font-size: 0.82rem; }
+    .cv-fold.hold { border-color: var(--halo-soft); background: rgba(127,178,255,0.05); }
+    .cv-fold.hold strong { color: var(--halo); }
+
+    @media (max-width: 860px) {
+      .section-head, .narrative { grid-template-columns: 1fr; }
+      .cv-flow { grid-template-columns: repeat(3, 1fr); }
+    }
+  </style>
+</head>
+<body>
+  <div class="masthead">
+    <div class="shell">
+      <div class="brand"><div class="mark"></div><div><strong>Retina CAD</strong><span>Phase 12 explainer</span></div></div>
+      <nav><a href="#schedule">3-stage schedule</a><a href="#cv">Cross-validation</a><a href="#optimizer">Optimizer</a><a href="#resume">Resumability</a><a href="#repro">Reproducibility</a></nav>
+    </div>
+  </div>
+
+  <header>
+    <div class="shell">
+      <div class="kicker">Phase 12</div>
+      <h1>Training strategy</h1>
+      <p class="lead">A 3-stage training schedule that first adapts OCTA representations via SimCLR, then trains the downstream classifier modules with frozen backbones, and finally fine-tunes end-to-end. 5-fold patient-grouped cross-validation with inner validation splits for early stopping and calibration.</p>
+    </div>
+  </header>
+
+  <section id="schedule">
+    <div class="shell">
+      <div class="section-head">
+        <h2>3-stage training schedule</h2>
+        <p>The three stages progressively unlock model capacity. Stage 1 is a completed reuse, not a rerun. Stages 2 and 3 run sequentially for each fold.</p>
+      </div>
+
+      <div class="stage-grid">
+        <div class="stage-card">
+          <h3><span class="dot-1">&#9679;</span> Stage 1 &middot; OCTA-SimCLR pretraining</h3>
+          <div class="subtitle">Unlabeled adaptation of image encoders to the OCTA domain</div>
+          <div class="params">
+            <span>Epochs: <strong>100</strong></span>
+            <span>LR: <strong>0.03 (cosine decay)</strong></span>
+            <span>Batch: <strong>256 (128 &times; 2 GA)</strong></span>
+            <span>AMP: <strong>disabled</strong></span>
+            <span>Grad clip: <strong>max norm 1.0</strong></span>
+          </div>
+          <p><strong>Status: completed and reused.</strong> Stage 1 does not rerun pretraining. The notebook loads existing Phase 3 backbone checkpoints and reports a reuse audit. Each fold has 100-epoch histories for Sup, Deep, and CC encoders independently.</p>
+        </div>
+
+        <div class="stage-card">
+          <h3><span class="dot-2">&#9679;</span> Stage 2 &middot; Frozen OCTA backbones, train downstream heads</h3>
+          <div class="subtitle">Initialise the classifier, attention, fusion, and encoder modules before fine-tuning risk</div>
+          <div class="params">
+            <span>Epochs: <strong>15</strong></span>
+            <span>LR: <strong>3e-4 (all trained modules)</strong></span>
+            <span>Frozen: <strong>Sup/Deep/CC backbones</strong></span>
+            <span>Frozen: <strong>U-Net++ student</strong></span>
+          </div>
+          <p>Trains the projection heads, tabular encoder, mask encoder, cross-layer attention, multimodal fusion, prototype parameters, and classification head while the OCTA ConvNeXt-Tiny backbones remain frozen. This prevents catastrophic forgetting of the SimCLR-adapted features.</p>
+        </div>
+
+        <div class="stage-card">
+          <h3><span class="dot-3">&#9679;</span> Stage 3 &middot; End-to-end fine-tuning</h3>
+          <div class="subtitle">Unfreeze OCTA backbones with 10&times; lower learning rate</div>
+          <div class="params">
+            <span>Epochs: <strong>up to 100</strong></span>
+            <span>Backbone LR: <strong>3e-5</strong></span>
+            <span>Head LR: <strong>3e-4</strong></span>
+            <span>Warmup: <strong>5 epochs (linear)</strong></span>
+            <span>Schedule: <strong>cosine warm restarts (T_0=20, T_mult=2)</strong></span>
+            <span>Early stopping: <strong>patience 15 on val macro-F1</strong></span>
+          </div>
+          <p>Unfreezes the OCTA ConvNeXt-Tiny backbones at a 10&times; lower learning rate than the downstream heads. The U-Net++ student remains frozen throughout. Gradient clipping (max norm 1.0), AMP (bfloat16/float16 with GradScaler), and AdamW are applied.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="cv">
+    <div class="shell">
+      <div class="section-head">
+        <h2>Cross-validation design</h2>
+        <p>5-fold stratified cross-validation with strict patient-level isolation. Each fold has its own inner validation split for model selection and calibration.</p>
+      </div>
+      <div class="narrative">
+        <h3>Patient grouping</h3>
+        <div>
+          <p>Both eyes (OD and OS) from the same patient must stay in the same fold. The initial fold assignment was computed during Phase 2 using stratification by cohort label and age decade. Zero patient leakage across folds was verified. These fixed folds are used for all downstream phases &mdash; changing them would invalidate the Phase 2, 3, and 8 artifacts.</p>
+        </div>
+      </div>
+      <div class="cv-flow">
+        <div class="cv-fold hold"><strong>Fold 0</strong><span>Test</span></div>
+        <div class="cv-fold"><strong>Fold 1</strong><span>Train &rarr; inner val</span></div>
+        <div class="cv-fold"><strong>Fold 2</strong><span>Train</span></div>
+        <div class="cv-fold"><strong>Fold 3</strong><span>Train</span></div>
+        <div class="cv-fold"><strong>Fold 4</strong><span>Train</span></div>
+      </div>
+      <div class="cv-flow">
+        <div class="cv-fold"><strong>Fold 0</strong><span>Train</span></div>
+        <div class="cv-fold hold"><strong>Fold 1</strong><span>Test</span></div>
+        <div class="cv-fold"><strong>Fold 2</strong><span>Train &rarr; inner val</span></div>
+        <div class="cv-fold"><strong>Fold 3</strong><span>Train</span></div>
+        <div class="cv-fold"><strong>Fold 4</strong><span>Train</span></div>
+      </div>
+      <div class="narrative" style="border-bottom:0;">
+        <h3>Inner validation split</h3>
+        <div>
+          <p>For each fold k, the remaining four folds are used as training data. From those four folds, a patient-grouped stratified inner split (80/20 by patient) is carved for early stopping and temperature scaling. The outer fold k is never used for model selection &mdash; it is a held-out evaluation set. Final metrics are reported as mean &plusmn; std across the 5 outer fold predictions, with bootstrap confidence intervals.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="optimizer">
+    <div class="shell">
+      <div class="section-head">
+        <h2>Optimizer and learning rate</h2>
+        <p>AdamW with cosine warm restarts provides the optimisation backbone. Mixed precision reduces memory usage on the GPU training machine.</p>
+      </div>
+      <div class="narrative">
+        <h3>AdamW</h3>
+        <div><p>&beta;&#8321; = 0.9, &beta;&#8322; = 0.999, weight decay = 1e-2. The weight decay is applied only to non-bias, non-norm parameters.</p></div>
+      </div>
+      <div class="narrative">
+        <h3>Learning rate schedule</h3>
+        <div><p>Stage 2 uses a fixed LR of 3e-4. Stage 3 uses linear warmup for 5 epochs from 0 to the target LRs, then cosine annealing with warm restarts (T_0 = 20 epochs, T_mult = 2). Each restart cycle allows the model to escape sharp minima while converging to flatter solutions that generalise better.</p></div>
+      </div>
+      <div class="narrative">
+        <h3>Mixed precision</h3>
+        <div><p>bfloat16 when available, otherwise float16 with GradScaler. In the notebook, <code>torch.amp.GradScaler('cuda')</code> is used. SimCLR pretraining (Stage 1) had AMP disabled due to gradient instability at LR=0.1, but downstream Stages 2 and 3 use AMP normally.</p></div>
+      </div>
+      <div class="narrative">
+        <h3>Batch size</h3>
+        <div><p>Effective batch size of 32 (physical batch 16 with gradient accumulation &times;2 if GPU memory limited). DataLoader pin_memory is disabled by default to avoid CUDA OOM on the Windows GPU machine.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="resume">
+    <div class="shell">
+      <div class="section-head">
+        <h2>Automatic resumability</h2>
+        <p>Every training stage saves checkpoints every epoch and can resume from the last checkpoint, restoring model weights, optimizer state, RNG state, and training history.</p>
+      </div>
+      <div class="narrative">
+        <h3>Checkpoint structure</h3>
+        <div>
+          <p>Each fold saves <code>stage*_last.pt</code> (every epoch), <code>stage*_best.pt</code> (best inner-val macro-F1), and <code>stage*_history.csv</code> (per-epoch metrics). The last checkpoint includes optimizer state, AMP scaler state, RNG states (Python, NumPy, PyTorch, CUDA), epoch counter, and early-stopping metadata (<code>best_macro_f1</code>, <code>stale_epochs</code>, <code>early_stopped</code>).</p>
+          <p>When resumed, the system detects existing checkpoints, loads the last state, and continues from the next epoch. Completed or early-stopped runs are automatically skipped. This is essential for the GPU training machine where runs may span multiple sessions.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="repro">
+    <div class="shell">
+      <div class="section-head">
+        <h2>Reproducibility</h2>
+        <p>All random seeds are fixed at the start of each fold run. Deterministic PyTorch operations are enabled where available.</p>
+      </div>
+      <div class="narrative">
+        <h3>Seeds</h3>
+        <div>
+          <p>Python random seed, NumPy seed, PyTorch seed, and CUDA seed are all set to the same value at the start of each fold's Stage 2 launch. The seed value is logged in the fold summary. When resuming, the RNG state is restored from the checkpoint rather than re-seeded, ensuring bitwise-identical continuation.</p>
+        </div>
+      </div>
+      <div class="narrative" style="border-bottom:0;">
+        <h3>Deterministic ops</h3>
+        <div>
+          <p><code>torch.backends.cudnn.deterministic = True</code> and <code>torch.backends.cudnn.benchmark = False</code> are set. This may reduce training throughput slightly but ensures that reruns with the same seed produce identical results, which is critical for ablation study validity.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</body>
+</html>

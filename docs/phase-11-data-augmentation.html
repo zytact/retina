@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Phase 11 — Data Augmentation &middot; Retina CAD</title>
+  <style>
+    :root {
+      --void: #030303; --deep: #0A0A0A; --surface: #111111;
+      --surface-2: #171717; --line: #2A2A2A; --line-soft: rgba(255,255,255,0.08);
+      --text: #F5F7FA; --text-mid: #B8BEC8; --text-low: #8C919A;
+      --halo: #7FB2FF; --halo-soft: rgba(127,178,255,0.12);
+      --mint: #8DE6BF; --amber: #D8B76A; --red: #FF8A95;
+      --max: 1180px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0; background: var(--void); color: var(--text);
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      font-size: 16px; line-height: 1.72;
+    }
+    body::before {
+      content: ""; position: fixed; inset: 0; pointer-events: none;
+      background: radial-gradient(circle at 78% 4%, rgba(127,178,255,0.07), transparent 28rem),
+                  radial-gradient(circle at 10% 70%, rgba(141,230,191,0.04), transparent 24rem);
+      z-index: -1;
+    }
+    a { color: var(--text); text-decoration-color: rgba(127,178,255,0.55); text-underline-offset: 0.18em; }
+    a:hover { color: var(--halo); }
+    .shell { width: min(var(--max), calc(100% - 40px)); margin: 0 auto; }
+
+    .masthead {
+      position: sticky; top: 0; z-index: 20;
+      background: rgba(3,3,3,0.78); backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--line-soft);
+    }
+    .masthead .shell {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 18px; padding: 14px 0;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+    .mark {
+      width: 32px; height: 32px; border-radius: 50%; flex: 0 0 auto;
+      background: radial-gradient(circle at 38% 38%, #eff6ff 0 10%, var(--halo) 12% 32%, rgba(127,178,255,0.24) 34% 56%, transparent 58%);
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.1), 0 0 32px rgba(127,178,255,0.18);
+    }
+    .brand strong, .brand span { display: block; }
+    .brand strong { font-size: 0.95rem; font-weight: 620; }
+    .brand span { font-size: 0.84rem; color: var(--text-mid); }
+    nav { display: flex; gap: 16px; flex-wrap: wrap; }
+    nav a { color: var(--text-mid); text-decoration: none; font-size: 0.92rem; padding-bottom: 4px; border-bottom: 1px solid transparent; transition: color 160ms, border-color 160ms; }
+    nav a:hover { color: var(--text); border-color: var(--line); }
+
+    header { padding: clamp(60px, 9vw, 100px) 0 44px; border-bottom: 1px solid var(--line); }
+    .kicker { display: inline-flex; align-items: center; gap: 10px; color: var(--text-mid); font-size: 0.92rem; margin-bottom: 20px; }
+    .kicker::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: var(--halo); box-shadow: 0 0 18px rgba(127,178,255,0.42); }
+    h1 { margin: 0; font-size: clamp(2.8rem, 6vw, 4.8rem); line-height: 0.96; letter-spacing: -0.033em; font-weight: 540; text-wrap: balance; }
+    .lead { margin: 24px 0 0; max-width: 72ch; color: var(--text-mid); font-size: clamp(1rem, 1.4vw, 1.12rem); text-wrap: pretty; }
+
+    section { padding: clamp(50px, 7vw, 80px) 0; border-bottom: 1px solid var(--line-soft); }
+    .section-head { display: grid; grid-template-columns: minmax(0, 0.72fr) minmax(280px, 1fr); gap: clamp(24px, 5vw, 60px); align-items: start; margin-bottom: 32px; }
+    h2 { margin: 0; font-size: clamp(1.8rem, 3.5vw, 3rem); line-height: 1; letter-spacing: -0.03em; font-weight: 530; text-wrap: balance; }
+    .section-head p { margin: 0; color: var(--text-mid); max-width: 72ch; text-wrap: pretty; }
+
+    .narrative { display: grid; grid-template-columns: minmax(160px, 0.34fr) minmax(0, 1fr); gap: clamp(18px, 4vw, 48px); padding: 22px 0; border-bottom: 1px solid var(--line-soft); }
+    .narrative:last-child { border-bottom: 0; }
+    .narrative h3 { margin: 0; font-size: 1.05rem; line-height: 1.25; font-weight: 620; }
+    .narrative p { margin: 0; color: var(--text-mid); max-width: 78ch; }
+    .narrative p + p { margin-top: 10px; }
+    code { font-family: "SFMono-Regular", Consolas, Menlo, monospace; color: #E3EEFF; background: rgba(127,178,255,0.07); border: 1px solid rgba(127,178,255,0.15); border-radius: 7px; padding: 0.12rem 0.34rem; white-space: nowrap; font-size: 0.88em; }
+
+    .aug-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-top: 20px; }
+    .aug-card { background: rgba(255,255,255,0.015); border: 1px solid var(--line-soft); border-radius: 12px; padding: 18px; }
+    .aug-card h3 { margin: 0 0 6px; font-size: 0.95rem; font-weight: 600; }
+    .aug-card .params { color: var(--text-low); font-size: 0.82rem; font-family: "SFMono-Regular", Consolas, Menlo, monospace; margin-bottom: 8px; }
+    .aug-card p { margin: 0; color: var(--text-mid); font-size: 0.9rem; }
+
+    .forbidden { border-color: rgba(255,138,149,0.25); background: rgba(255,138,149,0.04); }
+    .forbidden h3 { color: var(--red); }
+
+    @media (max-width: 860px) {
+      .section-head, .narrative { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="masthead">
+    <div class="shell">
+      <div class="brand"><div class="mark"></div><div><strong>Retina CAD</strong><span>Phase 11 explainer</span></div></div>
+      <nav><a href="#octa">OCTA augmentations</a><a href="#masks">Mask-aware</a><a href="#clinical">Clinical</a><a href="#forbidden">Forbidden</a><a href="#sync">Synchronisation</a></nav>
+    </div>
+  </div>
+
+  <header>
+    <div class="shell">
+      <div class="kicker">Phase 11</div>
+      <h1>Data augmentation</h1>
+      <p class="lead">Training-only augmentation that preserves vascular structure, keeps masks in spatial alignment with images, and applies mild noise to clinical features. Validation and test data are never augmented.</p>
+    </div>
+  </header>
+
+  <section id="octa">
+    <div class="shell">
+      <div class="section-head">
+        <h2>OCTA image augmentations</h2>
+        <p>Conservative transforms chosen to preserve vessel topology, FAZ morphology, and choriocapillaris texture. The guiding principle: if an augmentation would change clinical interpretation of the scan, it is not applied.</p>
+      </div>
+      <div class="aug-grid">
+        <div class="aug-card">
+          <h3>Horizontal flip</h3>
+          <div class="params">p = 0.5</div>
+          <p>Mirror symmetry is anatomically reasonable. OCTA scans of left and right eyes are already mirrored.</p>
+        </div>
+        <div class="aug-card">
+          <h3>Vertical flip</h3>
+          <div class="params">p = 0.3</div>
+          <p>Less common than horizontal, but still preserves vessel connectivity.</p>
+        </div>
+        <div class="aug-card">
+          <h3>Rotation</h3>
+          <div class="params">degrees = &plusmn;15</div>
+          <p>Small rotations preserve the circular scan geometry. Larger rotations would crop meaningful peripheral vessels.</p>
+        </div>
+        <div class="aug-card">
+          <h3>Affine shift</h3>
+          <div class="params">translate 5%, scale 0.95&ndash;1.05, shear &plusmn;5&deg;</div>
+          <p>Mild spatial distortions. Small enough that FAZ area and vessel density remain stable.</p>
+        </div>
+        <div class="aug-card">
+          <h3>Color jitter</h3>
+          <div class="params">brightness &plusmn;0.1, contrast &plusmn;0.1</div>
+          <p>OCTA images are grayscale, but small intensity shifts help the model generalise across acquisition variability.</p>
+        </div>
+        <div class="aug-card">
+          <h3>Gaussian noise</h3>
+          <div class="params">&sigma; = 0.01, p = 0.2</div>
+          <p>Adds mild sensor-noise simulation. Not applied to mask or clinical branches.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="masks">
+    <div class="shell">
+      <div class="section-head">
+        <h2>Mask-aware spatial transforms</h2>
+        <p>When OCTA images are geometrically transformed, the corresponding generated masks must receive the identical transform to preserve spatial correspondence.</p>
+      </div>
+      <div class="narrative">
+        <h3>Same seed, same transform</h3>
+        <div>
+          <p>For each training sample, a single random seed is generated. That seed drives the flip, rotation, affine, and crop parameters. The same parameters are applied to the Sup, Deep, and CC images and to all five generated masks (vessel, FAZ, flow deficit for each layer).</p>
+          <p>Masks use nearest-neighbour interpolation during geometric transforms to avoid introducing intermediate intensity values. Only the geometric transforms are shared &mdash; intensity jitter and Gaussian noise are applied to images only, never to masks.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="clinical">
+    <div class="shell">
+      <div class="section-head">
+        <h2>Clinical feature augmentation</h2>
+        <p>Mild augmentation applied only to the clinical tabular features during training. Generated biomarkers are not augmented.</p>
+      </div>
+      <div class="aug-grid">
+        <div class="aug-card">
+          <h3>Continuous feature noise</h3>
+          <div class="params">&sigma; = 0.05, p = 0.3</div>
+          <p>Small Gaussian noise on z-scored continuous features (age, BMI). Too much noise would corrupt the physiological meaning of these values.</p>
+        </div>
+        <div class="aug-card">
+          <h3>Random feature masking</h3>
+          <div class="params">p = 0.1, one feature per sample</div>
+          <p>Randomly sets one observed clinical feature to the learned missing-value mask token. This simulates real-world missingness and makes the tabular encoder robust to absent data at inference.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="forbidden">
+    <div class="shell">
+      <div class="section-head">
+        <h2>Forbidden augmentations</h2>
+        <p>These transforms are common in natural-image pipelines but would destroy or distort the vascular signal in OCTA. They are explicitly excluded.</p>
+      </div>
+      <div class="aug-grid">
+        <div class="aug-card forbidden">
+          <h3>Random erasing / Cutout</h3>
+          <p>Removes a rectangular region of the image. In OCTA, this would delete vessel segments, creating false avascular zones that the model could learn as spurious correlations.</p>
+        </div>
+        <div class="aug-card forbidden">
+          <h3>Aggressive color jitter</h3>
+          <p>Large brightness or contrast shifts can wash out capillary-level contrast. The vessel density signal depends on fine intensity differences.</p>
+        </div>
+        <div class="aug-card forbidden">
+          <h3>Large elastic deformation</h3>
+          <p>Distorts vessel geometry and FAZ morphology. Even if the classification task is disease prediction, not segmentation, the model should learn from real vascular shapes, not warped ones.</p>
+        </div>
+        <div class="aug-card forbidden">
+          <h3>Grayscale conversion</h3>
+          <p>OCTA images are already single-channel. Applying random grayscale would be a no-op or could add unintended colour-channel artefacts.</p>
+        </div>
+        <div class="aug-card forbidden">
+          <h3>Coarse dropout</h3>
+          <p>Drops entire channels or large feature map regions. In OCTA, this is equivalent to removing an entire vascular layer, which the model could use as a shortcut signal.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="sync">
+    <div class="shell">
+      <div class="section-head">
+        <h2>Cross-layer synchronisation</h2>
+        <p>All three OCTA layers from the same eye are augmented with the same random seed, preserving the spatial correspondence that the cross-layer attention module relies on.</p>
+      </div>
+      <div class="narrative">
+        <h3>Why synchronisation matters</h3>
+        <div>
+          <p>The cross-layer attention module in Phase 6 expects that a pixel at position (i, j) in the Sup image corresponds to roughly the same retinal location in the Deep and CC images. If each layer were augmented with an independent random seed, a vessel in the Sup image might be flipped horizontally while the same vessel in the Deep image is not &mdash; destroying the layer-to-layer spatial correspondence.</p>
+          <p>Validation and test data bypass all augmentation. Only the training DataLoader applies these transforms.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</body>
+</html>

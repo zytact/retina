@@ -1,0 +1,1583 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Phase 14 &mdash; Evaluation Metrics &middot; Retina CAD</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --void: #030303;
+      --deep: #0A0A0A;
+      --surface: #111111;
+      --surface-2: #171717;
+      --line: #2A2A2A;
+      --line-soft: rgba(255,255,255,0.08);
+      --text: #F5F7FA;
+      --text-mid: #B8BEC8;
+      --text-low: #8C919A;
+      --halo: #7FB2FF;
+      --halo-soft: rgba(127,178,255,0.12);
+      --mint: #8DE6BF;
+      --amber: #D8B76A;
+      --red: #FF8A95;
+      --violet: #BDA3FF;
+      --coral: #FF9A8A;
+      --cyan: #7FD9E6;
+      --max: 1220px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--void);
+      color: var(--text);
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.72;
+      text-rendering: optimizeLegibility;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 75% 6%, rgba(127,178,255,0.07), transparent 32rem),
+        radial-gradient(circle at 20% 60%, rgba(189,163,255,0.04), transparent 28rem),
+        radial-gradient(circle at 50% 90%, rgba(141,230,191,0.03), transparent 24rem);
+      z-index: -1;
+    }
+
+    a { color: var(--text); text-decoration-color: rgba(127,178,255,0.55); text-underline-offset: 0.18em; }
+    a:hover { color: var(--halo); }
+    strong { color: var(--text); font-weight: 620; }
+
+    code, pre {
+      font-family: "SFMono-Regular", Consolas, Menlo, "Ubuntu Mono", monospace;
+    }
+    code {
+      color: #E3EEFF;
+      background: rgba(127,178,255,0.07);
+      border: 1px solid rgba(127,178,255,0.15);
+      border-radius: 7px;
+      padding: 0.12rem 0.34rem;
+      white-space: nowrap;
+      font-size: 0.88em;
+    }
+
+    .shell {
+      width: min(var(--max), calc(100% - 40px));
+      margin: 0 auto;
+    }
+
+    /* ---- masthead ---- */
+    .masthead {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      backdrop-filter: blur(14px);
+      background: rgba(3,3,3,0.72);
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .masthead .shell {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 14px 0;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      min-width: 0;
+    }
+    .mark {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 38% 36%, #EEF6FF 0 10%, var(--halo) 12% 32%, rgba(127,178,255,0.2) 34% 56%, transparent 60%);
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.08), 0 0 28px rgba(127,178,255,0.16);
+      flex: 0 0 auto;
+    }
+    .brand strong { display: block; font-size: 0.95rem; font-weight: 620; white-space: nowrap; }
+    .brand span { display: block; color: var(--text-low); font-size: 0.84rem; white-space: nowrap; }
+
+    .nav-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 18px;
+      color: var(--text-low);
+      font-size: 0.92rem;
+    }
+    .nav-links a {
+      text-decoration: none;
+      border-bottom: 1px solid transparent;
+      padding-bottom: 4px;
+      transition: color 160ms ease, border-color 160ms ease;
+    }
+    .nav-links a:hover { color: var(--text); border-color: rgba(255,255,255,0.18); }
+
+    /* ---- hero ---- */
+    .hero {
+      padding: clamp(64px, 10vw, 132px) 0 56px;
+      border-bottom: 1px solid var(--line);
+    }
+    .kicker {
+      color: var(--halo);
+      font-size: 0.92rem;
+      letter-spacing: 0.02em;
+      margin-bottom: 20px;
+    }
+    .kicker span { color: var(--text-low); }
+    h1, h2, h3, h4 { margin: 0; text-wrap: balance; }
+    h1 {
+      max-width: 14ch;
+      font-size: clamp(3.2rem, 7vw, 5.8rem);
+      line-height: 0.96;
+      font-weight: 520;
+      letter-spacing: -0.035em;
+    }
+    .subtitle {
+      margin: 28px 0 0;
+      max-width: 82ch;
+      color: var(--text-mid);
+      font-size: clamp(1.05rem, 1.6vw, 1.28rem);
+      text-wrap: pretty;
+    }
+    .hero-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 18px 32px;
+      margin-top: 38px;
+      color: var(--text-low);
+      font-size: 0.96rem;
+      border-top: 1px solid var(--line-soft);
+      padding-top: 24px;
+    }
+    .hero-meta b { color: var(--text); font-weight: 560; }
+
+    /* ---- layout ---- */
+    .layout {
+      display: grid;
+      grid-template-columns: 250px minmax(0, 1fr);
+      gap: clamp(28px, 5vw, 72px);
+      align-items: start;
+      padding: 54px 0;
+    }
+
+    /* ---- sidebar nav ---- */
+    nav.sidebar {
+      position: sticky;
+      top: 84px;
+      border-top: 1px solid var(--line);
+      padding: 6px 0 22px;
+    }
+    nav.sidebar .nav-title {
+      color: var(--text);
+      margin: 14px 0 12px;
+      font-weight: 560;
+      font-size: 0.88rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    nav.sidebar a {
+      display: block;
+      color: var(--text-low);
+      text-decoration: none;
+      padding: 6px 0;
+      font-size: 0.92rem;
+      border-bottom: 1px solid transparent;
+      transition: color 140ms ease;
+    }
+    nav.sidebar a:hover { color: var(--text); }
+    nav.sidebar a.sub { padding-left: 14px; font-size: 0.86rem; color: rgba(140,145,154,0.75); }
+    nav.sidebar a.sub:hover { color: var(--text-mid); }
+
+    /* ---- article content ---- */
+    article { min-width: 0; }
+
+    .chapter {
+      padding: clamp(50px, 7vw, 90px) 0;
+      border-top: 1px solid var(--line);
+    }
+    .chapter:first-of-type { border-top: 0; padding-top: 0; }
+
+    .chapter-head {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(200px, 340px);
+      gap: 28px;
+      align-items: end;
+      margin-bottom: 34px;
+    }
+    .chapter-head h2 {
+      font-size: clamp(2rem, 4vw, 3.65rem);
+      line-height: 1.02;
+      font-weight: 520;
+      letter-spacing: -0.028em;
+    }
+    .chapter-head p { color: var(--text-low); max-width: 72ch; margin: 0; text-wrap: pretty; }
+
+    h3 {
+      font-size: clamp(1.32rem, 2vw, 1.8rem);
+      line-height: 1.16;
+      font-weight: 560;
+      letter-spacing: -0.014em;
+      margin: 32px 0 14px;
+    }
+    h4 {
+      font-size: 1.05rem;
+      line-height: 1.25;
+      font-weight: 620;
+      color: var(--text);
+      margin: 26px 0 10px;
+    }
+    h5 {
+      font-size: 0.95rem;
+      line-height: 1.3;
+      font-weight: 620;
+      color: var(--text-mid);
+      margin: 20px 0 8px;
+      letter-spacing: 0.01em;
+    }
+
+    p { margin: 0; max-width: 72ch; color: var(--text-mid); text-wrap: pretty; }
+    p + p { margin-top: 14px; }
+    p + h3, p + h4 { margin-top: 36px; }
+    h3 + p { margin-top: 10px; }
+    h4 + p { margin-top: 8px; }
+    h5 + p { margin-top: 6px; }
+
+    ul, ol { color: var(--text-mid); padding-left: 1.25rem; margin: 12px 0 0; max-width: 72ch; }
+    li + li { margin-top: 7px; }
+    li > p:first-child { margin-top: 0; }
+
+    /* ---- components ---- */
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 22px;
+    }
+    .panel-soft {
+      background: linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.015));
+      border: 1px solid var(--line-soft);
+      border-radius: 16px;
+      padding: 22px;
+    }
+    .panel-halo {
+      background: linear-gradient(180deg, rgba(127,178,255,0.06), rgba(127,178,255,0.02));
+      border: 1px solid rgba(127,178,255,0.18);
+      border-radius: 16px;
+      padding: 22px;
+    }
+
+    .split {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(240px, 380px);
+      gap: 32px;
+      align-items: start;
+      margin: 28px 0;
+    }
+    .split-alt {
+      grid-template-columns: minmax(240px, 380px) minmax(0, 1fr);
+    }
+    .split > * { min-width: 0; }
+    .measure > * + * { margin-top: 16px; }
+    .stack > * + * { margin-top: 22px; }
+
+    .signal {
+      margin: 24px 0;
+      padding: 18px 0;
+      border-top: 1px solid rgba(127,178,255,0.35);
+      border-bottom: 1px solid rgba(127,178,255,0.35);
+      color: var(--text-mid);
+    }
+    .signal strong { color: var(--halo); }
+    .signal.warn { border-color: rgba(255,138,149,0.40); }
+    .signal.warn strong { color: var(--red); }
+    .signal.ok { border-color: rgba(141,230,191,0.40); }
+    .signal.ok strong { color: var(--mint); }
+    .signal.caution { border-color: rgba(216,183,106,0.40); }
+    .signal.caution strong { color: var(--amber); }
+
+    .formula-block {
+      margin: 18px 0;
+      overflow-x: auto;
+      color: #DCE8FF;
+      background: #070707;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 18px 22px;
+      line-height: 1.65;
+      font-size: 0.95rem;
+    }
+    .formula-block .desc {
+      color: var(--text-low);
+      font-size: 0.84rem;
+      margin-top: 10px;
+      border-top: 1px solid var(--line-soft);
+      padding-top: 10px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 18px 0;
+      border-top: 1px solid var(--line);
+    }
+    th, td {
+      text-align: left;
+      vertical-align: top;
+      padding: 12px 12px 12px 0;
+      border-bottom: 1px solid var(--line);
+    }
+    th { color: var(--text); font-weight: 560; font-size: 0.92rem; }
+    td { color: var(--text-mid); font-size: 0.92rem; }
+
+    .term-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0 34px;
+      border-top: 1px solid var(--line);
+      margin: 24px 0;
+    }
+    .term-grid .term {
+      padding: 18px 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .term-grid .term h5 { margin: 0 0 6px; }
+    .term-grid .term p { font-size: 0.92rem; }
+
+    .metric-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0;
+      margin: 24px 0;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+    }
+    .metric-cell {
+      padding: 20px 18px;
+      border-right: 1px solid var(--line);
+    }
+    .metric-cell:last-child { border-right: 0; }
+    .metric-cell .num {
+      color: var(--text);
+      font-size: clamp(1.6rem, 2.8vw, 2.5rem);
+      line-height: 1;
+      letter-spacing: -0.03em;
+      font-weight: 560;
+    }
+    .metric-cell .cap {
+      color: var(--text-low);
+      margin-top: 6px;
+      font-size: 0.88rem;
+    }
+
+    .note-box {
+      border-left: 2px solid var(--halo);
+      padding: 12px 0 12px 18px;
+      margin: 18px 0;
+    }
+    .note-box p { margin: 0; color: var(--text-mid); font-size: 0.92rem; }
+    .note-box.caution { border-left-color: var(--amber); }
+    .note-box.warn { border-left-color: var(--red); }
+
+    .question-list { counter-reset: q; }
+    .question-list .qitem {
+      counter-increment: q;
+      padding: 16px 0;
+      border-bottom: 1px solid var(--line-soft);
+    }
+    .question-list .qitem:last-child { border-bottom: 0; }
+    .question-list .qitem::before {
+      content: "Q" counter(q);
+      color: var(--halo);
+      font-weight: 560;
+      font-size: 0.85rem;
+      letter-spacing: 0.02em;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    /* ---- metric cards ---- */
+    .metric-deck {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin: 24px 0;
+    }
+    .metric-deck .card {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 20px;
+      background: rgba(255,255,255,0.015);
+    }
+    .metric-deck .card .num {
+      color: var(--text);
+      font-size: clamp(1.8rem, 3.2vw, 2.8rem);
+      line-height: 1;
+      letter-spacing: -0.03em;
+      font-weight: 560;
+      margin-bottom: 8px;
+    }
+    .metric-deck .card .cap {
+      color: var(--text-mid);
+      font-size: 0.92rem;
+      line-height: 1.35;
+    }
+    .metric-deck .card .tag {
+      display: inline-block;
+      font-size: 0.75rem;
+      color: var(--text-low);
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      margin-top: 10px;
+    }
+
+    /* ---- legend swatches ---- */
+    .legend-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px 24px;
+      margin: 14px 0;
+    }
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-mid);
+      font-size: 0.88rem;
+    }
+    .swatch {
+      width: 12px;
+      height: 12px;
+      border-radius: 4px;
+      flex: 0 0 auto;
+    }
+    .swatch.blue   { background: var(--halo); }
+    .swatch.mint   { background: var(--mint); }
+    .swatch.amber  { background: var(--amber); }
+    .swatch.red    { background: var(--red); }
+    .swatch.violet { background: var(--violet); }
+    .swatch.cyan   { background: var(--cyan); }
+    .swatch.coral  { background: var(--coral); }
+
+    /* ---- flow chain ---- */
+    .flow-chain {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px 6px;
+      padding: 18px 0;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      margin: 20px 0;
+    }
+    .flow-chain .node {
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px 16px;
+      font-size: 0.92rem;
+      color: var(--text-mid);
+      white-space: nowrap;
+    }
+    .flow-chain .node.active {
+      border-color: rgba(127,178,255,0.3);
+      color: var(--text);
+    }
+    .flow-chain .arrow {
+      color: var(--text-low);
+      font-size: 1.2rem;
+      flex: 0 0 auto;
+    }
+
+    /* ---- footer ---- */
+    .foot {
+      padding: 48px 0 80px;
+      color: var(--text-low);
+      border-top: 1px solid var(--line);
+      margin-top: 20px;
+    }
+    .foot p { color: var(--text-low); font-size: 0.92rem; }
+
+    /* ---- responsive ---- */
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 1fr; }
+      nav.sidebar {
+        position: relative;
+        top: auto;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0 18px;
+      }
+      nav.sidebar .nav-title { grid-column: 1 / -1; }
+      .chapter-head, .split { grid-template-columns: 1fr; }
+      .term-grid { grid-template-columns: 1fr; }
+      .metric-row { grid-template-columns: repeat(2, 1fr); }
+      .metric-cell:nth-child(even) { border-right: 0; }
+      .metric-deck { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 540px) {
+      .metric-row { grid-template-columns: 1fr; }
+      .metric-cell { border-right: 0; }
+      .metric-deck { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ====== MASTHEAD ====== -->
+<header class="masthead">
+  <div class="shell">
+    <div class="brand">
+      <div class="mark"></div>
+      <div>
+        <strong>Retina CAD</strong>
+        <span>RASTA &middot; OCTA &middot; Evaluation</span>
+      </div>
+    </div>
+    <nav class="nav-links">
+      <a href="architecture-overview-guide.html">Architecture</a>
+      <a href="phase-4-to-8-explainer.html">Pipeline</a>
+      <a href="segmentation-pseudo-masks-explainer.html">Masks</a>
+      <a href="phase-13-explainability.html">Explainability</a>
+    </nav>
+  </div>
+</header>
+
+<!-- ====== HERO ====== -->
+<section class="hero">
+  <div class="shell">
+    <div class="kicker">Phase 14 <span>&middot; Evaluation Metrics</span></div>
+    <h1>Measuring What Matters</h1>
+    <p class="subtitle">
+      A medical AI model is only as good as the evidence that it works. This phase builds a rigorous
+      evaluation framework: how we measure performance, how we know those measurements are reliable,
+      and how we compare models fairly. The goal is to produce publication-quality numbers that
+      clinicians and reviewers can trust.
+    </p>
+    <div class="hero-meta">
+      <span><b>Metrics</b> ROC-AUC &middot; F1 &middot; Balanced Accuracy &middot; ECE &middot; Brier</span>
+      <span><b>Validation</b> Bootstrap CI &middot; DeLong Test &middot; McNemar &middot; Calibration</span>
+    </div>
+  </div>
+</section>
+
+<!-- ====== MAIN LAYOUT ====== -->
+<div class="shell">
+<div class="layout">
+
+<!-- ====== SIDEBAR ====== -->
+<nav class="sidebar">
+  <div class="nav-title">Contents</div>
+  <a href="#intro">Why Evaluation Matters</a>
+  <a href="#confidence" class="sub">Bootstrap Confidence Intervals</a>
+  <a href="#eye-vs-patient" class="sub">Eye-Level vs. Patient-Level</a>
+  <a href="#primary">Primary Metrics</a>
+  <a href="#roc-auc" class="sub">ROC-AUC</a>
+  <a href="#macro-f1" class="sub">Macro-F1 &amp; Balanced Accuracy</a>
+  <a href="#sensitivity" class="sub">Per-Class Sensitivity &amp; Specificity</a>
+  <a href="#secondary">Secondary Metrics</a>
+  <a href="#confusion-matrix" class="sub">Confusion Matrix</a>
+  <a href="#pr-auc" class="sub">PR-AUC</a>
+  <a href="#calibration">Calibration</a>
+  <a href="#ece" class="sub">Expected Calibration Error</a>
+  <a href="#brier" class="sub">Brier Score</a>
+  <a href="#uncertainty">Uncertainty Evaluation</a>
+  <a href="#comparison">Statistical Comparison</a>
+  <a href="#mcnemar" class="sub">McNemar's Test</a>
+  <a href="#delong" class="sub">DeLong Test</a>
+  <a href="#reading">How to Read the Results</a>
+</nav>
+
+<!-- ====== ARTICLE ====== -->
+<article>
+
+<!-- ============================================================ -->
+<!-- INTRO -->
+<!-- ============================================================ -->
+<section class="chapter" id="intro">
+
+  <div class="chapter-head">
+    <h2>Why Evaluation Matters</h2>
+    <p>A model that looks impressive on one metric may fail badly on another. Rigorous evaluation is
+    what separates a real contribution from a lucky run.</p>
+  </div>
+
+  <p>
+    Imagine you build a model that predicts whether a patient has coronary artery disease from their
+    retinal OCTA scan. You run it on your test set and get 92% accuracy. Sounds great, right? But what
+    if 90% of your patients are healthy controls? A model that predicts "healthy" for everyone gets
+    90% accuracy without learning anything. Accuracy alone tells you very little when classes are
+    imbalanced.
+  </p>
+
+  <p>
+    This is why medical AI evaluation needs multiple metrics, each answering a different question. The
+    Retina CAD project classifies patients into four cohorts with varying prevalence:
+  </p>
+
+  <div class="panel-soft" style="margin: 18px 0;">
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;">
+      <div style="text-align: center;">
+        <div style="color: var(--text); font-size: 1.2rem; font-weight: 560;">RETINORM</div>
+        <div style="color: var(--text-mid); font-size: 0.85rem;">Control / healthy</div>
+        <div style="color: var(--text-low); font-size: 0.8rem; margin-top: 4px;">Largest cohort</div>
+      </div>
+      <div style="text-align: center;">
+        <div style="color: var(--mint); font-size: 1.2rem; font-weight: 560;">ORNET</div>
+        <div style="color: var(--text-mid); font-size: 0.85rem;">Sleep apnea</div>
+        <div style="color: var(--text-low); font-size: 0.8rem; margin-top: 4px;">Mid-size</div>
+      </div>
+      <div style="text-align: center;">
+        <div style="color: var(--amber); font-size: 1.2rem; font-weight: 560;">FAMILIPO</div>
+        <div style="color: var(--text-mid); font-size: 0.85rem;">Hypercholesterolemia</div>
+        <div style="color: var(--text-low); font-size: 0.8rem; margin-top: 4px;">Mid-size</div>
+      </div>
+      <div style="text-align: center;">
+        <div style="color: var(--violet); font-size: 1.2rem; font-weight: 560;">MRCC</div>
+        <div style="color: var(--text-mid); font-size: 0.85rem;">Cardiac / CAD</div>
+        <div style="color: var(--text-low); font-size: 0.8rem; margin-top: 4px;">Smallest cohort</div>
+      </div>
+    </div>
+    <div style="color: var(--text-low); font-size: 0.86rem; margin-top: 14px; border-top: 1px solid var(--line-soft); padding-top: 12px;">
+      The smallest cohort (MRCC) may be 5-10x smaller than the largest (RETINORM). Any single-number
+      metric will be dominated by the majority class. That is why we need a <em>suite</em> of metrics.
+    </div>
+  </div>
+
+  <p>
+    Phase 14 addresses four fundamental questions about the model's performance:
+  </p>
+
+  <div class="question-list">
+    <div class="qitem">
+      <strong>How well does the model discriminate between classes?</strong>
+      <p style="margin-top: 4px; font-size: 0.92rem;">Answered by ROC-AUC, PR-AUC, and per-class sensitivity/specificity.
+      These metrics measure whether the model can separate diseased from healthy patients, and one disease
+      from another.</p>
+    </div>
+    <div class="qitem">
+      <strong>How reliable are the predicted probabilities?</strong>
+      <p style="margin-top: 4px; font-size: 0.92rem;">Answered by calibration metrics (ECE, Brier score) and
+      reliability diagrams. A model can have great discrimination (it ranks patients correctly) but poor
+      calibration (it says "80% confident" when it is right only 60% of the time).</p>
+    </div>
+    <div class="qitem">
+      <strong>How uncertain is each prediction?</strong>
+      <p style="margin-top: 4px; font-size: 0.92rem;">Answered by Monte Carlo Dropout uncertainty analysis.
+      Some predictions are inherently uncertain (e.g., ambiguous scans, patients with atypical features).
+      Identifying these allows the system to flag them for expert review rather than making a
+      potentially wrong decision.</p>
+    </div>
+    <div class="qitem">
+      <strong>Is this model significantly better than an alternative?</strong>
+      <p style="margin-top: 4px; font-size: 0.92rem;">Answered by statistical tests: McNemar's test for
+      paired classification comparison and DeLong's test for AUC comparison. A 0.01 improvement in AUC
+      might be real or it might be noise. Statistical tests tell us which.</p>
+    </div>
+  </div>
+
+  <p>
+    This framework follows best practices from the biomedical ML literature and aligns with reporting
+    standards for medical AI studies (e.g., TRIPOD-AI, STARD-AI). Every metric reported in future phases
+    (ablation studies in Phase 15, baseline comparisons in Phase 16) uses this same evaluation pipeline,
+    ensuring consistency across all results.
+  </p>
+
+</section>
+
+<!-- ============================================================ -->
+<!-- BOOTSTRAP CONFIDENCE INTERVALS -->
+<!-- ============================================================ -->
+<section class="chapter" id="confidence">
+
+  <div class="chapter-head">
+    <h2>Bootstrap Confidence Intervals</h2>
+    <p>Every single-number metric is incomplete. Confidence intervals tell you how much to trust it.</p>
+  </div>
+
+  <h3>What is bootstrapping?</h3>
+
+  <p>
+    When you compute a metric (say, accuracy) on your test set, you get one number: 87.3%. But if you
+    had a slightly different test set (different patients, different eyes), that number would change.
+    How much? The bootstrap answers this question by simulating "what if we had a slightly different
+    test set" over and over.
+  </p>
+
+  <p>
+    Here is how it works in practice:
+  </p>
+
+  <ol>
+    <li><strong>Start with your test set</strong> of N predictions (one per patient or per eye).</li>
+    <li><strong>Sample with replacement</strong> N items from your test set to create a "bootstrap sample."
+      Because you sample with replacement, some patients appear multiple times and some are left out.</li>
+    <li><strong>Compute your metric</strong> (AUC, F1, etc.) on this bootstrap sample.</li>
+    <li><strong>Repeat</strong> 1,000 (or more) times.</li>
+    <li><strong>Take the 2.5th and 97.5th percentiles</strong> of the 1,000 computed values. This range
+      is the 95% confidence interval.</li>
+  </ol>
+
+  <div class="signal caution">
+    <strong>Patient-level bootstrap, not eye-level.</strong> Because the dataset contains bilateral eyes
+    (OD and OS) from the same patient, a simple eye-level bootstrap would treat both eyes as independent
+    &mdash; violating the assumption that bootstrap samples are independent. The evaluation pipeline uses
+    a <strong>patient-clustered bootstrap</strong>: it resamples patients (not eyes), then includes
+    both eyes from sampled patients. This preserves within-patient correlation and produces valid
+    confidence intervals.
+  </div>
+
+  <div class="split">
+    <div class="measure">
+      <p><strong>Why this matters:</strong></p>
+      <ul>
+        <li>Without CIs, you cannot tell if an apparent improvement (e.g., AUC 0.87 vs. 0.85) is
+          meaningful or just noise.</li>
+        <li>Bootstrapping makes no assumptions about the underlying distribution (unlike parametric
+          methods that assume normality).</li>
+        <li>The CI width tells you the precision of your estimate. A wide CI means you need more
+          data to be confident in the result.</li>
+        <li>Stratified bootstrap (resampling within each cohort) ensures minority classes are not
+          accidentally omitted from some bootstrap samples.</li>
+      </ul>
+    </div>
+    <div class="panel-soft measure">
+      <strong>How to read a bootstrap CI</strong>
+      <div style="margin-top: 10px; font-family: ui-monospace, SFMono-Regular, monospace; font-size: 0.9rem; line-height: 1.8;">
+        <span style="color: var(--text);">Macro-F1 = 0.74</span><br>
+        <span style="color: var(--text-low);">95% CI [0.67, 0.80]</span>
+      </div>
+      <p style="margin-top: 8px; font-size: 0.9rem;">
+        This means: if we repeated the experiment 100 times with different patient samples, the Macro-F1
+        would fall between 0.67 and 0.80 in 95 of those experiments. The interval width (0.13) tells us
+        there is moderate uncertainty. A width of 0.03 would mean high precision.
+      </p>
+    </div>
+  </div>
+
+  <p>
+    In the evaluation pipeline, every metric reported in the final results tables is accompanied by
+    95% bootstrap confidence intervals with 1,000 replicates. This applies to primary metrics,
+    secondary metrics, calibration metrics, and per-class metrics alike.
+  </p>
+
+</section>
+
+<!-- ============================================================ -->
+<!-- EYE-LEVEL VS PATIENT-LEVEL -->
+<!-- ============================================================ -->
+<section class="chapter" id="eye-vs-patient">
+
+  <div class="chapter-head">
+    <h2>Eye-Level vs. Patient-Level Metrics</h2>
+    <p>Should we evaluate per eye or per patient? The answer depends on the question we are asking.</p>
+  </div>
+
+  <p>
+    The RASTA dataset contains both eyes (OD and OS) for many patients. This creates a choice: do we
+    report metrics at the eye level (each eye is a sample) or at the patient level (average both eyes
+    into one prediction per patient)?
+  </p>
+
+  <div class="term-grid">
+    <div class="term">
+      <h5>Eye-level metrics</h5>
+      <p>Treat each eye as an independent sample. Both OD and OS appear as separate rows in the
+        evaluation. This gives a larger N and higher statistical power. It answers: "How well does
+        the model classify a single OCTA scan?"</p>
+    </div>
+    <div class="term">
+      <h5>Patient-level metrics</h5>
+      <p>Average the softmax probabilities from OD and OS (when both are available) into a single
+        patient-level prediction. This answers: "How well does the model classify a patient?" which
+        is the clinically relevant question &mdash; clinicians treat patients, not individual eyes.</p>
+    </div>
+  </div>
+
+  <p>
+    Both are reported in the evaluation bundle:
+  </p>
+
+  <ul>
+    <li><strong>Eye-level metrics</strong> provide the primary analysis, matching how other OCTA studies
+      typically report results. They use all available data and provide the most statistical power
+      for detecting differences between models.</li>
+    <li><strong>Patient-level metrics</strong> serve as the publication-facing and clinically oriented
+      analysis. Averaging both eyes is a natural ensembling strategy: if the model agrees on both eyes,
+      confidence increases; if the eyes disagree, the average reflects uncertainty.</li>
+  </ul>
+
+  <div class="note-box">
+    <p><strong>Important:</strong> The bootstrap confidence intervals for patient-level metrics use
+      patient-level resampling (resample patients, then average both eyes within each resampled patient).
+      This preserves the within-patient correlation structure and produces valid intervals.</p>
+  </div>
+
+  <p>
+    For bilateral eyes, patient-level predictions are formed by averaging OD and OS softmax probabilities
+    before computing the final class prediction. For patients with only one eye available, that eye's
+    prediction is used directly as the patient-level prediction.
+  </p>
+
+</section>
+
+<!-- ============================================================ -->
+<!-- PRIMARY METRICS -->
+<!-- ============================================================ -->
+<section class="chapter" id="primary">
+
+  <div class="chapter-head">
+    <h2>Primary Metrics</h2>
+    <p>Three metrics form the primary evaluation battery. Together, they tell us whether the model is
+    genuinely discriminative, balanced across classes, and clinically useful.</p>
+  </div>
+
+  <!-- ---- ROC-AUC ---- -->
+  <h3 id="roc-auc">Macro-averaged ROC-AUC</h3>
+
+  <p>
+    The ROC (Receiver Operating Characteristic) curve plots the true positive rate against the false
+    positive rate as the classification threshold varies. The AUC (Area Under the Curve) summarizes
+    the entire curve into a single number: the probability that a randomly chosen positive sample will
+    be ranked higher than a randomly chosen negative sample.
+  </p>
+
+  <div class="panel-soft" style="margin: 18px 0;">
+    <strong>Plain English interpretation:</strong> If you show the model one random patient from cohort
+    A and one random patient from every other cohort combined, the AUC tells you how often the model
+    gives a higher score to the correct cohort. An AUC of 0.5 means random guessing. An AUC of 1.0
+    means perfect ranking. For medical tests, AUC &gt; 0.8 is generally considered good, and AUC &gt;
+    0.9 is excellent.
+  </div>
+
+  <p>
+    Because we have <strong>four cohorts</strong>, we compute AUC in a one-vs-rest manner: for each
+    cohort, treat it as the positive class and all other cohorts as the negative class. This gives
+    four per-class AUCs. The <strong>macro-averaged ROC-AUC</strong> is the unweighted average of
+    these four values.
+  </p>
+
+  <div class="formula-block">
+    <strong>Macro-averaged ROC-AUC</strong><br><br>
+    AUC<sub>macro</sub> = (1/4) &middot; &sum;<sub>k=1</sub><sup>4</sup> AUC<sub>class k</sub><br><br>
+    <span class="desc">
+      Each per-class AUC is computed one-vs-rest. Macro-averaging gives equal weight to each class
+      regardless of its prevalence. This is the standard for multi-class medical imaging studies
+      and is robust to class imbalance.
+    </span>
+  </div>
+
+  <div class="metric-row">
+    <div class="metric-cell">
+      <div class="num">1.0</div>
+      <div class="cap">Perfect model: AUC = 1.0</div>
+    </div>
+    <div class="metric-cell">
+      <div class="num">0.5</div>
+      <div class="cap">Random guessing: AUC = 0.5</div>
+    </div>
+    <div class="metric-cell">
+      <div class="num">&gt; 0.8</div>
+      <div class="cap">Good discrimination</div>
+    </div>
+    <div class="metric-cell">
+      <div class="num">&gt; 0.9</div>
+      <div class="cap">Excellent discrimination</div>
+    </div>
+  </div>
+
+  <!-- ---- Macro-F1 & Balanced Accuracy ---- -->
+  <h3 id="macro-f1">Macro-F1 and Balanced Accuracy</h3>
+
+  <p>
+    While ROC-AUC measures ranking quality, <strong>Macro-F1</strong> and <strong>Balanced Accuracy</strong>
+    measure classification quality at a specific decision threshold (usually 0.5 after temperature scaling).
+  </p>
+
+  <h4>Macro-F1</h4>
+
+  <p>
+    The F1 score is the harmonic mean of precision and recall. For multi-class problems, we compute
+    F1 per class and then average them (macro-averaging).
+  </p>
+
+  <div class="formula-block">
+    <strong>F1 score per class</strong><br><br>
+    Precision<sub>k</sub> = TP<sub>k</sub> / (TP<sub>k</sub> + FP<sub>k</sub>)<br>
+    Recall<sub>k</sub> = TP<sub>k</sub> / (TP<sub>k</sub> + FN<sub>k</sub>)<br>
+    F1<sub>k</sub> = 2 &middot; (Precision<sub>k</sub> &middot; Recall<sub>k</sub>) / (Precision<sub>k</sub> + Recall<sub>k</sub>)<br><br>
+    Macro-F1 = (1/4) &middot; &sum;<sub>k=1</sub><sup>4</sup> F1<sub>k</sub><br><br>
+    <span class="desc">
+      Macro-F1 penalizes the model equally for poor performance on any class, regardless of size.
+      A model that ignores MRCC entirely will have a low Macro-F1 even if overall accuracy is high.
+    </span>
+  </div>
+
+  <div class="split">
+    <div class="measure">
+      <p><strong>Why Macro-F1 instead of Weighted F1?</strong></p>
+      <p>
+        Weighted F1 averages per-class F1 scores weighted by class size. This gives the largest class
+        (RETINORM) the most influence. But we care most about whether the model works for the rare but
+        clinically critical classes (MRCC). Macro-F1 gives MRCC the same weight as RETINORM, which is
+        a harder test and more clinically honest.
+      </p>
+    </div>
+    <div class="measure">
+      <p><strong>Why not just accuracy?</strong></p>
+      <p>
+        Accuracy = (TP + TN) / Total. With class imbalance, accuracy is misleading. If RETINORM has
+        200 samples and MRCC has 20, a model that always predicts RETINORM achieves 200/220 = 91%
+        accuracy while being clinically useless. Macro-F1 and balanced accuracy avoid this trap.
+      </p>
+    </div>
+  </div>
+
+  <h4>Balanced Accuracy</h4>
+
+  <p>
+    Balanced accuracy is the average of recall (sensitivity) across all classes. Unlike standard
+    accuracy, it is immune to class imbalance:
+  </p>
+
+  <div class="formula-block">
+    <strong>Balanced Accuracy</strong><br><br>
+    Balanced Accuracy = (1/4) &middot; &sum;<sub>k=1</sub><sup>4</sup> (TP<sub>k</sub> / (TP<sub>k</sub> + FN<sub>k</sub>))<br><br>
+    <span class="desc">
+      This is simply the average of per-class recall. Random guessing gives 0.25 for 4 classes.
+      A perfect model gives 1.0.
+    </span>
+  </div>
+
+  <!-- ---- Per-class sensitivity/specificity ---- -->
+  <h3 id="sensitivity">Per-Class Sensitivity and Specificity</h3>
+
+  <p>
+    For clinical applications, the overall macro-averaged metrics are not enough. We need to know: for
+    <em>each</em> disease cohort, what fraction of patients with that condition does the model detect
+    (sensitivity), and what fraction of patients without that condition does it correctly identify as
+    not having it (specificity)?
+  </p>
+
+  <div class="term-grid">
+    <div class="term">
+      <h5>Sensitivity (Recall / True Positive Rate)</h5>
+      <p>Of all patients who truly have cohort X, how many did the model correctly identify? High
+        sensitivity means fewer missed cases. For a screening tool, high sensitivity is critical:
+        missing a case of CAD (MRCC) could have serious consequences.</p>
+    </div>
+    <div class="term">
+      <h5>Specificity (True Negative Rate)</h5>
+      <p>Of all patients who do <em>not</em> have cohort X, how many did the model correctly identify
+        as negative? High specificity means fewer false alarms. For a screening tool, low specificity
+        leads to unnecessary follow-up tests and patient anxiety.</p>
+    </div>
+  </div>
+
+  <div class="signal">
+    <strong>The sensitivity-specificity tradeoff.</strong> Increasing sensitivity (detecting more true
+    cases) almost always decreases specificity (more false alarms). The optimal balance depends on
+    the clinical use case. For screening, bias toward sensitivity. For confirmatory diagnosis, bias
+    toward specificity. The ROC curve shows this tradeoff at every possible threshold.
+  </div>
+
+  <p>
+    In the final results table, per-class sensitivity and specificity are reported at the default
+    decision threshold (after temperature scaling), with the option to adjust thresholds per class
+    to optimize a clinically defined operating point (e.g., ensure &ge; 95% sensitivity for MRCC
+    at the cost of reduced specificity).
+  </p>
+
+  <div class="panel-soft">
+    <strong>Example per-class results table (hypothetical)</strong>
+    <table style="margin: 10px 0 0; font-size: 0.9rem;">
+      <tr><th>Cohort</th><th>AUC</th><th>Sensitivity</th><th>Specificity</th><th>F1</th></tr>
+      <tr><td>RETINORM</td><td>0.91</td><td>0.88</td><td>0.93</td><td>0.86</td></tr>
+      <tr><td>ORNET</td><td>0.86</td><td>0.78</td><td>0.90</td><td>0.76</td></tr>
+      <tr><td>FAMILIPO</td><td>0.84</td><td>0.75</td><td>0.91</td><td>0.73</td></tr>
+      <tr><td>MRCC</td><td>0.82</td><td>0.71</td><td>0.94</td><td>0.65</td></tr>
+    </table>
+    <div style="color: var(--text-low); font-size: 0.86rem; margin-top: 8px;">
+      Note: MRCC, the smallest cohort, has the lowest sensitivity but high specificity. This pattern
+      is expected for rare classes: the model is cautious about calling MRCC but very reliable when it does.
+    </div>
+  </div>
+
+</section>
+
+<!-- ============================================================ -->
+<!-- SECONDARY METRICS -->
+<!-- ============================================================ -->
+<section class="chapter" id="secondary">
+
+  <div class="chapter-head">
+    <h2>Secondary Metrics</h2>
+    <p>Secondary metrics provide additional perspective and diagnostic detail beyond the primary battery.</p>
+  </div>
+
+  <!-- ---- Confusion Matrix ---- -->
+  <h3 id="confusion-matrix">Confusion Matrix</h3>
+
+  <p>
+    The confusion matrix is the most direct way to see <em>which</em> classes the model confuses. It
+    is a 4x4 grid where rows are true classes and columns are predicted classes. The diagonal shows
+    correct predictions; off-diagonal cells show errors.
+  </p>
+
+  <div class="split">
+    <div class="panel-soft measure">
+      <strong>Hypothetical confusion matrix</strong>
+      <table style="margin: 8px 0 0; font-size: 0.85rem;">
+        <tr><th></th><th>Pred RET</th><th>Pred ORN</th><th>Pred FAM</th><th>Pred MRCC</th></tr>
+        <tr><td>True RET</td><td style="color: var(--mint);">84</td><td>6</td><td>7</td><td>3</td></tr>
+        <tr><td>True ORN</td><td>8</td><td style="color: var(--mint);">62</td><td>11</td><td>5</td></tr>
+        <tr><td>True FAM</td><td>9</td><td>10</td><td style="color: var(--mint);">58</td><td>7</td></tr>
+        <tr><td>True MRCC</td><td>4</td><td>3</td><td>5</td><td style="color: var(--mint);">30</td></tr>
+      </table>
+      <div style="color: var(--text-low); font-size: 0.82rem; margin-top: 8px;">
+        Diagonal = correct. Higher is better.
+        This matrix shows MRCC is most often confused with FAMILIPO, which makes clinical sense.
+      </div>
+    </div>
+    <div class="measure">
+      <p><strong>What to look for in a confusion matrix:</strong></p>
+      <ul>
+        <li><strong>Which pairs are most confused?</strong> If the model often predicts ORNET when the
+          truth is FAMILIPO, there may be shared vascular features that make them hard to distinguish.</li>
+        <li><strong>Is one class absorbing most errors?</strong> If the largest class (RETINORM) gets
+          many false positives, the model may be biased toward predicting the majority class.</li>
+        <li><strong>Normalized version:</strong> The pipeline also produces a row-normalized confusion
+          matrix (each row sums to 1.0), showing the proportion of each true class that falls into
+          each predicted class. This is better for comparing across classes of different sizes.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ---- PR-AUC ---- -->
+  <h3 id="pr-auc">PR-AUC (Precision-Recall AUC)</h3>
+
+  <p>
+    While ROC-AUC is the standard for balanced datasets, <strong>Precision-Recall AUC (PR-AUC)</strong>
+    is more informative when classes are imbalanced &mdash; which is exactly the case in the RASTA
+    dataset. PR-AUC focuses on the positive class (the minority) rather than the negative class
+    (the majority).
+  </p>
+
+  <div class="panel-soft" style="margin: 18px 0;">
+    <strong>ROC-AUC vs. PR-AUC:</strong> ROC-AUC plots TPR vs. FPR. Because FPR uses the large
+    negative class in its denominator, it can make a model look better than it is when negatives
+    vastly outnumber positives. PR-AUC plots precision vs. recall, both of which focus on the
+    positive (minority) class. For imbalanced medical datasets, PR-AUC is often the more honest metric.
+  </div>
+
+  <p>
+    Macro-averaged PR-AUC is computed the same way as macro-averaged ROC-AUC: one-vs-rest per class,
+    then averaged. The baseline for PR-AUC is the prevalence of the positive class (e.g., if MRCC
+    is 15% of the data, a random classifier gets PR-AUC = 0.15).
+  </p>
+
+  <!-- ---- Top-2 Accuracy ---- -->
+  <h3>Top-2 Accuracy</h3>
+
+  <p>
+    For a 4-class problem, top-2 accuracy measures whether the correct class is in the model's top 2
+    predictions. This is a more forgiving metric that is useful when some classes are genuinely hard
+    to distinguish (e.g., FAMILIPO vs. MRCC both involve cardiovascular risk). If the model consistently
+    puts the correct class in its top 2, it means the ranking is sensible even if the top-1 prediction
+    is wrong.
+  </p>
+
+  <p>
+    Top-2 accuracy is particularly relevant for clinical triage: if the model lists "MRCC or
+    FAMILIPO" as the top 2, a clinician knows to investigate cardiovascular risk even if the exact
+    subcategory is uncertain.
+  </p>
+
+  <div class="metric-row">
+    <div class="metric-cell">
+      <div class="num" style="font-size: 1.2rem;">ROC-AUC (macro)</div>
+      <div class="cap">Ranking quality, balanced</div>
+    </div>
+    <div class="metric-cell">
+      <div class="num" style="font-size: 1.2rem;">PR-AUC (macro)</div>
+      <div class="cap">Ranking quality, imbalanced</div>
+    </div>
+    <div class="metric-cell">
+      <div class="num" style="font-size: 1.2rem;">Weighted F1</div>
+      <div class="cap">Size-weighted classification</div>
+    </div>
+    <div class="metric-cell">
+      <div class="num" style="font-size: 1.2rem;">Top-2 Accuracy</div>
+      <div class="cap">Forgiving ranking metric</div>
+    </div>
+  </div>
+
+</section>
+
+<!-- ============================================================ -->
+<!-- CALIBRATION -->
+<!-- ============================================================ -->
+<section class="chapter" id="calibration">
+
+  <div class="chapter-head">
+    <h2>Calibration &mdash; How Much Should You Trust That 80%?</h2>
+    <p>A model that says "80% confident" should be right 80% of the time. Calibration metrics tell
+    us whether the probabilities are trustworthy.</p>
+  </div>
+
+  <p>
+    Imagine two models that both achieve 85% accuracy on the same test set. Model A says "I am 95%
+    confident" when it is right and "I am 60% confident" when it is wrong. Model B says "I am 85%
+    confident" for every prediction. Model B is perfectly calibrated (on average), even though it
+    provides less informative individual probabilities. Model A is miscalibrated: it is overconfident
+    when it is right and underconfident when it is wrong.
+  </p>
+
+  <p>
+    For medical decision-making, calibration matters because:
+  </p>
+
+  <ul>
+    <li><strong>Clinical workflow integration</strong> &mdash; If the model says a patient has a
+      90% probability of MRCC, a clinician may decide to prioritize that patient for cardiac workup.
+      If this "90%" is actually 60% in reality, patients are being mismanaged.</li>
+    <li><strong>Screening thresholds</strong> &mdash; Many screening programs use probability
+      thresholds (e.g., refer if CAD risk &gt; 20%). Miscalibrated probabilities lead to incorrect
+      referral decisions.</li>
+    <li><strong>Regulatory acceptance</strong> &mdash; Calibration is part of the "analytical validity"
+      required by regulators. A model with good AUC but poor calibration may not pass regulatory review
+      for clinical use.</li>
+  </ul>
+
+  <!-- ---- ECE ---- -->
+  <h3 id="ece">Expected Calibration Error (ECE)</h3>
+
+  <p>
+    ECE is the most common metric for evaluating calibration. It works by:
+  </p>
+
+  <ol>
+    <li><strong>Binning</strong> predictions by confidence. For example, create 10 bins: [0-10%],
+      [10-20%], ..., [90-100%].</li>
+    <li>For each bin, compute the <strong>average predicted probability</strong> and the
+      <strong>fraction of positives</strong> (accuracy).</li>
+    <li>ECE is the weighted average of |accuracy - confidence| across bins.</li>
+  </ol>
+
+  <div class="formula-block">
+    <strong>Expected Calibration Error (10 bins)</strong><br><br>
+    ECE = &sum;<sub>b=1</sub><sup>10</sup> (n<sub>b</sub> / N) &middot; |acc(b) - conf(b)|<br><br>
+    <span class="desc">
+      Where n<sub>b</sub> is the number of predictions in bin b, N is the total number of predictions,
+      acc(b) is the fraction of correct predictions in bin b, and conf(b) is the average predicted
+      confidence in bin b. Lower ECE is better. ECE = 0 means perfect calibration.
+    </span>
+  </div>
+
+  <div class="split">
+    <div class="panel-soft measure">
+      <strong>Reading ECE values</strong>
+      <table style="margin: 8px 0 0; font-size: 0.85rem;">
+        <tr><th>ECE</th><th>Interpretation</th></tr>
+        <tr><td>&lt; 0.02</td><td>Excellent calibration</td></tr>
+        <tr><td>0.02 &ndash; 0.05</td><td>Good calibration</td></tr>
+        <tr><td>0.05 &ndash; 0.10</td><td>Moderate; may need recalibration</td></tr>
+        <tr><td>&gt; 0.10</td><td>Poor; probabilities unreliable</td></tr>
+      </table>
+    </div>
+    <div class="measure">
+      <p><strong>Reliability diagram:</strong> The evaluation pipeline also generates a reliability
+        diagram &mdash; a plot with predicted confidence on the x-axis and actual accuracy on the
+        y-axis. Perfect calibration is the diagonal line y = x. Points above the diagonal mean the
+        model is underconfident; points below mean it is overconfident.</p>
+      <p>The diagram is generated per class, so you can see if calibration varies across cohorts.</p>
+    </div>
+  </div>
+
+  <!-- ---- Brier Score ---- -->
+  <h3 id="brier">Brier Score</h3>
+
+  <p>
+    The Brier score is the mean squared error between predicted probabilities and one-hot encoded
+    true labels. It captures both discrimination and calibration in a single number.
+  </p>
+
+  <div class="formula-block">
+    <strong>Multi-class Brier Score</strong><br><br>
+    Brier = (1/N) &middot; &sum;<sub>i=1</sub><sup>N</sup> &sum;<sub>k=1</sub><sup>4</sup>
+    (p<sub>ik</sub> - y<sub>ik</sub>)<sup>2</sup><br><br>
+    <span class="desc">
+      Where p<sub>ik</sub> is the predicted probability for sample i and class k, and y<sub>ik</sub>
+      is 1 if the true label is k, 0 otherwise. Lower is better. The Brier score ranges from 0
+      (perfect) to 2 (worst for 4 classes).
+    </span>
+  </div>
+
+  <p>
+    The Brier score can be decomposed into three components: uncertainty (aleatory), reliability
+    (calibration), and resolution (discrimination). This decomposition helps diagnose <em>why</em>
+    the Brier score is high: is it because the model is poorly calibrated, or because the classes
+    are inherently overlapping (high uncertainty)?
+  </p>
+
+  <div class="signal">
+    <strong>Temperature scaling.</strong> Before computing calibration metrics, the raw model logits
+    are passed through a learned temperature parameter T &gt; 0. Softmax(logits / T) produces
+    calibrated probabilities. The temperature is learned on the inner validation split by minimizing
+    negative log-likelihood, then applied to the held-out test predictions. This is <em>post-hoc</em>
+    calibration &mdash; it does not change the model's ranking ability (AUC is unaffected), only the
+    confidence values.
+  </div>
+
+</section>
+
+<!-- ============================================================ -->
+<!-- UNCERTAINTY EVALUATION -->
+<!-- ============================================================ -->
+<section class="chapter" id="uncertainty">
+
+  <div class="chapter-head">
+    <h2>Uncertainty Evaluation &mdash; Knowing When to Say "I Don't Know"</h2>
+    <p>A good medical AI knows its limits. Uncertainty quantification identifies predictions that
+    should not be trusted.</p>
+  </div>
+
+  <p>
+    The Retina CAD model uses <strong>Monte Carlo Dropout (MC-Dropout)</strong> at inference time.
+    During training, dropout layers randomly zero out neurons. At inference, normally dropout is
+    turned off. But with MC-Dropout, we leave dropout <em>on</em> and run 30 forward passes. Each
+    pass produces slightly different predictions. The variability across these 30 passes measures
+    the model's <strong>epistemic uncertainty</strong> &mdash; uncertainty due to limited training
+    data or ambiguous inputs.
+  </p>
+
+  <div class="flow-chain">
+    <span class="node active">Input image</span>
+    <span class="arrow">&rarr;</span>
+    <span class="node">Run 1 (dropout on)</span>
+    <span class="arrow">&rarr;</span>
+    <span class="node">Prediction 1</span>
+    <span class="arrow" style="font-size: 1.4rem;">&#8942;</span>
+    <span class="node">Run 30 (dropout on)</span>
+    <span class="arrow">&rarr;</span>
+    <span class="node active">Mean &amp; Variance</span>
+  </div>
+
+  <p>
+    From the 30 forward passes, we compute:
+  </p>
+
+  <ul>
+    <li><strong>Mean prediction:</strong> The average softmax probability across all 30 passes. This
+      is the final prediction.</li>
+    <li><strong>Epistemic variance:</strong> The variance of the probabilities across the 30 passes,
+      per class. High variance means the model is uncertain about that class's probability.</li>
+    <li><strong>Predictive entropy:</strong> A single number summarizing overall uncertainty:
+      H = -&sum; p<sub>k</sub> log(p<sub>k</sub>). Higher entropy = more uncertain.</li>
+  </ul>
+
+  <h3>Entropy vs. Accuracy Analysis</h3>
+
+  <p>
+    The key validation question is: <strong>Are uncertain predictions also less accurate?</strong> If
+    the model's uncertainty estimates are meaningful, then predictions with high entropy should have
+    lower accuracy. The evaluation pipeline tests this by:
+  </p>
+
+  <ol>
+    <li>Sorting all predictions by entropy (low to high).</li>
+    <li>Dividing into quartiles (0-25%, 25-50%, 50-75%, 75-100% entropy).</li>
+    <li>Computing accuracy within each quartile.</li>
+  </ol>
+
+  <div class="panel-soft">
+    <strong>Expected pattern for a well-calibrated uncertainty model:</strong>
+    <table style="margin: 10px 0 0; font-size: 0.9rem;">
+      <tr><th>Entropy quartile</th><th>Accuracy</th><th>Interpretation</th></tr>
+      <tr><td>Lowest (most confident)</td><td>~95%</td><td>High-confidence predictions are very reliable</td></tr>
+      <tr><td>Second</td><td>~85%</td><td>Still reliable</td></tr>
+      <tr><td>Third</td><td>~70%</td><td>Moderate uncertainty</td></tr>
+      <tr><td>Highest (most uncertain)</td><td>~40%</td><td>Should be flagged for manual review</td></tr>
+    </table>
+  </div>
+
+  <h3>Coverage Analysis</h3>
+
+  <p>
+    Coverage analysis asks: "What percentage of correct predictions fall in the top confidence bin?"
+    If the top 30% most confident predictions contain 90% of all correct predictions, the model's
+    confidence ranking is informative. This is a practical metric for clinical deployment: you could
+    set a confidence threshold, automatically accept predictions above it, and refer the rest for
+    manual review.
+  </p>
+
+  <div class="note-box">
+    <p><strong>Clinical workflow implication:</strong> With a coverage of 80% at 95% accuracy, you
+      could automate 80% of cases with high confidence and have a clinician review the remaining
+      20%. This reduces workload while maintaining safety.</p>
+  </div>
+
+</section>
+
+<!-- ============================================================ -->
+<!-- STATISTICAL COMPARISON -->
+<!-- ============================================================ -->
+<section class="chapter" id="comparison">
+
+  <div class="chapter-head">
+    <h2>Statistical Comparison &mdash; Is Model A Really Better Than Model B?</h2>
+    <p>When two models differ by 0.01 in AUC, is that a real improvement or just noise? Statistical
+    tests provide the answer.</p>
+  </div>
+
+  <p>
+    Phase 14 provides two statistical tests for comparing models. These are essential for ablation
+    studies (Phase 15) and baseline comparisons (Phase 16), where we need to know whether adding
+    or removing a component makes a statistically significant difference.
+  </p>
+
+  <!-- ---- McNemar ---- -->
+  <h3 id="mcnemar">McNemar's Test</h3>
+
+  <p>
+    McNemar's test compares two models on a paired classification task. It answers: "Do the two models
+    make different errors?" It uses only the samples where the models disagree.
+  </p>
+
+  <div class="formula-block">
+    <strong>McNemar's Test</strong><br><br>
+    Contingency table:<br><br>
+    <table style="width: auto; margin: 8px 0;">
+      <tr><th></th><th>Model B correct</th><th>Model B wrong</th></tr>
+      <tr><td>Model A correct</td><td>n<sub>00</sub></td><td>n<sub>01</sub></td></tr>
+      <tr><td>Model A wrong</td><td>n<sub>10</sub></td><td>n<sub>11</sub></td></tr>
+    </table>
+    &chi;<sup>2</sup> = (|n<sub>01</sub> - n<sub>10</sub>| - 1)<sup>2</sup> / (n<sub>01</sub> + n<sub>10</sub>)<br><br>
+    <span class="desc">
+      The null hypothesis is that the two models have equal error rates. If p &lt; 0.05 (after
+      Bonferroni correction for multiple comparisons), we reject the null and conclude one model
+      makes significantly fewer errors. McNemar is a paired test, meaning the same test samples are
+      used for both models.
+    </span>
+  </div>
+
+  <div class="split">
+    <div class="measure">
+      <p><strong>Interpreting McNemar results:</strong></p>
+      <ul>
+        <li>If n<sub>01</sub> &gt; n<sub>10</sub>, Model A makes more errors on samples that Model B
+          gets right &rarr; Model B is better.</li>
+        <li>If the p-value is small (&lt; 0.05), the difference is statistically significant.</li>
+        <li>McNemar only tells you if the error rates are different, not which model is better on
+          specific classes. For class-level analysis, use per-class metrics.</li>
+      </ul>
+    </div>
+    <div class="panel-halo measure">
+      <strong>When to use McNemar</strong>
+      <p style="margin-top: 6px;">McNemar is the default test for comparing two classification models
+        on the same test set. It is preferred over a simple accuracy comparison because it accounts
+        for the paired nature of the data (same samples, two models). It is also distribution-free
+        (no assumptions about normality).</p>
+    </div>
+  </div>
+
+  <!-- ---- DeLong ---- -->
+  <h3 id="delong">DeLong Test for AUC Comparison</h3>
+
+  <p>
+    When comparing AUC values between two models, the DeLong test (DeLong et al., 1988) is the
+    standard method. It tests whether the difference between two correlated ROC-AUC values is
+    statistically significant.
+  </p>
+
+  <p>
+    The DeLong test uses the theory of U-statistics to estimate the covariance matrix of the two
+    AUC estimates, accounting for the fact that the same test samples are used for both models
+    (paired/matched data). It produces a z-statistic and p-value for the null hypothesis that the
+    two AUCs are equal.
+  </p>
+
+  <div class="panel-soft">
+    <strong>Paired comparison example (hypothetical):</strong>
+    <table style="margin: 10px 0 0; font-size: 0.9rem;">
+      <tr><th>Model comparison</th><th>AUC</th><th>AUC diff</th><th>DeLong p</th><th>Significant?</th></tr>
+      <tr><td>Full model vs. -Tabular</td><td>0.87 vs. 0.82</td><td>0.05</td><td>0.003</td><td style="color: var(--mint);">Yes (**)</td></tr>
+      <tr><td>Full model vs. -Mask</td><td>0.87 vs. 0.85</td><td>0.02</td><td>0.087</td><td style="color: var(--amber);">No</td></tr>
+      <tr><td>Full model vs. Sup only</td><td>0.87 vs. 0.76</td><td>0.11</td><td>&lt; 0.001</td><td style="color: var(--mint);">Yes (***)</td></tr>
+    </table>
+    <div style="color: var(--text-low); font-size: 0.86rem; margin-top: 8px;">
+      Removing the tabular branch causes a significant drop. Removing the mask branch does not reach
+      significance at this sample size. The single-layer ablation is highly significant.
+    </div>
+  </div>
+
+  <h3>Multiple Comparison Correction</h3>
+
+  <p>
+    When running multiple statistical tests (e.g., comparing the full model against 10 baselines and
+    15 ablations), the chance of at least one false positive increases dramatically. The pipeline
+    applies <strong>Bonferroni correction</strong>: the significance threshold &alpha; = 0.05 is
+    divided by the number of tests. If we run 25 comparisons, the corrected threshold is 0.05 / 25
+    = 0.002. Only p-values below this threshold are considered significant.
+  </p>
+
+  <h3>Effect Size (Cohen's h)</h3>
+
+  <p>
+    Statistical significance is not the same as practical significance. A tiny effect can be
+    statistically significant with enough data. Cohen's h measures the effect size for comparing
+    two proportions or AUC values:
+  </p>
+
+  <div class="formula-block">
+    <strong>Cohen's h for AUC comparison</strong><br><br>
+    h = 2 &middot; arcsin(&radic;AUC<sub>1</sub>) - 2 &middot; arcsin(&radic;AUC<sub>2</sub>)<br><br>
+    <span class="desc">
+      Convention: h &ge; 0.2 = small effect, h &ge; 0.5 = medium effect, h &ge; 0.8 = large effect.
+      Effect size tells you whether a statistically significant difference is also practically
+      meaningful.
+    </span>
+  </div>
+
+  <p>
+    The evaluation pipeline reports both p-values and effect sizes for all pairwise model comparisons,
+    ensuring that conclusions are based on both statistical and practical significance.
+  </p>
+
+</section>
+
+<!-- ============================================================ -->
+<!-- HOW TO READ THE RESULTS -->
+<!-- ============================================================ -->
+<section class="chapter" id="reading">
+
+  <div class="chapter-head">
+    <h2>How to Read the Results</h2>
+    <p>A practical guide to interpreting the evaluation output and distinguishing meaningful findings
+    from noise.</p>
+  </div>
+
+  <h3>The results bundle</h3>
+
+  <p>
+    When the evaluation pipeline runs, it produces a structured bundle under
+    <code>outputs/phase14_evaluation/</code>:
+  </p>
+
+  <ul>
+    <li><strong>fold_&lt;k&gt;_eye_metrics.csv</strong> &mdash; Per-fold eye-level metrics with
+      bootstrap CIs.</li>
+    <li><strong>fold_&lt;k&gt;_patient_metrics.csv</strong> &mdash; Per-fold patient-level metrics
+      with bootstrap CIs.</li>
+    <li><strong>fold_&lt;k&gt;_calibration.csv</strong> &mdash; ECE, Brier score, reliability bins.</li>
+    <li><strong>fold_&lt;k&gt;_confusion_matrix.csv</strong> &mdash; Raw and normalized confusion
+      matrices.</li>
+    <li><strong>fold_&lt;k&gt;_mc_dropout.csv</strong> &mdash; MC-Dropout uncertainty predictions
+      with entropy and per-class variance.</li>
+    <li><strong>cross_validation_summary.csv</strong> &mdash; Mean &plusmn; std across 5 folds for
+      all primary and secondary metrics.</li>
+  </ul>
+
+  <h3>How to interpret the numbers</h3>
+
+  <div class="question-list">
+    <div class="qitem">
+      <strong>Macro-AUC is 0.85. Is that good?</strong>
+      <p style="margin-top: 4px; font-size: 0.92rem;">For a 4-class medical image classification task
+        with moderate class imbalance and a medium-sized dataset (~476 eyes), 0.85 is competitive.
+        It means the model ranks about 85% of positive samples higher than negative samples, averaged
+        across all four one-vs-rest comparisons. Compare this to the baselines (Phase 16) to see if
+        the multimodal approach adds value over simpler models.</p>
+    </div>
+    <div class="qitem">
+      <strong>Macro-F1 is 0.68 but weighted F1 is 0.78. Why the gap?</strong>
+      <p style="margin-top: 4px; font-size: 0.92rem;">This gap means the model performs better on
+        larger classes (RETINORM) than on smaller ones (MRCC). Macro-F1 penalizes poor MRCC performance
+        equally, while weighted F1 lets RETINORM's size mask it. The gap itself is diagnostic: if it
+        is large, minority-class improvement should be a priority.</p>
+    </div>
+    <div class="qitem">
+      <strong>ECE is 0.08 after temperature scaling. What does this mean?</strong>
+      <p style="margin-top: 4px; font-size: 0.92rem;">An ECE of 0.08 means the average gap between
+        predicted confidence and actual accuracy is 8 percentage points. For example, predictions
+        where the model says "70% confident" are actually correct about 62% of the time on average.
+        This is moderate calibration &mdash; usable for ranking but not yet reliable enough for
+        threshold-based clinical decisions without further calibration improvement.</p>
+    </div>
+    <div class="qitem">
+      <strong>MC-Dropout entropy is high for a specific patient. What should I do?</strong>
+      <p style="margin-top: 4px; font-size: 0.92rem;">High entropy means the model is uncertain about
+        this patient. In a clinical workflow, this patient would be flagged for expert review. Review
+        the Grad-CAM heatmaps (Phase 13) for this patient to see what the model was looking at. The
+        uncertainty signal is a feature, not a bug &mdash; it tells you when to trust the model and
+        when to be cautious.</p>
+    </div>
+    <div class="qitem">
+      <strong>DeLong test says p = 0.04 but Bonferroni threshold is 0.002. Is it significant?</strong>
+      <p style="margin-top: 4px; font-size: 0.92rem;">With Bonferroni correction for 25 comparisons,
+        no, p = 0.04 is not significant after correction. The observed AUC difference is likely due
+        to chance. This is why multiple comparison correction is essential: without it, about 1 in 20
+        tests would be falsely called significant just by chance.</p>
+    </div>
+  </div>
+
+  <div class="signal">
+    <strong>Remember:</strong> No single metric tells the full story. ROC-AUC tells you about ranking.
+    F1 tells you about classification at a specific threshold. ECE tells you about probability
+    reliability. Entropy analysis tells you about per-sample uncertainty. Together, they provide a
+    complete picture. Always look at the full evaluation bundle, not just one number.
+  </div>
+
+  <h3>What to expect from a successful model</h3>
+
+  <p>
+    Based on the literature for multimodal OCTA classification and the biological rationale for the
+    project, here are reasonable performance expectations:
+  </p>
+
+  <div class="panel-soft">
+    <table style="margin: 0; font-size: 0.9rem;">
+      <tr><th>Metric</th><th>Good</th><th>Excellent</th><th>Notes</th></tr>
+      <tr><td>Macro-ROC-AUC</td><td>0.80</td><td>0.88</td><td>Above 0.85 is strong for 4-class medical task</td></tr>
+      <tr><td>Macro-F1</td><td>0.60</td><td>0.72</td><td>Penalized by rare classes; 0.65+ is solid</td></tr>
+      <tr><td>Balanced Accuracy</td><td>0.58</td><td>0.70</td><td>Random baseline is 0.25 for 4 classes</td></tr>
+      <tr><td>ECE</td><td>0.05</td><td>0.02</td><td>Post-temperature scaling</td></tr>
+      <tr><td>Brier Score</td><td>0.50</td><td>0.35</td><td>Lower is better; depends on class overlap</td></tr>
+    </table>
+  </div>
+
+  <p>
+    These are rough guides. The true test is whether the full multimodal model significantly outperforms
+    the baselines (Phase 16) and whether the ablation studies (Phase 15) confirm that each component
+    contributes meaningfully.
+  </p>
+
+</section>
+
+</article>
+</div>
+</div>
+
+<!-- ====== FOOTER ====== -->
+<footer class="foot">
+  <div class="shell">
+    <p>Retina CAD &middot; RASTA OCTA CAD Project &middot; Phase 14 &mdash; Evaluation Metrics</p>
+    <p style="margin-top: 4px; font-size: 0.84rem;">
+      This document is part of the explainer series for the Retina CAD project.
+      See also: <a href="phase-13-explainability.html">Phase 13 &mdash; Explainability</a>,
+      <a href="phase-12-training-strategy.html">Phase 12 &mdash; Training Strategy</a>,
+      <a href="phase-9-classifier-prototypes.html">Phase 9 &mdash; Classifier Prototypes</a>.
+    </p>
+  </div>
+</footer>
+
+</body>
+</html>

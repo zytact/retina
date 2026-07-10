@@ -413,28 +413,28 @@
       <div class="shell hero-grid">
         <div>
           <div class="signal">Advisor-facing explainer</div>
-          <h1>Architecture from raw OCTA scans to CAD prediction</h1>
+          <h1>End-to-end architecture from OCTA scans to diagnosis</h1>
           <p class="lead">
-            This version is meant for explaining the project at the right altitude: enough technical substance to defend the modeling choices, but simple enough to describe as one coherent pipeline rather than a collection of notebook phases.
+            An explainer at the right altitude: technical enough to defend the modeling choices, but simple enough to describe as one coherent pipeline. The system covers data curation, layer-specific representation learning, multimodal fusion, prototype-augmented classification with uncertainty, calibration, explainability, and a full evaluation suite.
           </p>
         </div>
         <div class="hero-side">
           <h2>Core idea</h2>
           <p>
-            The system treats each retinal OCTA layer as a different physiological view, learns a separate visual representation for each one, combines those views with clinical metadata and generated vascular biomarkers, then produces a calibrated coronary artery disease prediction with interpretation hooks.
+            The system treats each retinal OCTA layer as a different physiological view, learns a separate visual representation for each one, models cross-layer interactions via attention, fuses those learned features with clinical metadata and generated vascular biomarkers, then produces a calibrated, uncertainty-aware disease prediction with full explainability.
           </p>
           <div class="hero-rail">
             <div>
               <strong>Inputs</strong>
-              <span>Three OCTA layers, per-eye clinical metadata, generated pseudo-mask biomarkers</span>
+              <span>Three OCTA layers, per-eye clinical metadata, generated pseudo-masks and biomarkers</span>
             </div>
             <div>
               <strong>Fusion</strong>
-              <span>Cross-layer attention first, multimodal cross-attention second</span>
+              <span>Cross-layer attention, multimodal fusion, mask encoder, prototype-augmented classifier</span>
             </div>
             <div>
               <strong>Outputs</strong>
-              <span>Disease probabilities, calibration, attention attribution, biomarker context</span>
+              <span>Disease probabilities, MC-Dropout uncertainty, ECE-calibrated confidence, Grad-CAM and SHAP explanations</span>
             </div>
           </div>
         </div>
@@ -516,10 +516,34 @@
           </article>
 
           <article class="narrative">
-            <h3>Why calibration and explainability are explicit</h3>
+            <h3>Why prototype augmentation</h3>
             <div>
-              <p>For a clinical screening model, probability quality matters, not just ranking accuracy. The roadmap therefore includes post-training calibration and uncertainty estimation as first-class outputs.</p>
-              <p>Layer dominance, Grad-CAM maps, biomarker attribution, and ablation studies provide a path to explaining whether the model is using plausible retinal evidence rather than shortcut correlations.</p>
+              <p>The RASTA cohorts are imbalanced. A standard linear classifier tends to bias toward majority classes. A prototype-based similarity branch provides a non-parametric signal that works well for rare classes &mdash; a sample close to its class prototype scores high regardless of class frequency.</p>
+              <p>EMA class prototypes are maintained during training and combined with the linear logits via a learned scalar weight. This hybrid head improves generalisation for minority cohorts without requiring oversampling.</p>
+            </div>
+          </article>
+
+          <article class="narrative">
+            <h3>Why the 3-stage training schedule</h3>
+            <div>
+              <p>Training everything from scratch would destroy the SimCLR-adapted features before they can help. Stage 1 completes self-supervised pretraining. Stage 2 trains all downstream heads with OCTA backbones frozen. Stage 3 fine-tunes end-to-end with a 10x lower backbone learning rate.</p>
+              <p>This schedule preserves layer-specific visual representations while allowing the classifier, attention, and fusion modules to learn their specialised functions before the backbones are adjusted.</p>
+            </div>
+          </article>
+
+          <article class="narrative">
+            <h3>Why evaluation is comprehensive</h3>
+            <div>
+              <p>Clinical ML requires evidence beyond a single test-set accuracy. The pipeline includes 15 ablation configurations, 8 baseline comparisons, 5-fold patient-grouped cross-validation with bootstrap confidence intervals, fairness analysis across demographic subgroups, and formal statistical tests.</p>
+              <p>This is not just for publication rigour. It helps collaborators understand which modality combinations drive performance and whether the model behaves equitably across patient populations.</p>
+            </div>
+          </article>
+
+          <article class="narrative">
+            <h3>Why calibration, uncertainty, and explainability are explicit stages</h3>
+            <div>
+              <p>For a clinical screening model, probability quality matters, not just ranking accuracy. The system includes post-training temperature scaling, MC-Dropout uncertainty with entropy-based flagging, and ECE/Brier metrics.</p>
+              <p>Layer dominance, Grad-CAM maps, SHAP attribution, and ablation studies provide evidence about whether the model uses plausible retinal signals rather than shortcut correlations. These are implemented as first-class outputs, not afterthoughts.</p>
             </div>
           </article>
         </div>
@@ -531,34 +555,41 @@
         <div class="section-head">
           <h2>Current state versus next layer</h2>
           <p>
-            This helps keep the explanation honest. The core architecture through mask generation and multimodal fusion is already implemented in the notebook. The downstream evaluation and deployment-oriented trust layer is the main planned continuation.
+            The full pipeline from data curation through explainability is now implemented in the notebook. This section helps keep the explanation honest about which results are from completed runs versus downstream analysis that is still in progress.
           </p>
         </div>
 
         <div class="compare-grid">
           <div class="compare-col">
-            <h3>Already implemented</h3>
+            <h3>Implemented through Phase 13</h3>
             <ul>
-              <li>Dataset audit, leakage-safe folds, and preprocessing pipeline.</li>
-              <li>Layer-specific OCTA SimCLR pretraining and Phase 4 image encoders.</li>
-              <li>Tabular encoder, cross-layer attention, multimodal cross-attention fusion.</li>
-              <li>Classical pseudo-mask generation, biomarker extraction, and optional U-Net++ student path.</li>
+              <li>Dataset audit, leakage-safe folds, and preprocessing pipeline with learned missing-value imputation.</li>
+              <li>Layer-specific OCTA SimCLR pretraining, independent ConvNeXt-Tiny encoders, and projection heads.</li>
+              <li>Tabular encoder, cross-layer attention with layer-identity embeddings, multimodal fusion.</li>
+              <li>Classical pseudo-masks, U-Net++ student refinement, QC gate, and biomarker extraction.</li>
+              <li>Prototype-augmented classifier, MC-Dropout uncertainty, post-hoc temperature scaling.</li>
+              <li>3-stage training strategy (SimCLR reuse, frozen backbones, end-to-end fine-tune), 5-fold CV.</li>
+              <li>Explainability: Grad-CAM per layer, layer-dominance analysis, SHAP/occlusion attribution.</li>
+              <li>Loss functions: weighted CE with label smoothing, Focal loss fallback, Tversky+Focal+Dice for student.</li>
+              <li>Data augmentation: synchronised OCTA transforms, mask-aware, clinical noise.</li>
             </ul>
           </div>
 
           <div class="compare-col">
-            <h3>Next downstream layer</h3>
+            <h3>Analysis and outputs in progress</h3>
             <ul>
-              <li>Full supervised training loop and comparative ablations across modality combinations.</li>
-              <li>Calibration, uncertainty estimation, reliability diagrams, and threshold analysis.</li>
-              <li>Explainability reports linking prediction behavior back to layers, regions, and biomarkers.</li>
-              <li>Final evaluation framing for advisor review, paper writing, and clinical interpretation.</li>
+              <li>Full tabulated results from 5-fold CV with bootstrap confidence intervals.</li>
+              <li>Comparative ablations across all modality combinations (15 configurations).</li>
+              <li>8 baseline model comparisons (clinical-only, CNN, Transformer, single-layer variants).</li>
+              <li>Statistical validation: group-level analysis, fairness analysis, multivariate analysis.</li>
+              <li>Novel contributions write-up: bilateral SimCLR, layer-identity tokens, prototype head.</li>
+              <li>Publication-ready methodology section for IEEE / Nature Biomedical Engineering.</li>
             </ul>
           </div>
         </div>
 
         <p class="footer-note">
-          Suggested one-line summary for discussion: this is a multimodal retinal screening architecture that learns each OCTA layer separately, models cross-layer vascular interactions, conditions those image signals on clinical context, and then produces an interpretable, calibration-aware CAD prediction.
+          Suggested one-line summary: a multimodal retinal screening architecture that learns each OCTA layer separately, models cross-layer vascular interactions with attention, conditions those signals on clinical and biomarker context, and produces calibrated, interpretable, uncertainty-aware disease predictions with a full evaluation suite.
         </p>
       </div>
     </section>
@@ -724,7 +755,7 @@
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      const bg = ctx.createLinearGradient(180, 40, 1360, 900);
+      const bg = ctx.createLinearGradient(180, 40, 1360, 960);
       bg.addColorStop(0, '#0a0c10');
       bg.addColorStop(1, '#070809');
       ctx.fillStyle = bg;
@@ -736,153 +767,144 @@
       ctx.fill();
       ctx.fillStyle = 'rgba(127,178,255,0.05)';
       ctx.beginPath();
-      ctx.arc(180, 760, 140, 0, Math.PI * 2);
+      ctx.arc(180, 820, 140, 0, Math.PI * 2);
       ctx.fill();
 
       label('Retina CAD architecture at a glance', 56, 46, 34, C.text, 620);
-      wrap('A guide-level view of the full system: curated OCTA inputs, separate retinal encoders, multimodal fusion, CAD prediction, then calibration and explainability.', 56, 92, 880, 27, 17, C.mid);
+      wrap('The full pipeline from curated OCTA inputs through layer-specific encoders, biology-aware fusion, prototype-augmented prediction, and comprehensive evaluation.', 56, 92, 960, 27, 17, C.mid);
 
-      pill(56, 150, 188, 34, '#111822', '#283445', 'CURRENT CORE PIPELINE', C.blue);
-      pill(1100, 150, 156, 34, '#18150e', '#4a3a18', 'NEXT TRUST LAYER', C.amber);
+      pill(56, 150, 308, 34, '#111822', '#283445', 'IMPLEMENTED  &middot;  PHASES 1 THROUGH 13', C.blue);
 
       panel({
-        x: 56, y: 210, w: 280, h: 540,
+        x: 56, y: 210, w: 280, h: 580,
         title: '1. Inputs and curation',
-        body: 'Each eye is a sample, but both eyes from the same patient stay in the same fold before modeling.'
+        body: 'Each eye is a sample, but both eyes from the same patient stay in the same fold.'
       });
       box({
-        x: 84, y: 386, w: 224, h: 92,
+        x: 84, y: 396, w: 224, h: 92,
         title: 'OCTA inputs',
         lines: ['Sup, Deep, CC layers', 'Per-eye retinal views'],
         tone: 'blue'
       });
       box({
-        x: 84, y: 494, w: 224, h: 100,
+        x: 84, y: 508, w: 224, h: 100,
         title: 'Clinical inputs',
         lines: ['Age, sex, BMI, smoking', 'HTN, diabetes, more'],
         tone: 'green'
       });
       box({
-        x: 84, y: 610, w: 224, h: 116,
+        x: 84, y: 628, w: 224, h: 130,
         title: 'QC + preprocessing',
-        lines: ['Leakage-safe folds', 'Normalization + CLAHE', 'Resize checks'],
+        lines: ['Leakage-safe folds', 'Normalization + CLAHE', 'Missing-value mask tokens'],
         tone: 'blue'
       });
 
       panel({
-        x: 370, y: 210, w: 286, h: 540,
-        title: '2. Layer-specific OCTA learning',
-        body: 'Each OCTA layer gets its own representation learning path rather than one shared visual filter bank.'
+        x: 370, y: 210, w: 286, h: 580,
+        title: '2. OCTA representation learning',
+        body: 'Each layer gets its own encoder rather than one shared filter bank.'
       });
       box({
-        x: 398, y: 386, w: 230, h: 110,
+        x: 398, y: 396, w: 230, h: 110,
         title: 'OCTA-SimCLR adaptation',
-        lines: ['Self-supervised OCTA pretraining', 'Bilateral OD/OS pairs'],
+        lines: ['Self-supervised pretraining', 'Bilateral OD/OS pairs'],
         tone: 'blue'
       });
       box({
-        x: 398, y: 512, w: 230, h: 126,
-        title: 'Three independent backbones',
-        lines: ['ConvNeXt-Tiny for Sup', 'ConvNeXt-Tiny for Deep', 'ConvNeXt-Tiny for CC'],
+        x: 398, y: 526, w: 230, h: 126,
+        title: 'Independent backbones',
+        lines: ['ConvNeXt-Tiny (Sup)', 'ConvNeXt-Tiny (Deep)', 'ConvNeXt-Tiny (CC)'],
         tone: 'blue'
       });
       box({
-        x: 398, y: 654, w: 230, h: 72,
-        title: 'Output: Fs, Fd, Fc',
-        lines: ['256-d layer tokens'],
+        x: 398, y: 672, w: 230, h: 88,
+        title: 'Projection heads',
+        lines: ['768 &rarr; 512 &rarr; 256-d tokens'],
         tone: 'blue'
       });
 
       panel({
-        x: 690, y: 210, w: 350, h: 540,
-        title: '3. Biology-aware multimodal fusion',
-        body: 'The retinal layers interact first, then the OCTA state is interpreted with clinical context and generated vascular structure.'
+        x: 690, y: 210, w: 330, h: 580,
+        title: '3. Multimodal fusion',
+        body: 'Retinal layers interact first, then fuse with clinical and biomarker context.'
       });
       box({
-        x: 718, y: 386, w: 294, h: 104,
-        title: 'Cross-layer attention',
-        lines: ['Sup, Deep, CC read each other', 'Produces layer-aware OCTA state F_octa'],
+        x: 718, y: 396, w: 274, h: 100,
+        title: 'Cross-layer attention (Phase 6)',
+        lines: ['Layer-identity embeddings', '8-head transformer &rarr; F_octa'],
         tone: 'blue'
       });
       box({
-        x: 718, y: 506, w: 294, h: 104,
-        title: 'Tabular encoder',
-        lines: ['Clinical features + generated biomarkers', 'Missingness modeled explicitly'],
+        x: 718, y: 516, w: 274, h: 100,
+        title: 'Tabular encoder (Phase 5)',
+        lines: ['Clinical + generated biomarkers', 'Learned missing-value tokens'],
         tone: 'green'
       });
       box({
-        x: 718, y: 626, w: 294, h: 100,
-        title: 'Pseudo-mask branch',
-        lines: ['Vessel, FAZ, CC flow masks', 'Optional U-Net++ refinement path'],
+        x: 718, y: 636, w: 274, h: 120,
+        title: 'U-Net++ mask branch (Phase 8)',
+        lines: ['Classical masks &rarr; U-Net++', 'Mask encoder &rarr; F_mask 128-d', 'Vessel, FAZ, CC biomarkers'],
         tone: 'green'
       });
 
       panel({
-        x: 1074, y: 210, w: 242, h: 540,
-        title: '4. CAD predictor',
-        body: 'The fused multimodal state is projected into one decision space before classification.'
+        x: 1054, y: 210, w: 242, h: 580,
+        title: '4. Prediction and trust',
+        body: 'Prototype-augmented classifier with full uncertainty and explainability.'
       });
       box({
-        x: 1100, y: 410, w: 190, h: 112,
-        title: 'Cross-attention fusion',
-        lines: ['F_octa queries tabular context', 'Mask features added'],
+        x: 1080, y: 396, w: 190, h: 100,
+        title: 'Prototype classifier (Ph 9)',
+        lines: ['512 &rarr; 256 &rarr; 128 &rarr; N', '+ EMA class prototypes'],
         tone: 'blue'
       });
       box({
-        x: 1100, y: 538, w: 190, h: 84,
-        title: 'Unified representation',
-        lines: ['512-d multimodal state'],
+        x: 1080, y: 516, w: 190, h: 80,
+        title: 'Uncertainty + calibr.',
+        lines: ['MC Dropout (30 passes)', 'Temperature scaling'],
         tone: 'blue'
       });
       box({
-        x: 1100, y: 638, w: 190, h: 88,
-        title: 'Classifier head',
-        lines: ['CAD cohort probabilities', 'Per-eye sample'],
-        tone: 'amber'
+        x: 1080, y: 616, w: 190, h: 100,
+        title: 'Explainability (Ph 13)',
+        lines: ['Grad-CAM per layer', 'Layer-dominance analysis', 'SHAP / occlusion'],
+        tone: 'blue'
+      });
+      box({
+        x: 1080, y: 736, w: 190, h: 28,
+        title: 'Cohort probabilities',
+        lines: [],
+        tone: 'blue'
       });
 
       panel({
-        x: 56, y: 818, w: 1260, h: 190,
-        title: '5. Trust layer',
-        body: 'The next layer turns raw model outputs into calibrated probabilities, explicit uncertainty, and interpretation views.',
-        maxBodyLines: 2
+        x: 1330, y: 210, w: 56, h: 580,
+        title: '5. Eval',
+        body: '',
+        maxBodyLines: 0
       });
-      box({
-        x: 730, y: 910, w: 166, h: 76,
-        title: 'Calibration',
-        lines: ['Temperature scaling'],
-        tone: 'amber'
-      });
-      box({
-        x: 918, y: 910, w: 166, h: 76,
-        title: 'Uncertainty',
-        lines: ['MC dropout, reliability'],
-        tone: 'amber'
-      });
-      box({
-        x: 1106, y: 910, w: 186, h: 76,
-        title: 'Explainability',
-        lines: ['Grad-CAM, attention, ablations'],
-        tone: 'amber'
-      });
+      box({x: 1336, y: 400, w: 44, h: 68, title: 'Ablations', lines: ['15 configs'], tone: 'green'});
+      box({x: 1336, y: 488, w: 44, h: 68, title: 'Baselines', lines: ['8 models'], tone: 'green'});
+      box({x: 1336, y: 576, w: 44, h: 68, title: '5-fold CV', lines: ['boot CI'], tone: 'green'});
+      box({x: 1336, y: 664, w: 44, h: 68, title: 'Fairness', lines: ['subgroups'], tone: 'green'});
 
-      arrow(336, 502, 370, 502, 'rgba(142,164,200,0.92)');
-      arrow(656, 502, 690, 502, C.blue, 2.4);
-      arrow(1040, 502, 1074, 502, C.blue, 2.4);
-      arrow(1195, 726, 1195, 798, 'rgba(142,164,200,0.92)', 1.9);
+      arrow(336, 510, 358, 510, 'rgba(142,164,200,0.92)');
+      arrow(656, 510, 678, 510, C.blue, 2.4);
+      arrow(1020, 510, 1042, 510, C.blue, 2.4);
+      arrow(1296, 510, 1318, 510, 'rgba(142,164,200,0.92)');
 
-      arrow(308, 432, 370, 432, 'rgba(255,255,255,0.10)', 1.1);
-      arrow(308, 544, 370, 544, 'rgba(255,255,255,0.10)', 1.1);
-      arrow(308, 668, 370, 668, 'rgba(255,255,255,0.10)', 1.1);
+      arrow(308, 442, 370, 442, 'rgba(255,255,255,0.10)', 1.1);
+      arrow(308, 558, 370, 558, 'rgba(255,255,255,0.10)', 1.1);
+      arrow(308, 694, 370, 694, 'rgba(255,255,255,0.10)', 1.1);
 
-      roundRect(56, 1038, 1260, 64, 18);
+      roundRect(56, 830, 1330, 64, 18);
       ctx.fillStyle = '#0d1219';
       ctx.fill();
       ctx.strokeStyle = '#232d3b';
       ctx.lineWidth = 1.1;
       ctx.stroke();
-      label('How to say it out loud', 80, 1057, 18, C.text, 620);
-      wrap('Separate encoders learn each OCTA layer, cross-layer attention models retinal interactions, multimodal fusion adds clinical and biomarker context, and the downstream trust layer turns raw predictions into calibrated and explainable CAD decisions.', 286, 1053, 980, 24, 16, C.mid);
+      label('Training strategy (Phase 12)', 80, 848, 18, C.text, 620);
+      wrap('Stage 1: SimCLR pretraining (completed, reused)  &middot;  Stage 2: Backbones frozen, train heads  &middot;  Stage 3: End-to-end fine-tune  &middot;  AdamW, cosine warm restarts, AMP, patient-grouped 5-fold CV', 80, 874, 1260, 22, 15, C.mid);
     }
 
     draw();
