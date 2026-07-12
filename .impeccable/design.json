@@ -1,62 +1,188 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-06-19T15:06:06Z",
+  "generatedAt": "2026-07-12T00:00:00Z",
   "title": "Design System: Retina Project Explainer",
+  "themes": {
+    "dark": {
+      "displayName": "Dark (default)",
+      "detection": "prefers-color-scheme: dark (default when unspecified)"
+    },
+    "light": {
+      "displayName": "Light",
+      "detection": "prefers-color-scheme: light, or manual toggle"
+    }
+  },
   "extensions": {
     "colorMeta": {
       "halo-blue": {
         "role": "primary",
         "displayName": "Cold Halo Blue",
+        "dark": "#7FB2FF",
+        "light": "#4A7FCF",
         "canonical": "#7FB2FF",
-        "tonalRamp": ["#0B1A31", "#102649", "#173563", "#224D8D", "#3E6FBF", "#5F92E3", "#7FB2FF", "#DDEBFF"]
+        "tonalRamp": [
+          "#0B1A31",
+          "#102649",
+          "#173563",
+          "#224D8D",
+          "#3E6FBF",
+          "#5F92E3",
+          "#7FB2FF",
+          "#DDEBFF"
+        ]
       },
       "bg-void": {
         "role": "neutral",
-        "displayName": "Void Black",
+        "displayName": "Void Black / Paper Field",
+        "dark": "#030303",
+        "light": "#F7F8FA",
         "canonical": "#030303",
-        "tonalRamp": ["#030303", "#070707", "#0B0B0B", "#101010", "#191919", "#252525", "#3A3A3A", "#5A5A5A"]
+        "tonalRamp": [
+          "#030303",
+          "#070707",
+          "#0B0B0B",
+          "#101010",
+          "#191919",
+          "#252525",
+          "#3A3A3A",
+          "#5A5A5A"
+        ]
       },
       "bg-deep": {
         "role": "neutral",
-        "displayName": "Deep Black",
+        "displayName": "Deep Black / Paper Deep",
+        "dark": "#0A0A0A",
+        "light": "#EDEEF2",
         "canonical": "#0A0A0A",
-        "tonalRamp": ["#0A0A0A", "#101010", "#151515", "#1C1C1C", "#292929", "#3A3A3A", "#525252", "#747474"]
+        "tonalRamp": [
+          "#0A0A0A",
+          "#101010",
+          "#151515",
+          "#1C1C1C",
+          "#292929",
+          "#3A3A3A",
+          "#525252",
+          "#747474"
+        ]
       },
       "surface-low": {
         "role": "neutral",
-        "displayName": "Low Surface Graphite",
+        "displayName": "Low Surface / White Surface",
+        "dark": "#111111",
+        "light": "#FFFFFF",
         "canonical": "#111111",
-        "tonalRamp": ["#111111", "#171717", "#1F1F1F", "#2A2A2A", "#373737", "#4B4B4B", "#666666", "#878787"]
+        "tonalRamp": [
+          "#111111",
+          "#171717",
+          "#1F1F1F",
+          "#2A2A2A",
+          "#373737",
+          "#4B4B4B",
+          "#666666",
+          "#878787"
+        ]
       },
       "surface-high": {
         "role": "neutral",
-        "displayName": "High Surface Graphite",
+        "displayName": "High Surface / Elevated Surface",
+        "dark": "#171717",
+        "light": "#F0F1F4",
         "canonical": "#171717",
-        "tonalRamp": ["#171717", "#1E1E1E", "#262626", "#303030", "#3F3F3F", "#565656", "#727272", "#949494"]
+        "tonalRamp": [
+          "#171717",
+          "#1E1E1E",
+          "#262626",
+          "#303030",
+          "#3F3F3F",
+          "#565656",
+          "#727272",
+          "#949494"
+        ]
       },
       "line-smoke": {
         "role": "neutral",
-        "displayName": "Smoke Line",
+        "displayName": "Smoke Line / Light Line",
+        "dark": "#2A2A2A",
+        "light": "#D6DAE2",
         "canonical": "#2A2A2A",
-        "tonalRamp": ["#141414", "#1C1C1C", "#252525", "#2A2A2A", "#3A3A3A", "#555555", "#777777", "#A1A1A1"]
+        "tonalRamp": [
+          "#141414",
+          "#1C1C1C",
+          "#252525",
+          "#2A2A2A",
+          "#3A3A3A",
+          "#555555",
+          "#777777",
+          "#A1A1A1"
+        ]
       },
       "text-high": {
         "role": "neutral",
-        "displayName": "High Ink",
+        "displayName": "High Ink / Dark Ink",
+        "dark": "#F5F7FA",
+        "light": "#17191E",
         "canonical": "#F5F7FA",
-        "tonalRamp": ["#3B4048", "#525A64", "#6F7884", "#8A94A0", "#A9B2BC", "#C4CCD4", "#DEE4EA", "#F5F7FA"]
+        "tonalRamp": [
+          "#3B4048",
+          "#525A64",
+          "#6F7884",
+          "#8A94A0",
+          "#A9B2BC",
+          "#C4CCD4",
+          "#DEE4EA",
+          "#F5F7FA"
+        ]
       },
       "text-mid": {
         "role": "neutral",
         "displayName": "Mid Ink",
+        "dark": "#8C919A",
+        "light": "#555B66",
         "canonical": "#8C919A",
-        "tonalRamp": ["#1B1D21", "#2A2D32", "#3C4047", "#555A63", "#6C727B", "#8C919A", "#AEB2B9", "#D6D8DC"]
+        "tonalRamp": [
+          "#1B1D21",
+          "#2A2D32",
+          "#3C4047",
+          "#555A63",
+          "#6C727B",
+          "#8C919A",
+          "#AEB2B9",
+          "#D6D8DC"
+        ]
       },
       "text-low": {
         "role": "neutral",
-        "displayName": "Low Ink",
+        "displayName": "Low Ink / Supporting Ink",
+        "dark": "#666A73",
+        "light": "#657080",
         "canonical": "#666A73",
-        "tonalRamp": ["#121317", "#1D2025", "#2A2D34", "#383C45", "#4C515B", "#666A73", "#8A8E96", "#C1C4C9"]
+        "tonalRamp": [
+          "#15191F",
+          "#242B34",
+          "#36404C",
+          "#4B5664",
+          "#657080",
+          "#818B98",
+          "#A6AEB8",
+          "#D5DAE0"
+        ]
+      },
+      "technical-surface": {
+        "role": "neutral",
+        "displayName": "Technical Surface",
+        "dark": "#070707",
+        "light": "#EEF1F5",
+        "canonical": "#070707",
+        "tonalRamp": [
+          "#070707",
+          "#111317",
+          "#20252D",
+          "#39414C",
+          "#657080",
+          "#9EA7B2",
+          "#C7CDD6",
+          "#EEF1F5"
+        ]
       }
     },
     "typographyMeta": {
@@ -80,18 +206,21 @@
     "shadows": [
       {
         "name": "ambient-low",
-        "value": "0 8px 24px rgba(0, 0, 0, 0.22)",
+        "dark": "0 8px 24px rgba(0, 0, 0, 0.22)",
+        "light": "0 8px 24px rgba(0, 0, 0, 0.05)",
         "purpose": "Hover lift for pills, chips, and compact controls."
       },
       {
         "name": "ambient-mid",
-        "value": "0 18px 48px rgba(0, 0, 0, 0.34)",
+        "dark": "0 18px 48px rgba(0, 0, 0, 0.34)",
+        "light": "0 18px 48px rgba(0, 0, 0, 0.06)",
         "purpose": "Large prompt shells and hero modules."
       },
       {
         "name": "halo-edge",
-        "value": "0 0 0 1px rgba(255,255,255,0.08)",
-        "purpose": "Quiet structural edge for dark surfaces."
+        "dark": "0 0 0 1px rgba(255,255,255,0.08)",
+        "light": "0 0 0 1px rgba(0,0,0,0.06)",
+        "purpose": "Quiet structural edge for surfaces."
       }
     ],
     "motion": [
@@ -124,7 +253,31 @@
         "name": "lg",
         "value": "1240px"
       }
-    ]
+    ],
+    "themeDetection": {
+      "method": "@media (prefers-color-scheme: light) -- pure CSS, no JS",
+      "cssPattern": "@media (prefers-color-scheme: light) { :root { ... overrides ... } }",
+      "usage": "Every doc page must include a @media (prefers-color-scheme: light) block after </style> that overrides all :root CSS custom properties with light-theme equivalents. The :root block must also set color-scheme: dark light.",
+      "notes": "No manual toggle. No JS. The browser automatically picks the right theme based on the OS/system preference."
+    },
+    "lightThemeContract": {
+      "technicalSurface": {
+        "token": "--technical-surface",
+        "dark": "#070707",
+        "light": "#EEF1F5",
+        "inkToken": "--technical-ink",
+        "lightInk": "#20252D",
+        "lineToken": "--technical-line",
+        "lightLine": "#C7CDD6",
+        "usage": "Use for code, formulas, contingency tables, and other dense technical specimens. Never hard-code a dark technical surface outside a theme token."
+      },
+      "navigation": {
+        "supportingInkLight": "#657080",
+        "sidebarTopLevelLight": "#596574",
+        "sidebarNestedLight": "#687280",
+        "usage": "Contents navigation is navigational text, not a de-emphasized annotation. It must use the dedicated sidebar tones in light mode."
+      }
+    }
   },
   "components": [
     {
@@ -156,7 +309,7 @@
       "kind": "custom",
       "refersTo": "prompt-shell",
       "description": "Signature hero interaction, long and tactile but still quiet.",
-      "html": "<div class=\"ds-prompt\"><span class=\"ds-prompt-copy\">Ask what the project already proves.</span><button class=\"ds-prompt-send\" aria-label=\"Send\">↑</button></div>",
+      "html": "<div class=\"ds-prompt\"><span class=\"ds-prompt-copy\">Ask what the project already proves.</span><button class=\"ds-prompt-send\" aria-label=\"Send\">\u2191</button></div>",
       "css": ".ds-prompt { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-width: 320px; max-width: 560px; background: #171717; color: #8C919A; border: 1px solid #2A2A2A; border-radius: 999px; padding: 20px 24px; box-shadow: 0 18px 48px rgba(0,0,0,0.34); } .ds-prompt-copy { font: 400 16px/1.4 ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; } .ds-prompt-send { width: 44px; height: 44px; border: 1px solid rgba(255,255,255,0.12); border-radius: 999px; background: rgba(255,255,255,0.04); color: #F5F7FA; font: 500 20px/1 ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; transition: border-color 180ms cubic-bezier(0.19,1,0.22,1), box-shadow 180ms cubic-bezier(0.19,1,0.22,1), transform 180ms cubic-bezier(0.19,1,0.22,1); } .ds-prompt-send:hover { border-color: rgba(127,178,255,0.5); box-shadow: 0 0 0 4px rgba(127,178,255,0.18); transform: translateY(-1px); } .ds-prompt-send:focus-visible { outline: none; box-shadow: 0 0 0 1px rgba(255,255,255,0.12), 0 0 0 4px rgba(127,178,255,0.22); }"
     },
     {
@@ -169,10 +322,10 @@
     }
   ],
   "narrative": {
-    "northStar": "Orbital Clinical Briefing",
-    "overview": "This system should feel like a research briefing projected onto a black field: calm, exact, and slightly futuristic. The mood is not cinematic chaos. It is controlled atmosphere. The page should give clinicians and collaborators the sense that the work is advanced, but already under discipline.\n\nThe design language is sparse and premium. Large white type carries the narrative. Surfaces are few, dark, and quiet. Accent color appears as a faint halo, not a rainbow. Density stays low so the distinction between current evidence and future roadmap remains easy to parse.\n\nThis system explicitly rejects the anti-references in `PRODUCT.md`: salesy SaaS landing page, busy dashboard, playful consumer AI site, flashy gradients, infographic clutter, over-carded layouts, and loud promotional copy.",
+    "northStar": "Orbital Clinical Briefing (dark) / Clean Clinical Document (light)",
+    "overview": "This system supports two themes: dark (default, 'projected onto a black field') and light (adapted to a clean off-white field for print-like reading). Both follow the same design principles: calm, exact, and slightly futuristic. The dark mood is controlled atmosphere projected onto black. The light mood is a clean clinical document on an off-white field with dark ink. Both themes share the same sparse composition, premium restraint, and one-halo accent rule.\n\nThe design language is sparse and premium. Large type carries the narrative. Surfaces are few and quiet. Accent color appears as a faint halo, not a rainbow. Density stays low so the distinction between current evidence and future roadmap remains easy to parse.\n\nThis system explicitly rejects the anti-references in `PRODUCT.md`: salesy SaaS landing page, busy dashboard, playful consumer AI site, flashy gradients, infographic clutter, over-carded layouts, and loud promotional copy.",
     "keyCharacteristics": [
-      "Black-led palette with one cold halo accent",
+      "Dark-led palette with one cold halo accent (dark); clean white-led palette (light)",
       "Sans-serif typography with surgical spacing and tight hierarchy",
       "Tonal depth before visible decoration",
       "Sparse composition, long breathing room, few containers",
@@ -180,8 +333,8 @@
     ],
     "rules": [
       {
-        "name": "The One Halo Rule",
-        "body": "`#7FB2FF` is never a second background. It is a signal accent on 10% or less of any screen. Its rarity is the point.",
+        "name": "The One Halo Rule (both themes)",
+        "body": "The accent blue is never a second background. It is a signal accent on 10% or less of any screen. Dark: `#7FB2FF`. Light: `#4A7FCF`.",
         "section": "colors"
       },
       {
@@ -193,14 +346,20 @@
         "name": "The Atmosphere, Not Glass Rule",
         "body": "Use tonal layering and ambient shadow. Decorative glassmorphism is forbidden.",
         "section": "elevation"
+      },
+      {
+        "name": "Automatic Theme Detection",
+        "body": "Every doc page must include a `@media (prefers-color-scheme: light)` block overriding `:root` CSS custom properties with light-theme equivalents. The `:root` block must also set `color-scheme: dark light`. No JS, no manual toggle -- purely automatic via OS/browser preference.",
+        "section": "theme"
       }
     ],
     "dos": [
-      "Do keep the page field in the `#030303` to `#111111` range and let whitespace do the work.",
-      "Do use `#F5F7FA` for primary copy and keep secondary copy at `#8C919A` or brighter on black.",
-      "Do reserve `#7FB2FF` for one focal interaction, one selected state, or one ambient halo per viewport.",
-      "Do keep long-form explanatory copy within 65–72ch and sentence case.",
-      "Do separate implemented evidence from roadmap with hierarchy, pacing, and grouping before adding any extra color."
+      "Do keep the page field in the `#030303` to `#111111` range (dark) or `#F7F8FA` to `#FFFFFF` range (light) and let whitespace do the work.",
+      "Do maintain WCAG AA contrast in both themes: high-ink on surface for primary copy.",
+      "Do reserve the halo blue for one focal interaction per viewport.",
+      "Do keep long-form explanatory copy within 65-72ch and sentence case.",
+      "Do separate implemented evidence from roadmap with hierarchy, pacing, and grouping before adding any extra color.",
+      "Do include the automatic theme detection block in every doc page."
     ],
     "donts": [
       "Don't make this feel like a salesy SaaS landing page.",
@@ -208,7 +367,8 @@
       "Don't make this feel like a playful consumer AI site.",
       "Don't use flashy gradients, infographic clutter, over-carded layouts, or loud promotional copy.",
       "Don't use serif hero type, repeating grid overlays, rainbow cohort color systems, or metric-card walls as the page's main grammar.",
-      "Don't pair a visible border with a giant decorative shadow or blur-heavy glass treatment."
+      "Don't pair a visible border with a giant decorative shadow or blur-heavy glass treatment.",
+      "Don't forget to include the theme-detection @media block when creating a new doc page."
     ]
   }
 }

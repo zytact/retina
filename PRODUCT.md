@@ -38,4 +38,4 @@ Do not make this feel like a salesy SaaS landing page, a busy dashboard, or a pl
 6. Use containers sparingly: structure should come from rhythm, alignment, and spacing before boxes.
 
 ## Accessibility & Inclusion
-Target WCAG AA. Support reduced motion. Maintain strong contrast on dark surfaces, especially body text and secondary text. Use plain-language labels where possible so non-ML collaborators can follow the narrative.
+Target WCAG AA. Support reduced motion. Maintain strong contrast on dark surfaces and light surfaces, especially body text, secondary text, and contents navigation. Support both dark and light themes with automatic detection via `prefers-color-scheme`. All doc pages must carry the theme-detection CSS @media block and semantic tokens for page, content, and technical surfaces. Code, formulas, contingency tables, and dense technical specimens must switch to a readable light surface in light mode, never remain dark islands. Use plain-language labels where possible so non-ML collaborators can follow the narrative.

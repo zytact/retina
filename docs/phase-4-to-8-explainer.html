@@ -6,7 +6,7 @@
   <title>RASTA OCTA CAD, phases 4 to 8 from zero to advanced</title>
   <style>
     :root {
-      color-scheme: dark;
+      color-scheme: dark light;
       --void: #030303;
       --deep: #0a0a0a;
       --surface: #111111;
@@ -317,7 +317,370 @@
       html { scroll-behavior: auto; }
       *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
     }
-  </style>
+
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #F7F8FA;
+    --bg-2: #EDEEF2;
+    --bg-deep: #EDEEF2;
+    --deep: #EDEEF2;
+    --void: #F7F8FA;
+    --surface: #FFFFFF;
+    --surface-2: #F0F1F4;
+    --surface-high: #F0F1F4;
+    --line: #D6DAE2;
+    --line-soft: #E4E7ED;
+    --line-strong: #C6CAD4;
+    --text: #17191E;
+    --mid: #555B66;
+    --low: #8B919D;
+    --text-mid: #555B66;
+    --text-low: #8B919D;
+    --halo: #4A7FCF;
+    --halo-soft: rgba(74,127,207,0.10);
+    --amber: #C49A44;
+    --amber-soft: rgba(196,154,68,0.10);
+    --green: #3BA66B;
+    --red: #C44A4A;
+    --violet: #7F67C8;
+    --mint: #3BA66B;
+    --coral: #C44A4A;
+    --cyan: #3B8DBF;
+    --danger: #C44A4A;
+    --success: #3BA66B;
+    --planned: #C49A44;
+    --shadow-lg: 0 22px 60px rgba(0,0,0,0.06);
+    --shadow-sm: 0 10px 30px rgba(0,0,0,0.04);
+    --radius: 18px;
+    --radius-sm: 12px;
+  }
+  :root { color-scheme: light; }
+
+  /* body ambient gradient */
+  body::before { background: none !important; }
+
+  /* header backgrounds */
+  .site-header, .masthead, header {
+    background: rgba(247,248,250,0.85) !important;
+  }
+
+  /* code */
+  code {
+    background: rgba(74,127,207,0.06) !important;
+    border-color: rgba(74,127,207,0.12) !important;
+    color: #1A1D24 !important;
+  }
+
+  /* quiet-panel: gradient bg + border */
+  .quiet-panel {
+    background: #FFFFFF !important;
+    border-color: #E4E7ED !important;
+  }
+
+  /* hero-side / hero-note panels */
+  .hero-side, .hero-note {
+    background: #FFFFFF !important;
+    border-color: #E4E7ED !important;
+  }
+
+  /* hero-panel */
+  .hero-panel {
+    background: #FFFFFF !important;
+    border-color: #E4E7ED !important;
+  }
+
+  /* callout */
+  .callout {
+    border-top-color: rgba(74,127,207,0.20) !important;
+  }
+
+  /* formula block */
+  .formula {
+    border-top-color: rgba(74,127,207,0.20) !important;
+  }
+
+  /* diagram-box */
+  .diagram-box {
+    background: #FFFFFF !important;
+    border-color: #E4E7ED !important;
+  }
+
+  /* number-line (z-score explainer) */
+  .number-line {
+    background: #FFFFFF !important;
+    border-color: #D6DAE2 !important;
+  }
+  .number {
+    border-right-color: #E4E7ED !important;
+  }
+  .number.mean {
+    background: rgba(74,127,207,0.05) !important;
+  }
+  .number.good {
+    background: rgba(59,166,107,0.05) !important;
+  }
+
+  /* diagram-shell / canvas-stage */
+  .diagram-shell, .canvas-stage {
+    background: #FFFFFF !important;
+    border-color: #E4E7ED !important;
+  }
+  .canvas-wrap {
+    background: #FFFFFF !important;
+    border-color: #E4E7ED !important;
+  }
+
+  /* summary-rail items */
+  .summary-rail div {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* compare items */
+  .compare > div {
+    border-right-color: #E4E7ED !important;
+  }
+
+  /* deep-grid items */
+  .deep-grid > div {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* status-grid items */
+  .status-grid li {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* narrative items */
+  .narrative {
+    border-bottom-color: #E4E7ED !important;
+  }
+
+  /* definition items */
+  .definition {
+    border-bottom-color: #E4E7ED !important;
+  }
+
+  /* section borders */
+  .section, section {
+    border-top-color: #E4E7ED !important;
+    border-bottom-color: #E4E7ED !important;
+  }
+  .section-head {
+    border-bottom-color: #E4E7ED !important;
+  }
+  .section-top {
+    border-bottom-color: #E4E7ED !important;
+  }
+
+  /* layer-row items */
+  .layer-row {
+    border-bottom-color: #E4E7ED !important;
+  }
+  .layer-row:first-child {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* definition-stack */
+  .definition-stack {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* flow-row */
+  .flow-row {
+    border-bottom-color: #E4E7ED !important;
+  }
+
+  /* legend */
+  .legend {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* stage-card, loss-card, aug-card, split-panel > div */
+  .stage-card, .loss-card, .aug-card, .split-panel > div {
+    background: #FFFFFF !important;
+    border-color: #E4E7ED !important;
+  }
+
+  /* evidence-item */
+  .evidence-item {
+    border-bottom-color: #E4E7ED !important;
+  }
+
+  /* truth-line */
+  .truth-line {
+    border-top-color: #C6CAD4 !important;
+    border-bottom-color: #E4E7ED !important;
+  }
+
+  /* matrix */
+  .matrix {
+    border-top-color: #C6CAD4 !important;
+  }
+  .matrix > div {
+    border-bottom-color: #E4E7ED !important;
+  }
+
+  /* quiet-panel verdict */
+  .quiet-panel .verdict {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* meta-row */
+  .meta-row {
+    border-top-color: #E4E7ED !important;
+  }
+  .meta-row .marker-line {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* section-aside */
+  .section-aside {
+    border-left-color: #E4E7ED !important;
+  }
+
+  /* flow-panel */
+  .flow-panel {
+    border-left-color: #E4E7ED !important;
+  }
+
+  /* table cells */
+  th, td {
+    border-bottom-color: #E4E7ED !important;
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* hr */
+  hr {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* details */
+  details {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* source-note */
+  .source-note {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* brand mark shadow */
+  .mark, .brandmark, .orb {
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.06) !important;
+  }
+
+  /* nav a hover border */
+  .nav a:hover, nav a:hover, .nav-links a:hover {
+    border-color: rgba(0,0,0,0.12) !important;
+  }
+
+  /* mode button */
+  .mode button[aria-pressed="true"],
+  .stage-tabs button[aria-pressed="true"] {
+    border-color: rgba(74,127,207,0.4) !important;
+  }
+
+  /* glossary dt */
+  .glossary dt {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* answer items */
+  .answer {
+    border-bottom-color: #E4E7ED !important;
+  }
+  .answer-grid {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* footer-note */
+  .footer-note { color: #8B919D !important; }
+
+  /* canvas-stage inner */
+  .canvas-stage {
+    background: #F7F8FA !important;
+  }
+
+  /* code inline */
+  code {
+    color: #1A1D24 !important;
+    background: rgba(74,127,207,0.06) !important;
+    border-color: rgba(74,127,207,0.12) !important;
+  }
+
+  /* pre / mono elements */
+  .mono, .monoish, code, .monoish code {
+    color: #1A1D24 !important;
+  }
+
+  .formula code {
+    color: #1A1D24 !important;
+  }
+
+  /* figure-placeholder */
+  .figure-placeholder {
+    background: #FFFFFF !important;
+    border-color: #D6DAE2 !important;
+  }
+
+  /* stage-grid */
+  .stage-grid {
+    border-top-color: #E4E7ED !important;
+  }
+}
+
+
+
+/* Shared light-theme contract: keep technical content on a light semantic surface.
+   This final layer intentionally overrides legacy dark-only component literals. */
+@media (prefers-color-scheme: light) {
+  :root {
+    color-scheme: light;
+    --text-low: #657080;
+    --low: #657080;
+    --technical-surface: #EEF1F5;
+    --technical-ink: #20252D;
+    --technical-line: #C7CDD6;
+  }
+
+  pre,
+  .formula-block,
+  .formula,
+  .code-block,
+  .terminal,
+  [data-theme-surface="technical"] {
+    background: var(--technical-surface) !important;
+    color: var(--technical-ink) !important;
+    border-color: var(--technical-line) !important;
+    box-shadow: none !important;
+  }
+
+  pre *,
+  .formula-block *,
+  .formula *,
+  .code-block *,
+  .terminal *,
+  [data-theme-surface="technical"] * {
+    color: inherit !important;
+  }
+
+  nav.sidebar a {
+    color: #596574 !important;
+  }
+
+  nav.sidebar a.sub {
+    color: #687280 !important;
+  }
+
+  nav.sidebar a:hover,
+  nav.sidebar a:focus-visible {
+    color: var(--text) !important;
+  }
+}
+
+</style>
+
 </head>
 <body>
   <header class="page hero">
@@ -345,9 +708,7 @@
       <a href="#truth">Ground truth</a>
       <a href="#unet">U-Net++ gate</a>
       <a href="#next">Next action</a>
-    </nav>
-
-    <article>
+    </nav> <article>
       <section class="chapter" id="zero">
         <div class="chapter-head">
           <h2>Start from zero.</h2>
@@ -597,5 +958,6 @@ Bottom row: Deep vessel mask | Sup FAZ mask | Deep FAZ mask | CC flow mask</pre>
       <footer class="foot">Generated for the Retina CAD project. This document explains the pipeline through Phase 8. For the downstream classifier stages (Phases 9&ndash;13), see the dedicated explainers: <a href="phase-9-classifier-prototypes.html">Phase 9 classifier</a>, <a href="phase-10-loss-functions.html">Phase 10 losses</a>, <a href="phase-11-data-augmentation.html">Phase 11 augmentation</a>, <a href="phase-12-training-strategy.html">Phase 12 training</a>, and <a href="phase-13-explainability.html">Phase 13 explainability</a>.</footer>
     </article>
   </main>
+
 </body>
 </html>

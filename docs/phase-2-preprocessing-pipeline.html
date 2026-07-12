@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Phase 2 — Preprocessing Pipeline</title>
+  <style>
+    :root {
+      --bg: #030303;
+      --bg-deep: #090909;
+      --surface: #111111;
+      --surface-2: #171717;
+      --line: rgba(255,255,255,0.1);
+      --line-soft: rgba(255,255,255,0.06);
+      --text: #f5f7fa;
+      --mid: #a4acb7;
+      --low: #6f7782;
+      --halo: #7fb2ff;
+      --halo-soft: rgba(127,178,255,0.14);
+      --green: #86e0ad;
+      --amber: #ffd27d;
+      --violet: #c4afff;
+      --red: #ff9b9b;
+      --max: 1220px;
+      color-scheme: dark light;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.72;
+      overflow-x: hidden;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 82% 0%, rgba(127,178,255,0.12), transparent 24rem),
+        radial-gradient(circle at 10% 26%, rgba(196,175,255,0.08), transparent 28rem),
+        linear-gradient(180deg, #060606 0%, #030303 35%, #090909 100%);
+      z-index: -2;
+    }
+    a { color: inherit; }
+    .shell { width: min(calc(100% - 40px), var(--max)); margin-inline: auto; }
+    .site-header {
+      position: sticky; top: 0; z-index: 20;
+      backdrop-filter: blur(16px);
+      background: rgba(3,3,3,0.78);
+      border-bottom: 1px solid var(--line-soft);
+    }
+    .site-header .shell {
+      display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 14px 0;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .mark {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: radial-gradient(circle at 38% 38%, #eff6ff 0 10%, var(--halo) 12% 32%, rgba(127,178,255,0.24) 34% 56%, transparent 58%);
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.1), 0 0 32px rgba(127,178,255,0.18);
+      flex: 0 0 auto;
+    }
+    .brand strong, .brand span { display: block; }
+    .brand strong { font-size: 0.95rem; font-weight: 620; }
+    .brand span { font-size: 0.84rem; color: var(--mid); }
+    .nav { display: flex; flex-wrap: wrap; gap: 18px; }
+    .nav a {
+      text-decoration: none; color: var(--mid); font-size: 0.92rem;
+      border-bottom: 1px solid transparent; padding-bottom: 4px;
+    }
+    .nav a:hover { color: var(--text); border-color: rgba(255,255,255,0.18); }
+    main { padding-bottom: 100px; }
+    .hero { padding: clamp(70px, 10vw, 128px) 0 60px; }
+    .hero-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(290px, 0.9fr);
+      gap: clamp(34px, 7vw, 92px);
+      align-items: end;
+    }
+    .signal {
+      display: inline-flex; align-items: center; gap: 10px;
+      color: var(--mid); font-size: 0.92rem; margin-bottom: 24px;
+    }
+    .signal::before {
+      content: ""; width: 9px; height: 9px; border-radius: 50%;
+      background: var(--halo); box-shadow: 0 0 18px rgba(127,178,255,0.42);
+    }
+    h1, h2, h3, h4 { text-wrap: balance; }
+    h1 {
+      margin: 0;
+      font-size: clamp(3.15rem, 7vw, 5.8rem);
+      line-height: 0.95; letter-spacing: -0.035em; font-weight: 540; max-width: 12ch;
+    }
+    .lead {
+      margin: 24px 0 0; color: var(--mid); max-width: 68ch;
+      font-size: clamp(1.03rem, 1.6vw, 1.16rem);
+    }
+    .quiet-panel {
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+      border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 24px;
+    }
+    .hero-panel {
+      display: grid; gap: 20px;
+      box-shadow: 0 0 0 1px rgba(127,178,255,0.05) inset;
+      border-color: rgba(127,178,255,0.16);
+    }
+    .eyebrow {
+      color: var(--halo); text-transform: uppercase;
+      letter-spacing: 0.08em; font-size: 0.75rem; font-weight: 620;
+    }
+    .stat-row { display: flex; flex-wrap: wrap; gap: 12px 24px; }
+    .stat { line-height: 1.3; }
+    .stat-num {
+      display: block; font-size: 1.7rem; font-weight: 540; letter-spacing: -0.02em;
+    }
+    .stat-label { font-size: 0.88rem; color: var(--low); }
+    .content { padding: 40px 0; }
+    .content h2 {
+      font-size: 2.1rem; font-weight: 540; letter-spacing: -0.025em;
+      margin: 48px 0 16px;
+    }
+    .content h3 {
+      font-size: 1.35rem; font-weight: 540; margin: 32px 0 12px;
+      color: var(--halo);
+    }
+    .content h4 {
+      font-size: 1.1rem; font-weight: 540; margin: 24px 0 8px;
+    }
+    .content p, .content li { color: var(--mid); max-width: 72ch; }
+    .content p { margin: 12px 0; }
+    .content ul, .content ol { padding-left: 22px; }
+    .content li { margin: 6px 0; }
+    .content strong { color: var(--text); }
+    code {
+      background: rgba(255,255,255,0.06); border-radius: 6px; padding: 2px 8px;
+      font-size: 0.88em; font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    }
+    .callout {
+      background: rgba(127,178,255,0.08);
+      border-left: 3px solid var(--halo);
+      border-radius: 0 12px 12px 0;
+      padding: 16px 20px;
+      margin: 20px 0;
+    }
+    .callout p { margin: 4px 0; }
+    .callout strong { color: var(--halo); }
+    .callout-warn {
+      background: rgba(255,210,125,0.08);
+      border-left: 3px solid var(--amber);
+      border-radius: 0 12px 12px 0;
+      padding: 16px 20px;
+      margin: 20px 0;
+    }
+    .callout-warn p { margin: 4px 0; }
+    .callout-warn strong { color: var(--amber); }
+    table {
+      width: 100%; border-collapse: collapse;
+      background: var(--surface); border-radius: 12px;
+      margin: 20px 0; font-size: 0.92rem;
+    }
+    th, td {
+      text-align: left; padding: 12px 16px;
+      border-bottom: 1px solid var(--line-soft);
+    }
+    th { color: var(--low); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 620; }
+    td { color: var(--mid); }
+    tr:last-child td { border-bottom: none; }
+    hr { border: none; border-top: 1px solid var(--line-soft); margin: 48px 0; }
+    .glossary dt { font-weight: 620; color: var(--text); margin-top: 16px; }
+    .glossary dd { margin: 4px 0 0; color: var(--mid); max-width: 64ch; }
+    .step { margin: 24px 0; padding: 16px 20px; background: var(--surface); border-radius: 16px; border: 1px solid var(--line-soft); }
+    .step h4 { margin: 0 0 8px; color: var(--halo); }
+    .step p { margin: 4px 0; }
+    @media (max-width: 800px) {
+      .hero-grid { grid-template-columns: 1fr; }
+      h1 { max-width: 100%; }
+    }
+
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #F7F8FA;
+    --bg-2: #EDEEF2;
+    --bg-deep: #EDEEF2;
+    --deep: #EDEEF2;
+    --void: #F7F8FA;
+    --surface: #FFFFFF;
+    --surface-2: #F0F1F4;
+    --surface-high: #F0F1F4;
+    --line: #D6DAE2;
+    --line-soft: #E4E7ED;
+    --line-strong: #C6CAD4;
+    --text: #17191E;
+    --mid: #555B66;
+    --low: #8B919D;
+    --text-mid: #555B66;
+    --text-low: #8B919D;
+    --halo: #4A7FCF;
+    --halo-soft: rgba(74,127,207,0.10);
+    --amber: #C49A44;
+    --amber-soft: rgba(196,154,68,0.10);
+    --green: #3BA66B;
+    --red: #C44A4A;
+    --violet: #7F67C8;
+    --mint: #3BA66B;
+    --coral: #C44A4A;
+    --cyan: #3B8DBF;
+    --danger: #C44A4A;
+    --success: #3BA66B;
+    --planned: #C49A44;
+    --shadow-lg: 0 22px 60px rgba(0,0,0,0.06);
+    --shadow-sm: 0 10px 30px rgba(0,0,0,0.04);
+    --radius: 18px;
+    --radius-sm: 12px;
+  }
+  :root { color-scheme: light; }
+
+  /* body ambient gradient */
+  body::before { background: none !important; }
+
+  /* header backgrounds */
+  .site-header, .masthead, header {
+    background: rgba(247,248,250,0.85) !important;
+  }
+
+  /* code */
+  code {
+    background: rgba(74,127,207,0.06) !important;
+    border-color: rgba(74,127,207,0.12) !important;
+    color: #1A1D24 !important;
+  }
+
+  /* quiet-panel: gradient bg + border */
+  .quiet-panel {
+    background: #FFFFFF !important;
+    border-color: #E4E7ED !important;
+  }
+
+  /* hero-side / hero-note panels */
+  .hero-side, .hero-note {
+    background: #FFFFFF !important;
+    border-color: #E4E7ED !important;
+  }
+
+  /* hero-panel */
+  .hero-panel {
+    background: #FFFFFF !important;
+    border-color: #E4E7ED !important;
+  }
+
+  /* callout */
+  .callout {
+    border-top-color: rgba(74,127,207,0.20) !important;
+  }
+
+  /* formula block */
+  .formula {
+    border-top-color: rgba(74,127,207,0.20) !important;
+  }
+
+  /* diagram-box */
+  .diagram-box {
+    background: #FFFFFF !important;
+    border-color: #E4E7ED !important;
+  }
+
+  /* number-line (z-score explainer) */
+  .number-line {
+    background: #FFFFFF !important;
+    border-color: #D6DAE2 !important;
+  }
+  .number {
+    border-right-color: #E4E7ED !important;
+  }
+  .number.mean {
+    background: rgba(74,127,207,0.05) !important;
+  }
+  .number.good {
+    background: rgba(59,166,107,0.05) !important;
+  }
+
+  /* diagram-shell / canvas-stage */
+  .diagram-shell, .canvas-stage {
+    background: #FFFFFF !important;
+    border-color: #E4E7ED !important;
+  }
+  .canvas-wrap {
+    background: #FFFFFF !important;
+    border-color: #E4E7ED !important;
+  }
+
+  /* summary-rail items */
+  .summary-rail div {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* compare items */
+  .compare > div {
+    border-right-color: #E4E7ED !important;
+  }
+
+  /* deep-grid items */
+  .deep-grid > div {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* status-grid items */
+  .status-grid li {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* narrative items */
+  .narrative {
+    border-bottom-color: #E4E7ED !important;
+  }
+
+  /* definition items */
+  .definition {
+    border-bottom-color: #E4E7ED !important;
+  }
+
+  /* section borders */
+  .section, section {
+    border-top-color: #E4E7ED !important;
+    border-bottom-color: #E4E7ED !important;
+  }
+  .section-head {
+    border-bottom-color: #E4E7ED !important;
+  }
+  .section-top {
+    border-bottom-color: #E4E7ED !important;
+  }
+
+  /* layer-row items */
+  .layer-row {
+    border-bottom-color: #E4E7ED !important;
+  }
+  .layer-row:first-child {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* definition-stack */
+  .definition-stack {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* flow-row */
+  .flow-row {
+    border-bottom-color: #E4E7ED !important;
+  }
+
+  /* legend */
+  .legend {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* stage-card, loss-card, aug-card, split-panel > div */
+  .stage-card, .loss-card, .aug-card, .split-panel > div {
+    background: #FFFFFF !important;
+    border-color: #E4E7ED !important;
+  }
+
+  /* evidence-item */
+  .evidence-item {
+    border-bottom-color: #E4E7ED !important;
+  }
+
+  /* truth-line */
+  .truth-line {
+    border-top-color: #C6CAD4 !important;
+    border-bottom-color: #E4E7ED !important;
+  }
+
+  /* matrix */
+  .matrix {
+    border-top-color: #C6CAD4 !important;
+  }
+  .matrix > div {
+    border-bottom-color: #E4E7ED !important;
+  }
+
+  /* quiet-panel verdict */
+  .quiet-panel .verdict {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* meta-row */
+  .meta-row {
+    border-top-color: #E4E7ED !important;
+  }
+  .meta-row .marker-line {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* section-aside */
+  .section-aside {
+    border-left-color: #E4E7ED !important;
+  }
+
+  /* flow-panel */
+  .flow-panel {
+    border-left-color: #E4E7ED !important;
+  }
+
+  /* table cells */
+  th, td {
+    border-bottom-color: #E4E7ED !important;
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* hr */
+  hr {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* details */
+  details {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* source-note */
+  .source-note {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* brand mark shadow */
+  .mark, .brandmark, .orb {
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.06) !important;
+  }
+
+  /* nav a hover border */
+  .nav a:hover, nav a:hover, .nav-links a:hover {
+    border-color: rgba(0,0,0,0.12) !important;
+  }
+
+  /* mode button */
+  .mode button[aria-pressed="true"],
+  .stage-tabs button[aria-pressed="true"] {
+    border-color: rgba(74,127,207,0.4) !important;
+  }
+
+  /* glossary dt */
+  .glossary dt {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* answer items */
+  .answer {
+    border-bottom-color: #E4E7ED !important;
+  }
+  .answer-grid {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* footer-note */
+  .footer-note { color: #8B919D !important; }
+
+  /* canvas-stage inner */
+  .canvas-stage {
+    background: #F7F8FA !important;
+  }
+
+  /* code inline */
+  code {
+    color: #1A1D24 !important;
+    background: rgba(74,127,207,0.06) !important;
+    border-color: rgba(74,127,207,0.12) !important;
+  }
+
+  /* pre / mono elements */
+  .mono, .monoish, code, .monoish code {
+    color: #1A1D24 !important;
+  }
+
+  .formula code {
+    color: #1A1D24 !important;
+  }
+
+  /* figure-placeholder */
+  .figure-placeholder {
+    background: #FFFFFF !important;
+    border-color: #D6DAE2 !important;
+  }
+
+  /* stage-grid */
+  .stage-grid {
+    border-top-color: #E4E7ED !important;
+  }
+}
+
+
+
+/* Shared light-theme contract: keep technical content on a light semantic surface.
+   This final layer intentionally overrides legacy dark-only component literals. */
+@media (prefers-color-scheme: light) {
+  :root {
+    color-scheme: light;
+    --text-low: #657080;
+    --low: #657080;
+    --technical-surface: #EEF1F5;
+    --technical-ink: #20252D;
+    --technical-line: #C7CDD6;
+  }
+
+  pre,
+  .formula-block,
+  .formula,
+  .code-block,
+  .terminal,
+  [data-theme-surface="technical"] {
+    background: var(--technical-surface) !important;
+    color: var(--technical-ink) !important;
+    border-color: var(--technical-line) !important;
+    box-shadow: none !important;
+  }
+
+  pre *,
+  .formula-block *,
+  .formula *,
+  .code-block *,
+  .terminal *,
+  [data-theme-surface="technical"] * {
+    color: inherit !important;
+  }
+
+  nav.sidebar a {
+    color: #596574 !important;
+  }
+
+  nav.sidebar a.sub {
+    color: #687280 !important;
+  }
+
+  nav.sidebar a:hover,
+  nav.sidebar a:focus-visible {
+    color: var(--text) !important;
+  }
+}
+
+</style>
+
+</head>
+<body>
+  <header class="site-header">
+    <div class="shell">
+      <div class="brand">
+        <div class="mark"></div>
+        <div><strong>RASTA-CAD</strong><span>Phase 2 &middot; Preprocessing Pipeline</span></div>
+      </div>
+      <nav class="nav">
+        <a href="#overview">Overview</a>
+        <a href="#bilateral">Bilateral Eyes</a>
+        <a href="#octa">OCTA Preprocessing</a>
+        <a href="#clinical">Clinical Metadata</a>
+        <a href="#dataset">Dataset Object</a>
+        <a href="#folds">Cross-Validation Folds</a>
+      </nav> </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="shell">
+        <div class="signal">Phase 2 &mdash; Data Preparation</div>
+        <div class="hero-grid">
+          <div>
+            <h1>From Raw Files to Ready Tensors</h1>
+            <p class="lead">
+              Raw OCTA images and clinical spreadsheets are not directly usable by a neural network.
+              Phase 2 transforms them into clean, normalized, augmentation-ready tensors while
+              preventing the most common source of data leakage: having the same patient's two eyes
+              end up in different cross-validation folds.
+            </p>
+          </div>
+          <div class="quiet-panel hero-panel">
+            <span class="eyebrow">Key Principle</span>
+            <p style="color:var(--mid);font-size:0.93rem;margin:0;">
+              Every preprocessing decision that uses information from the dataset (e.g., computing
+              the mean pixel value) must be <strong>fit on the training fold only</strong> and
+              then <strong>applied</strong> to the validation and test folds. Otherwise you leak
+              information about the held-out data into the training process.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="content">
+      <div class="shell">
+
+        <h2 id="overview">The Big Picture: What Phase 2 Produces</h2>
+        <p>
+          Phase 2 takes the raw RASTA files on disk and produces a <code>PyTorch Dataset</code> object
+          that the rest of the pipeline (SimCLR pretraining, classifier training) can consume directly.
+          Each "sample" in the dataset is a dictionary containing:
+        </p>
+        <ul>
+          <li>The three OCTA layer images (Sup, Deep, CC) as 1-channel 224x224 tensors</li>
+          <li>Clinical features as a flat vector + a mask indicating which values were observed</li>
+          <li>Placeholder tensors for segmentation masks (filled in later during Phase 8)</li>
+          <li>The disease label, patient ID, eye side (OD/OS), and fold assignment</li>
+        </ul>
+
+        <div class="callout">
+          <strong>Beginners:</strong> A "Dataset" in PyTorch is just a Python object with a <code>__len__</code>
+          and a <code>__getitem__</code> method. When you index it like <code>dataset[5]</code>, it loads
+          the 6th sample from disk, processes it, and returns ready-to-use tensors. This is the standard
+          way to feed data into a PyTorch training loop.
+        </div>
+
+        <h2 id="bilateral">Bilateral Eye Handling (Critical Rule)</h2>
+        <p>
+          This is one of the most important design decisions in the entire project, and getting it wrong
+          invalidates the results.
+        </p>
+        <p>
+          The RASTA dataset contains patients with one or both eyes scanned. A patient's two eyes are
+          <strong>not independent</strong> -- they share genetics, systemic circulation, age, and disease
+          status. If we put OD in the training set and OS in the test set, the model has effectively
+          seen that patient's disease pattern during training and will score artificially well on the
+          test set. This is a subtle form of data leakage that inflates AUC and fools nobody once
+          detected.
+        </p>
+        <p>
+          The rule is simple and absolute:
+          <strong>All eyes from the same patient must be assigned to the same cross-validation fold.</strong>
+        </p>
+        <p>
+          In practice, this means we group the manifest by patient ID before splitting, then apply
+          stratified k-fold at the patient level (stratifying by cohort label and optionally age decade).
+          After splitting, we verify that no patient ID appears in more than one fold.
+        </p>
+
+        <h2 id="octa">OCTA Image Preprocessing (Step by Step)</h2>
+        <p>
+          Each OCTA image goes through a deterministic pipeline. The goal is to standardize the images
+          for neural network consumption while preserving the vascular structure that carries disease
+          information.
+        </p>
+
+        <div class="step">
+          <h4>Step 1: Quality Control</h4>
+          <p>We check each image for basic usability: is it all black? Is there zero variance (a dead pixel)?
+          Is the signal-to-noise ratio too low? Optionally, a lightweight CNN quality classifier can
+          flag scans with motion artifacts. Low-quality scans are excluded and logged. This prevents
+          the network from learning to recognize artifacts instead of anatomy.</p>
+        </div>
+
+        <div class="step">
+          <h4>Step 2: Percentile Normalization</h4>
+          <p>For each image independently, we compute the 2nd and 98th percentiles of pixel intensity,
+          then clip and rescale the image to [0, 1]. This removes extreme pixel outliers (e.g., a single
+          bright reflection) without assuming the data is Gaussian. Unlike global min-max normalization,
+          percentile clipping is robust to a few spurious bright or dark pixels.</p>
+        </div>
+
+        <div class="step">
+          <h4>Step 3: CLAHE (Contrast-Limited Adaptive Histogram Equalization)</h4>
+          <p>OCTA images often have uneven illumination -- the center might be brighter than the edges.
+          CLAHE divides the image into an 8x8 grid of tiles, equalizes each tile's histogram independently,
+          and then blends the tile boundaries to avoid artifacts. The "contrast-limited" part means it
+          caps how much contrast can be amplified, preventing noise amplification in flat regions.
+          We apply CLAHE per layer (not globally) because each layer has different contrast characteristics.</p>
+        </div>
+
+        <div class="step">
+          <h4>Step 4: Resize to 224x224</h4>
+          <p>All OCTA images are resized to 224x224 pixels using bicubic interpolation. This is the
+          standard input size for ConvNeXt-Tiny (our backbone). Bicubic interpolation preserves
+          smooth vascular boundaries better than nearest-neighbor (which creates jaggies) or bilinear
+          (which is slightly blurrier).</p>
+        </div>
+
+        <div class="step">
+          <h4>Step 5: Z-Score Normalization</h4>
+          <p>Finally, we subtract the per-channel mean and divide by the per-channel standard deviation.
+          Crucially, the mean and std are computed from the <strong>training fold only</strong> and
+          then applied to the validation and test folds. This ensures no information about the held-out
+          data leaks into the training process. After this step, pixel values are centered around zero
+          with unit variance, which helps neural network training stability.</p>
+        </div>
+
+        <div class="callout-warn">
+          <strong>Watch out:</strong> Do not compute z-score statistics on the entire dataset before
+          splitting. Always compute on the training fold and apply to val/test. This is a common mistake
+          that subtly leaks information.
+        </div>
+
+        <h2 id="clinical">Clinical Metadata Preprocessing</h2>
+        <p>
+          The clinical data contains a mix of continuous (age, BMI), binary (sex, hypertension, diabetes),
+          and ordinal (smoking: never/former/current) features. Each type needs different handling.
+        </p>
+
+        <h3>Continuous Features</h3>
+        <p>
+          Age and BMI are z-score normalized using training-fold mean and std, just like the images.
+          This puts them on a comparable scale.
+        </p>
+
+        <h3>Binary Features</h3>
+        <p>
+          Sex, hypertension, diabetes, and dyslipidemia are encoded as 0/1 integers. They are not
+          normalized because they are already on a meaningful scale (1 means "present").
+        </p>
+
+        <h3>Ordinal Features (Smoking)</h3>
+        <p>
+          Smoking status has a natural order: never (0) &lt; former (1) &lt; current (2). Encoding
+          these as raw integers (0, 1, 2) would imply that "current" is twice as "intense" as "former,"
+          which is not necessarily true. Instead, we use learned ordinal embeddings -- the model learns
+          a scalar representation for each smoking category during training.
+        </p>
+
+        <h3>Missing Value Handling (The Clever Part)</h3>
+        <p>
+          Traditional approaches fill missing values with the mean or median of that feature. But this
+          is problematic: imputing the mean assumes the missing value is "average," which may be
+          systematically wrong if missingness correlates with disease status (e.g., sicker patients
+          might be less likely to have BMI recorded).
+        </p>
+        <p>
+          Our approach: each clinical feature gets a <strong>learnable mask token</strong> -- a single
+          trainable scalar that represents "this value was not measured." When a feature is missing,
+          the model uses the mask token instead. During training, we randomly hide 10% of observed
+          values to teach the model to handle missing data robustly. This way, the model can learn
+          that missingness itself might be informative, rather than pretending missing values are average.
+        </p>
+
+        <h3>Feature Selection</h3>
+        <p>
+          Not every clinical feature is informative for disease classification. We compute mutual
+          information (MI) between each feature and the disease label on the training fold. Features
+          with MI &lt; 0.01 are flagged as potentially low-information. This is a diagnostic, not
+          an automatic filter -- domain knowledge may overrule it.
+        </p>
+
+        <h2 id="dataset">The Dataset Sample Dictionary</h2>
+        <p>
+          Each call to <code>dataset[i]</code> returns a dictionary with the following keys:
+        </p>
+        <table>
+          <tr><th>Key</th><th>Shape</th><th>Description</th></tr>
+          <tr><td><code>sup_image</code></td><td>[1, 224, 224]</td><td>Preprocessed SVC layer</td></tr>
+          <tr><td><code>deep_image</code></td><td>[1, 224, 224]</td><td>Preprocessed DVC layer</td></tr>
+          <tr><td><code>cc_image</code></td><td>[1, 224, 224]</td><td>Preprocessed CC layer</td></tr>
+          <tr><td><code>clinical_features</code></td><td>[D_clin]</td><td>Processed clinical vector</td></tr>
+          <tr><td><code>clinical_mask</code></td><td>[D_clin]</td><td>1=observed, 0=missing</td></tr>
+          <tr><td><code>vessel_mask</code></td><td>[1, 224, 224]</td><td>Zero placeholder until Phase 8</td></tr>
+          <tr><td><code>faz_mask</code></td><td>[1, 224, 224]</td><td>Zero placeholder until Phase 8</td></tr>
+          <tr><td><code>flow_mask</code></td><td>[1, 224, 224]</td><td>Zero placeholder until Phase 8</td></tr>
+          <tr><td><code>label</code></td><td>int</td><td>Disease cohort index (0-3)</td></tr>
+          <tr><td><code>patient_id</code></td><td>str</td><td>Patient identifier</td></tr>
+          <tr><td><code>eye</code></td><td>str</td><td>"OD" or "OS"</td></tr>
+          <tr><td><code>fold</code></td><td>int</td><td>Cross-validation fold (0-4)</td></tr>
+        </table>
+
+        <div class="callout">
+          <strong>Note on masks:</strong> Before Phase 8 generates pseudo-masks, the mask fields are zero
+          tensors. They exist as placeholders so that the data loading code does not need to change when
+          Phase 8 is completed. After Phase 8, these are replaced with actual generated masks.
+        </div>
+
+        <h2 id="folds">Patient- Stratified Cross-Validation Folds</h2>
+        <p>
+          We create 5 folds for cross-validation. The process is:
+        </p>
+        <ol>
+          <li>Group all eye samples by patient ID.</li>
+          <li>Stratify by disease cohort and (optionally) age decade to ensure each fold has a similar
+          distribution of classes and ages.</li>
+          <li>Assign entire patient groups to folds, never splitting a patient across folds.</li>
+          <li>Verify that no patient ID appears in more than one fold.</li>
+        </ol>
+        <p>
+          The result is 5 approximately balanced folds, each containing 94-98 eye samples, with zero
+          patient overlap. These fixed folds are used consistently throughout the entire project --
+          every phase (SimCLR, classifier training, baselines, ablations) uses the same splits.
+        </p>
+
+        <hr />
+
+        <h2>Quick Reference: Phase 2 Outputs</h2>
+        <table>
+          <tr><th>Artifact</th><th>Description</th></tr>
+          <tr><td>QC-passed manifest</td><td>Table of all samples that passed image quality checks</td></tr>
+          <tr><td>QC exclusion log</td><td>Why each excluded sample was rejected</td></tr>
+          <tr><td>Fold assignments</td><td>Patient-level fold IDs with zero-leakage verification</td></tr>
+          <tr><td>Clinical preprocessor stats</td><td>Mean, std per continuous feature (per fold)</td></tr>
+          <tr><td>Mutual information report</td><td>MI between each clinical feature and label</td></tr>
+          <tr><td>OCTA layer statistics</td><td>Mean, std per layer per fold (for z-score normalization)</td></tr>
+          <tr><td>RastaPhase2Dataset</td><td>PyTorch Dataset ready for Phase 3 and beyond</td></tr>
+        </table>
+
+        <hr />
+
+        <h2>Glossary for Beginners</h2>
+        <dl class="glossary">
+          <dt>CLAHE</dt>
+          <dd>Contrast-Limited Adaptive Histogram Equalization. A method that improves local contrast in images by equalizing histograms over small tiles, then blending them. Think of it as "smart brightness/contrast adjustment" that adapts to different regions of the image.</dd>
+          <dt>Z-Score Normalization</dt>
+          <dd>Subtracting the mean and dividing by the standard deviation. Transforms data to have mean=0 and variance=1. Also called "standardization."</dd>
+          <dt>Bicubic Interpolation</dt>
+          <dd>A method for resizing images that considers the 16 nearest pixels (a 4x4 grid) to compute each output pixel. It produces smoother results than simpler methods.</dd>
+          <dt>Mutual Information (MI)</dt>
+          <dd>A measure of how much knowing one variable tells you about another. High MI between a clinical feature and the disease label means that feature is informative for classification. MI can capture non-linear relationships, unlike correlation.</dd>
+          <dt>Stratified K-Fold</dt>
+          <dd>A cross-validation technique where each fold preserves the same class proportions as the full dataset. Prevents a fold from accidentally having zero samples of a rare class.</dd>
+        </dl>
+
+      </div>
+    </section>
+  </main>
+
+</body>
+</html>

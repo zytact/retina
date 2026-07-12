@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Phase 15 — Ablation Studies</title>
+  <style>
+    :root {
+      --bg: #030303;
+      --bg-deep: #090909;
+      --surface: #111111;
+      --surface-2: #171717;
+      --line: rgba(255,255,255,0.1);
+      --line-soft: rgba(255,255,255,0.06);
+      --text: #f5f7fa;
+      --mid: #a4acb7;
+      --low: #6f7782;
+      --halo: #7fb2ff;
+      --halo-soft: rgba(127,178,255,0.14);
+      --green: #86e0ad;
+      --amber: #ffd27d;
+      --violet: #c4afff;
+      --red: #ff9b9b;
+      --max: 1220px;
+      color-scheme: dark light;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.72;
+      overflow-x: hidden;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 82% 0%, rgba(127,178,255,0.12), transparent 24rem),
+        radial-gradient(circle at 10% 26%, rgba(196,175,255,0.08), transparent 28rem),
+        linear-gradient(180deg, #060606 0%, #030303 35%, #090909 100%);
+      z-index: -2;
+    }
+    a { color: inherit; }
+    .shell { width: min(calc(100% - 40px), var(--max)); margin-inline: auto; }
+    .site-header {
+      position: sticky; top: 0; z-index: 20;
+      backdrop-filter: blur(16px);
+      background: rgba(3,3,3,0.78);
+      border-bottom: 1px solid var(--line-soft);
+    }
+    .site-header .shell {
+      display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 14px 0;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .mark {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: radial-gradient(circle at 38% 38%, #eff6ff 0 10%, var(--halo) 12% 32%, rgba(127,178,255,0.24) 34% 56%, transparent 58%);
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.1), 0 0 32px rgba(127,178,255,0.18);
+      flex: 0 0 auto;
+    }
+    .brand strong, .brand span { display: block; }
+    .brand strong { font-size: 0.95rem; font-weight: 620; }
+    .brand span { font-size: 0.84rem; color: var(--mid); }
+    .nav { display: flex; flex-wrap: wrap; gap: 18px; }
+    .nav a {
+      text-decoration: none; color: var(--mid); font-size: 0.92rem;
+      border-bottom: 1px solid transparent; padding-bottom: 4px;
+    }
+    .nav a:hover { color: var(--text); border-color: rgba(255,255,255,0.18); }
+    main { padding-bottom: 100px; }
+    .hero { padding: clamp(70px, 10vw, 128px) 0 60px; }
+    .hero-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(290px, 0.9fr);
+      gap: clamp(34px, 7vw, 92px);
+      align-items: end;
+    }
+    .signal {
+      display: inline-flex; align-items: center; gap: 10px;
+      color: var(--mid); font-size: 0.92rem; margin-bottom: 24px;
+    }
+    .signal::before {
+      content: ""; width: 9px; height: 9px; border-radius: 50%;
+      background: var(--halo); box-shadow: 0 0 18px rgba(127,178,255,0.42);
+    }
+    h1, h2, h3, h4 { text-wrap: balance; }
+    h1 {
+      margin: 0;
+      font-size: clamp(3.15rem, 7vw, 5.8rem);
+      line-height: 0.95; letter-spacing: -0.035em; font-weight: 540; max-width: 12ch;
+    }
+    .lead {
+      margin: 24px 0 0; color: var(--mid); max-width: 68ch;
+      font-size: clamp(1.03rem, 1.6vw, 1.16rem);
+    }
+    .quiet-panel {
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+      border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 24px;
+    }
+    .hero-panel {
+      display: grid; gap: 20px;
+      box-shadow: 0 0 0 1px rgba(127,178,255,0.05) inset;
+      border-color: rgba(127,178,255,0.16);
+    }
+    .eyebrow {
+      color: var(--halo); text-transform: uppercase;
+      letter-spacing: 0.08em; font-size: 0.75rem; font-weight: 620;
+    }
+    .content { padding: 40px 0; }
+    .content h2 {
+      font-size: 2.1rem; font-weight: 540; letter-spacing: -0.025em;
+      margin: 48px 0 16px;
+    }
+    .content h3 {
+      font-size: 1.35rem; font-weight: 540; margin: 32px 0 12px;
+      color: var(--halo);
+    }
+    .content h4 {
+      font-size: 1.1rem; font-weight: 540; margin: 24px 0 8px;
+    }
+    .content p, .content li { color: var(--mid); max-width: 72ch; }
+    .content p { margin: 12px 0; }
+    .content ul, .content ol { padding-left: 22px; }
+    .content li { margin: 6px 0; }
+    .content strong { color: var(--text); }
+    code {
+      background: rgba(255,255,255,0.06); border-radius: 6px; padding: 2px 8px;
+      font-size: 0.88em; font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    }
+    .callout {
+      background: rgba(127,178,255,0.08);
+      border-left: 3px solid var(--halo);
+      border-radius: 0 12px 12px 0;
+      padding: 16px 20px;
+      margin: 20px 0;
+    }
+    .callout p { margin: 4px 0; }
+    .callout strong { color: var(--halo); }
+    table {
+      width: 100%; border-collapse: collapse;
+      background: var(--surface); border-radius: 12px;
+      margin: 20px 0; font-size: 0.92rem;
+    }
+    th, td {
+      text-align: left; padding: 12px 16px;
+      border-bottom: 1px solid var(--line-soft);
+    }
+    th { color: var(--low); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 620; }
+    td { color: var(--mid); }
+    tr:last-child td { border-bottom: none; }
+    hr { border: none; border-top: 1px solid var(--line-soft); margin: 48px 0; }
+    .glossary dt { font-weight: 620; color: var(--text); margin-top: 16px; }
+    .glossary dd { margin: 4px 0 0; color: var(--mid); max-width: 64ch; }
+    .ablation { margin: 24px 0; }
+    .ablation h4 { margin: 0 0 6px; padding: 10px 16px; background: var(--surface); border-radius: 12px 12px 0 0; border: 1px solid var(--line-soft); border-bottom: none; }
+    .ablation p { margin: 0; padding: 12px 16px; border: 1px solid var(--line-soft); border-top: none; border-radius: 0 0 12px 12px; }
+    .ablation p:last-of-type { border-radius: 0 0 12px 12px; }
+    @media (max-width: 800px) {
+      .hero-grid { grid-template-columns: 1fr; }
+      h1 { max-width: 100%; }
+    }
+
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #F7F8FA;
+    --bg-2: #EDEEF2;
+    --bg-deep: #EDEEF2;
+    --deep: #EDEEF2;
+    --void: #F7F8FA;
+    --surface: #FFFFFF;
+    --surface-2: #F0F1F4;
+    --surface-high: #F0F1F4;
+    --line: #D6DAE2;
+    --line-soft: #E4E7ED;
+    --line-strong: #C6CAD4;
+    --text: #17191E;
+    --mid: #555B66;
+    --low: #8B919D;
+    --text-mid: #555B66;
+    --text-low: #8B919D;
+    --halo: #4A7FCF;
+    --halo-soft: rgba(74,127,207,0.10);
+    --amber: #C49A44;
+    --amber-soft: rgba(196,154,68,0.10);
+    --green: #3BA66B;
+    --red: #C44A4A;
+    --violet: #7F67C8;
+    --mint: #3BA66B;
+    --coral: #C44A4A;
+    --cyan: #3B8DBF;
+    --danger: #C44A4A;
+    --success: #3BA66B;
+    --planned: #C49A44;
+    --shadow-lg: 0 22px 60px rgba(0,0,0,0.06);
+    --shadow-sm: 0 10px 30px rgba(0,0,0,0.04);
+    --radius: 18px;
+    --radius-sm: 12px;
+  }
+  :root { color-scheme: light; }
+
+  /* body ambient gradient */
+  body::before { background: none !important; }
+
+  /* header backgrounds */
+  .site-header, .masthead, header {
+    background: rgba(247,248,250,0.85) !important;
+  }
+
+  /* code */
+  code {
+    background: rgba(74,127,207,0.06) !important;
+    border-color: rgba(74,127,207,0.12) !important;
+    color: #1A1D24 !important;
+  }
+
+  /* quiet-panel: gradient bg + border */
+  .quiet-panel {
+    background: #FFFFFF !important;
+    border-color: #E4E7ED !important;
+  }
+
+  /* hero-side / hero-note panels */
+  .hero-side, .hero-note {
+    background: #FFFFFF !important;
+    border-color: #E4E7ED !important;
+  }
+
+  /* hero-panel */
+  .hero-panel {
+    background: #FFFFFF !important;
+    border-color: #E4E7ED !important;
+  }
+
+  /* callout */
+  .callout {
+    border-top-color: rgba(74,127,207,0.20) !important;
+  }
+
+  /* formula block */
+  .formula {
+    border-top-color: rgba(74,127,207,0.20) !important;
+  }
+
+  /* diagram-box */
+  .diagram-box {
+    background: #FFFFFF !important;
+    border-color: #E4E7ED !important;
+  }
+
+  /* number-line (z-score explainer) */
+  .number-line {
+    background: #FFFFFF !important;
+    border-color: #D6DAE2 !important;
+  }
+  .number {
+    border-right-color: #E4E7ED !important;
+  }
+  .number.mean {
+    background: rgba(74,127,207,0.05) !important;
+  }
+  .number.good {
+    background: rgba(59,166,107,0.05) !important;
+  }
+
+  /* diagram-shell / canvas-stage */
+  .diagram-shell, .canvas-stage {
+    background: #FFFFFF !important;
+    border-color: #E4E7ED !important;
+  }
+  .canvas-wrap {
+    background: #FFFFFF !important;
+    border-color: #E4E7ED !important;
+  }
+
+  /* summary-rail items */
+  .summary-rail div {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* compare items */
+  .compare > div {
+    border-right-color: #E4E7ED !important;
+  }
+
+  /* deep-grid items */
+  .deep-grid > div {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* status-grid items */
+  .status-grid li {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* narrative items */
+  .narrative {
+    border-bottom-color: #E4E7ED !important;
+  }
+
+  /* definition items */
+  .definition {
+    border-bottom-color: #E4E7ED !important;
+  }
+
+  /* section borders */
+  .section, section {
+    border-top-color: #E4E7ED !important;
+    border-bottom-color: #E4E7ED !important;
+  }
+  .section-head {
+    border-bottom-color: #E4E7ED !important;
+  }
+  .section-top {
+    border-bottom-color: #E4E7ED !important;
+  }
+
+  /* layer-row items */
+  .layer-row {
+    border-bottom-color: #E4E7ED !important;
+  }
+  .layer-row:first-child {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* definition-stack */
+  .definition-stack {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* flow-row */
+  .flow-row {
+    border-bottom-color: #E4E7ED !important;
+  }
+
+  /* legend */
+  .legend {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* stage-card, loss-card, aug-card, split-panel > div */
+  .stage-card, .loss-card, .aug-card, .split-panel > div {
+    background: #FFFFFF !important;
+    border-color: #E4E7ED !important;
+  }
+
+  /* evidence-item */
+  .evidence-item {
+    border-bottom-color: #E4E7ED !important;
+  }
+
+  /* truth-line */
+  .truth-line {
+    border-top-color: #C6CAD4 !important;
+    border-bottom-color: #E4E7ED !important;
+  }
+
+  /* matrix */
+  .matrix {
+    border-top-color: #C6CAD4 !important;
+  }
+  .matrix > div {
+    border-bottom-color: #E4E7ED !important;
+  }
+
+  /* quiet-panel verdict */
+  .quiet-panel .verdict {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* meta-row */
+  .meta-row {
+    border-top-color: #E4E7ED !important;
+  }
+  .meta-row .marker-line {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* section-aside */
+  .section-aside {
+    border-left-color: #E4E7ED !important;
+  }
+
+  /* flow-panel */
+  .flow-panel {
+    border-left-color: #E4E7ED !important;
+  }
+
+  /* table cells */
+  th, td {
+    border-bottom-color: #E4E7ED !important;
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* hr */
+  hr {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* details */
+  details {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* source-note */
+  .source-note {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* brand mark shadow */
+  .mark, .brandmark, .orb {
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.06) !important;
+  }
+
+  /* nav a hover border */
+  .nav a:hover, nav a:hover, .nav-links a:hover {
+    border-color: rgba(0,0,0,0.12) !important;
+  }
+
+  /* mode button */
+  .mode button[aria-pressed="true"],
+  .stage-tabs button[aria-pressed="true"] {
+    border-color: rgba(74,127,207,0.4) !important;
+  }
+
+  /* glossary dt */
+  .glossary dt {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* answer items */
+  .answer {
+    border-bottom-color: #E4E7ED !important;
+  }
+  .answer-grid {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* footer-note */
+  .footer-note { color: #8B919D !important; }
+
+  /* canvas-stage inner */
+  .canvas-stage {
+    background: #F7F8FA !important;
+  }
+
+  /* code inline */
+  code {
+    color: #1A1D24 !important;
+    background: rgba(74,127,207,0.06) !important;
+    border-color: rgba(74,127,207,0.12) !important;
+  }
+
+  /* pre / mono elements */
+  .mono, .monoish, code, .monoish code {
+    color: #1A1D24 !important;
+  }
+
+  .formula code {
+    color: #1A1D24 !important;
+  }
+
+  /* figure-placeholder */
+  .figure-placeholder {
+    background: #FFFFFF !important;
+    border-color: #D6DAE2 !important;
+  }
+
+  /* stage-grid */
+  .stage-grid {
+    border-top-color: #E4E7ED !important;
+  }
+}
+
+
+
+/* Shared light-theme contract: keep technical content on a light semantic surface.
+   This final layer intentionally overrides legacy dark-only component literals. */
+@media (prefers-color-scheme: light) {
+  :root {
+    color-scheme: light;
+    --text-low: #657080;
+    --low: #657080;
+    --technical-surface: #EEF1F5;
+    --technical-ink: #20252D;
+    --technical-line: #C7CDD6;
+  }
+
+  pre,
+  .formula-block,
+  .formula,
+  .code-block,
+  .terminal,
+  [data-theme-surface="technical"] {
+    background: var(--technical-surface) !important;
+    color: var(--technical-ink) !important;
+    border-color: var(--technical-line) !important;
+    box-shadow: none !important;
+  }
+
+  pre *,
+  .formula-block *,
+  .formula *,
+  .code-block *,
+  .terminal *,
+  [data-theme-surface="technical"] * {
+    color: inherit !important;
+  }
+
+  nav.sidebar a {
+    color: #596574 !important;
+  }
+
+  nav.sidebar a.sub {
+    color: #687280 !important;
+  }
+
+  nav.sidebar a:hover,
+  nav.sidebar a:focus-visible {
+    color: var(--text) !important;
+  }
+}
+
+</style>
+
+</head>
+<body>
+  <header class="site-header">
+    <div class="shell">
+      <div class="brand">
+        <div class="mark"></div>
+        <div><strong>RASTA-CAD</strong><span>Phase 15 &middot; Ablation Studies</span></div>
+      </div>
+      <nav class="nav">
+        <a href="#why">Why Ablate?</a>
+        <a href="#design">Experiment Design</a>
+        <a href="#experiments">The Experiments</a>
+        <a href="#interpretation">How to Read Results</a>
+        <a href="#table">Summary Table</a>
+      </nav> </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="shell">
+        <div class="signal">Phase 15 &mdash; Evidence</div>
+        <div class="hero-grid">
+          <div>
+            <h1>What Actually Matters?</h1>
+            <p class="lead">
+              The full model has many components: three image encoders, a cross-layer attention module,
+              a tabular encoder, a mask encoder, SimCLR pretraining, prototype augmentation, temperature
+              calibration, and more. Are all of these actually pulling their weight? Ablation studies
+              answer this by removing one component at a time and measuring the performance drop.
+            </p>
+          </div>
+          <div class="quiet-panel hero-panel">
+            <span class="eyebrow">The Core Question</span>
+            <p style="color:var(--mid);font-size:0.93rem;margin:0;">
+              "If we remove component X, does performance meaningfully decrease?"
+              If the answer is yes, X contributes. If no, X might be unnecessary complexity.
+              Every claim in the paper about "our novel X improves performance" must be
+              backed by an ablation experiment.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="content">
+      <div class="shell">
+
+        <h2 id="why">Why Ablation Studies Matter for Your Paper</h2>
+        <p>
+          Imagine you have built a 15-component system and it achieves 0.92 AUC. A reviewer asks:
+          "What is the marginal contribution of the cross-layer attention module?" If you cannot answer
+          with a number, your claim that cross-layer attention "improves" performance is speculation,
+          not evidence.
+        </p>
+        <p>
+          Ablation studies are the standard method for attribution in machine learning research.
+          You systematically remove (or "ablate") each component and retrain from scratch with identical
+          seeds. The performance difference between the full model and the ablated model is the
+          marginal contribution of that component. This is distinct from simply turning off a module
+          at inference time -- you must retrain, because other components may compensate for the
+          missing module during training.
+        </p>
+
+        <div class="callout">
+          <strong>For beginners:</strong> Think of it like cooking. You make a complex dish. To know
+          whether the paprika matters, you make the same dish again without paprika. If nobody notices
+          the difference, maybe skip the paprika next time. Ablation is the same idea: make the model
+          again without component X and compare the results.
+        </div>
+
+        <h2 id="design">The Ablation Protocol</h2>
+        <p>Every ablation experiment follows a strict protocol to ensure fair comparison:</p>
+        <ul>
+          <li><strong>Identical seeds:</strong> Every ablation uses the same random seeds as the full model, so differences are not due to random variation in weight initialization or data ordering.</li>
+          <li><strong>Full retraining:</strong> Each ablation is trained from scratch (or from ImageNet weights, depending on the ablation). You cannot just disable a module at test time -- other modules may have compensated during training.</li>
+          <li><strong>Same cross-validation folds:</strong> The fixed Phase 2 folds are used everywhere. No re-splitting.</li>
+          <li><strong>Same training schedule:</strong> Same epochs, learning rates, optimizer, augmentation, and early stopping. The only thing that changes is the architecture.</li>
+          <li><strong>Mean + std across 5 folds:</strong> Every result is reported as mean +/- standard deviation over the 5 folds, with 95% bootstrap confidence intervals.</li>
+        </ul>
+
+        <div class="callout" style="border-color:var(--amber);background:rgba(255,210,125,0.08);">
+          <strong>Critical rule:</strong> When you remove a component, the remaining components must still form a valid architecture. For example, removing the tabular branch means the classifier receives only the OCTA and mask embeddings. You cannot leave a broken input dimension.
+        </div>
+
+        <h2 id="experiments">The Ablation Experiments, Explained</h2>
+
+        <h3>Architecture Ablations (What to remove)</h3>
+
+        <div class="ablation">
+          <h4>&minus; SimCLR Pretraining</h4>
+          <p>Instead of loading Phase 3 SimCLR-trained backbones, the OCTA encoders are initialized from ImageNet weights only. This tests how much the OCTA-specific self-supervised pretraining contributes. If the performance drop is large, it justifies the 100-epoch SimCLR pretraining stage in the paper.</p>
+        </div>
+
+        <div class="ablation">
+          <h4>&minus; Cross-Layer Attention</h4>
+          <p>Instead of passing the three layer tokens (Sup, Deep, CC) through self-attention, we simply concatenate them and project to 256 dimensions. This tests whether the cross-layer interaction modeling is valuable, or whether simply stacking layer features is enough.</p>
+        </div>
+
+        <div class="ablation">
+          <h4>&minus; Layer-Identity Embeddings</h4>
+          <p>Remove the learnable e_sup, e_deep, e_cc vectors from the cross-layer attention module. This tests whether the tokens need to "know" which layer they represent, or whether the attention module can infer it from the feature content alone.</p>
+        </div>
+
+        <div class="ablation">
+          <h4>&minus; Tabular Branch</h4>
+          <p>Remove all clinical features and generated biomarkers. The classifier runs on OCTA and mask features only. This is a pure imaging model, testing how much the clinical data contributes to classification.</p>
+        </div>
+
+        <div class="ablation">
+          <h4>&minus; Mask Branch</h4>
+          <p>Remove the generated segmentation masks and their encoder. Keep the clinical tabular branch. This tests whether the pseudo-masks from Phase 8 add value beyond what the image encoders already extract and what the clinical data already provides.</p>
+        </div>
+
+        <div class="ablation">
+          <h4>&minus; Mask Biomarkers</h4>
+          <p>Keep the mask encoder (mask visual features) but remove the quantitative biomarker vector from the tabular stream. This separates the contribution of mask <em>images</em> vs. mask-derived <em>numbers</em> (vessel density, FAZ area, etc.).</p>
+        </div>
+
+        <h3>Head and Calibration Ablations</h3>
+
+        <div class="ablation">
+          <h4>&minus; Prototype Head</h4>
+          <p>Remove the prototype-augmented logits, using only the standard linear classifier head. This tests whether the hybrid parametric + non-parametric head helps rare classes.</p>
+        </div>
+
+        <div class="ablation">
+          <h4>&minus; Uncertainty (MC-Dropout)</h4>
+          <p>Use a single deterministic forward pass instead of 30-pass MC-Dropout. This tests whether MC-Dropout improves accuracy (by averaging) or only uncertainty estimation.</p>
+        </div>
+
+        <div class="ablation">
+          <h4>&minus; Temperature Calibration</h4>
+          <p>Use raw softmax probabilities without post-hoc temperature scaling. This tests whether calibration actually improves probability estimates.</p>
+        </div>
+
+        <div class="ablation">
+          <h4>&minus; Label Smoothing</h4>
+          <p>Use hard one-hot targets instead of smoothed targets (epsilon=0). Tests whether label smoothing helps generalization.</p>
+        </div>
+
+        <h3>Single-Layer and Modality Ablations</h3>
+        <p>
+          These are the most important for the paper's central claim: <strong>that using all three
+          layers + clinical data + masks is better than any single modality</strong>.
+        </p>
+
+        <div class="ablation">
+          <h4>Sup Only / Deep Only / CC Only</h4>
+          <p>Use only one retinal layer. No cross-layer attention (there is only one token). No tabular, no masks. This establishes a per-layer performance baseline. CC-only is expected to be worst (lower resolution, less structured texture), but the actual ordering is an empirical finding.</p>
+        </div>
+
+        <div class="ablation">
+          <h4>Sup + Deep</h4>
+          <p>Two encoders, no CC. Tests whether the choriocapillaris layer adds discriminative information beyond the two vascular layers.</p>
+        </div>
+
+        <div class="ablation">
+          <h4>Images + Tabular</h4>
+          <p>Three OCTA encoders + clinical features, no mask branch. Tests the marginal contribution of mask features on top of images + clinical data.</p>
+        </div>
+
+        <h3>Mask Source Ablations</h3>
+        <div class="ablation">
+          <h4>Classical Masks Only</h4>
+          <p>Use the improved classical pseudo-masks (from Phase 8 Step A/B) instead of the U-Net++ student masks. This tests whether the refinement step matters.</p>
+        </div>
+
+        <div class="ablation">
+          <h4>Student Masks Only</h4>
+          <p>Use frozen U-Net++ student outputs. The operational default. Compare against classical-only to justify the extra complexity of training a segmentation student.</p>
+        </div>
+
+        <h2 id="interpretation">How to Read an Ablation Table</h2>
+        <p>
+          The ablation results are typically presented as a table in the paper. Each row is an ablation
+          configuration. The columns show metrics (macro-AUC, macro-F1, balanced accuracy, ECE).
+          The full model is the first row (the reference). Each subsequent row shows the performance
+          after removing one component.
+        </p>
+        <p>
+          When reading the table:
+        </p>
+        <ul>
+          <li>A <strong>large drop</strong> (e.g., -0.05 AUC) means that component is important.</li>
+          <li>A <strong>small drop</strong> (within the confidence interval) suggests the component may be unnecessary or redundant.</li>
+          <li>A <strong>tie or improvement</strong> after removal is interesting -- it might mean the component was harming performance (overfitting, noise). This would motivate a simplification of the architecture.</li>
+          <li>Single-layer ablations are expected to show significant drops, confirming the value of multi-layer fusion.</li>
+        </ul>
+
+        <hr />
+
+        <h2 id="table">Quick Reference: All Ablation Configurations</h2>
+        <table>
+          <tr><th>Name</th><th>Change from Full Model</th></tr>
+          <tr><td>Full model</td><td>Reference: all components active</td></tr>
+          <tr><td>- SimCLR pretraining</td><td>ImageNet init only, no OCTA-SimCLR</td></tr>
+          <tr><td>- Cross-layer attention</td><td>Concatenate tokens instead of self-attention</td></tr>
+          <tr><td>- Layer-identity embeddings</td><td>No e_sup/e_deep/e_cc tokens</td></tr>
+          <tr><td>- Tabular branch</td><td>No clinical features or biomarkers</td></tr>
+          <tr><td>- Mask branch</td><td>No generated mask encoder</td></tr>
+          <tr><td>- Mask biomarkers</td><td>Keep mask images, remove biomarker vector</td></tr>
+          <tr><td>Classical masks</td><td>Use classical_improved instead of unetpp_student</td></tr>
+          <tr><td>Student masks</td><td>Use unetpp_student (confirms full-model source)</td></tr>
+          <tr><td>- Prototype head</td><td>Standard linear classifier only</td></tr>
+          <tr><td>- Uncertainty</td><td>Single forward pass, no MC-Dropout</td></tr>
+          <tr><td>- Temperature calibration</td><td>Uncalibrated softmax</td></tr>
+          <tr><td>- Label smoothing</td><td>Hard one-hot targets</td></tr>
+          <tr><td>Sup only</td><td>Single encoder, no Deep, CC, tabular, masks</td></tr>
+          <tr><td>Deep only</td><td>Single encoder, no Sup, CC, tabular, masks</td></tr>
+          <tr><td>CC only</td><td>Single encoder, no Sup, Deep, tabular, masks</td></tr>
+          <tr><td>Sup + Deep</td><td>Two encoders, no CC, tabular, masks</td></tr>
+          <tr><td>Images + Tabular</td><td>Three encoders + tabular, no masks</td></tr>
+        </table>
+
+        <hr />
+
+        <h2>Glossary for Beginners</h2>
+        <dl class="glossary">
+          <dt>Ablation</dt>
+          <dd>From the Latin "ablatio" (removal). In ML research, systematically removing a component to measure its contribution.</dd>
+          <dt>Marginal Contribution</dt>
+          <dd>The change in performance when adding or removing a single component, holding everything else constant.</dd>
+          <dt>Confidence Interval</dt>
+          <dd>A range of values that likely contains the true performance. In our study, 95% bootstrap CIs mean we are 95% confident the true metric lies in that interval.</dd>
+          <dt>Bootstrap</dt>
+          <dd>A statistical method where you repeatedly resample your data (with replacement) to estimate the variability of a metric. We use patient-cluster bootstrap to account for bilateral eyes.</dd>
+          <dt>Parametric vs. Non-Parametric</dt>
+          <dd>A parametric model has a fixed set of parameters (like a linear layer). A non-parametric model like prototype classification uses training examples (prototypes) as part of its decision rule. The prototype head combines both approaches.</dd>
+        </dl>
+
+      </div>
+    </section>
+  </main>
+
+</body>
+</html>

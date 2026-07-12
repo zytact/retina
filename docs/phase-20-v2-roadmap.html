@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Phase 20 — V2 Roadmap</title>
+  <style>
+    :root {
+      --bg: #030303;
+      --bg-deep: #090909;
+      --surface: #111111;
+      --surface-2: #171717;
+      --line: rgba(255,255,255,0.1);
+      --line-soft: rgba(255,255,255,0.06);
+      --text: #f5f7fa;
+      --mid: #a4acb7;
+      --low: #6f7782;
+      --halo: #7fb2ff;
+      --halo-soft: rgba(127,178,255,0.14);
+      --green: #86e0ad;
+      --amber: #ffd27d;
+      --violet: #c4afff;
+      --red: #ff9b9b;
+      --max: 1220px;
+      color-scheme: dark light;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.72;
+      overflow-x: hidden;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 82% 0%, rgba(127,178,255,0.12), transparent 24rem),
+        radial-gradient(circle at 10% 26%, rgba(196,175,255,0.08), transparent 28rem),
+        linear-gradient(180deg, #060606 0%, #030303 35%, #090909 100%);
+      z-index: -2;
+    }
+    a { color: inherit; }
+    .shell { width: min(calc(100% - 40px), var(--max)); margin-inline: auto; }
+    .site-header {
+      position: sticky; top: 0; z-index: 20;
+      backdrop-filter: blur(16px);
+      background: rgba(3,3,3,0.78);
+      border-bottom: 1px solid var(--line-soft);
+    }
+    .site-header .shell {
+      display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 14px 0;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .mark {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: radial-gradient(circle at 38% 38%, #eff6ff 0 10%, var(--halo) 12% 32%, rgba(127,178,255,0.24) 34% 56%, transparent 58%);
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.1), 0 0 32px rgba(127,178,255,0.18);
+      flex: 0 0 auto;
+    }
+    .brand strong, .brand span { display: block; }
+    .brand strong { font-size: 0.95rem; font-weight: 620; }
+    .brand span { font-size: 0.84rem; color: var(--mid); }
+    .nav { display: flex; flex-wrap: wrap; gap: 18px; }
+    .nav a {
+      text-decoration: none; color: var(--mid); font-size: 0.92rem;
+      border-bottom: 1px solid transparent; padding-bottom: 4px;
+    }
+    .nav a:hover { color: var(--text); border-color: rgba(255,255,255,0.18); }
+    main { padding-bottom: 100px; }
+    .hero { padding: clamp(70px, 10vw, 128px) 0 60px; }
+    .hero-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(290px, 0.9fr);
+      gap: clamp(34px, 7vw, 92px);
+      align-items: end;
+    }
+    .signal {
+      display: inline-flex; align-items: center; gap: 10px;
+      color: var(--mid); font-size: 0.92rem; margin-bottom: 24px;
+    }
+    .signal::before {
+      content: ""; width: 9px; height: 9px; border-radius: 50%;
+      background: var(--green); box-shadow: 0 0 18px rgba(134,224,173,0.42);
+    }
+    h1, h2, h3, h4 { text-wrap: balance; }
+    h1 {
+      margin: 0;
+      font-size: clamp(3.15rem, 7vw, 5.8rem);
+      line-height: 0.95; letter-spacing: -0.035em; font-weight: 540; max-width: 12ch;
+    }
+    .lead {
+      margin: 24px 0 0; color: var(--mid); max-width: 68ch;
+      font-size: clamp(1.03rem, 1.6vw, 1.16rem);
+    }
+    .quiet-panel {
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+      border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 24px;
+    }
+    .hero-panel {
+      display: grid; gap: 20px;
+      box-shadow: 0 0 0 1px rgba(134,224,173,0.05) inset;
+      border-color: rgba(134,224,173,0.16);
+    }
+    .eyebrow {
+      color: var(--green); text-transform: uppercase;
+      letter-spacing: 0.08em; font-size: 0.75rem; font-weight: 620;
+    }
+    .content { padding: 40px 0; }
+    .content h2 {
+      font-size: 2.1rem; font-weight: 540; letter-spacing: -0.025em;
+      margin: 48px 0 16px;
+    }
+    .content h3 {
+      font-size: 1.35rem; font-weight: 540; margin: 32px 0 12px;
+      color: var(--green);
+    }
+    .content h4 {
+      font-size: 1.1rem; font-weight: 540; margin: 24px 0 8px;
+    }
+    .content p, .content li { color: var(--mid); max-width: 72ch; }
+    .content p { margin: 12px 0; }
+    .content ul, .content ol { padding-left: 22px; }
+    .content li { margin: 6px 0; }
+    .content strong { color: var(--text); }
+    code {
+      background: rgba(255,255,255,0.06); border-radius: 6px; padding: 2px 8px;
+      font-size: 0.88em; font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    }
+    .callout {
+      background: rgba(134,224,173,0.08);
+      border-left: 3px solid var(--green);
+      border-radius: 0 12px 12px 0;
+      padding: 16px 20px;
+      margin: 20px 0;
+    }
+    .callout p { margin: 4px 0; }
+    .callout strong { color: var(--green); }
+    table {
+      width: 100%; border-collapse: collapse;
+      background: var(--surface); border-radius: 12px;
+      margin: 20px 0; font-size: 0.92rem;
+    }
+    th, td {
+      text-align: left; padding: 12px 16px;
+      border-bottom: 1px solid var(--line-soft);
+    }
+    th { color: var(--low); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 620; }
+    td { color: var(--mid); }
+    tr:last-child td { border-bottom: none; }
+    hr { border: none; border-top: 1px solid var(--line-soft); margin: 48px 0; }
+    .glossary dt { font-weight: 620; color: var(--text); margin-top: 16px; }
+    .glossary dd { margin: 4px 0 0; color: var(--mid); max-width: 64ch; }
+    .roadmap-item { margin: 24px 0; padding: 20px; background: var(--surface); border-radius: 16px; border: 1px solid var(--line-soft); }
+    .roadmap-item h3 { margin: 0 0 8px; color: var(--green); }
+    .roadmap-item p { margin: 6px 0; }
+    .pill { display: inline-block; background: rgba(134,224,173,0.12); color: var(--green); font-size: 0.72rem; padding: 2px 10px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.06em; }
+    .pill-v1 { background: rgba(127,178,255,0.12); color: var(--halo); }
+    .pill-v2 { background: rgba(196,175,255,0.12); color: var(--violet); }
+    @media (max-width: 800px) {
+      .hero-grid { grid-template-columns: 1fr; }
+      h1 { max-width: 100%; }
+    }
+
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #F7F8FA;
+    --bg-2: #EDEEF2;
+    --bg-deep: #EDEEF2;
+    --deep: #EDEEF2;
+    --void: #F7F8FA;
+    --surface: #FFFFFF;
+    --surface-2: #F0F1F4;
+    --surface-high: #F0F1F4;
+    --line: #D6DAE2;
+    --line-soft: #E4E7ED;
+    --line-strong: #C6CAD4;
+    --text: #17191E;
+    --mid: #555B66;
+    --low: #8B919D;
+    --text-mid: #555B66;
+    --text-low: #8B919D;
+    --halo: #4A7FCF;
+    --halo-soft: rgba(74,127,207,0.10);
+    --amber: #C49A44;
+    --amber-soft: rgba(196,154,68,0.10);
+    --green: #3BA66B;
+    --red: #C44A4A;
+    --violet: #7F67C8;
+    --mint: #3BA66B;
+    --coral: #C44A4A;
+    --cyan: #3B8DBF;
+    --danger: #C44A4A;
+    --success: #3BA66B;
+    --planned: #C49A44;
+    --shadow-lg: 0 22px 60px rgba(0,0,0,0.06);
+    --shadow-sm: 0 10px 30px rgba(0,0,0,0.04);
+    --radius: 18px;
+    --radius-sm: 12px;
+  }
+  :root { color-scheme: light; }
+
+  /* body ambient gradient */
+  body::before { background: none !important; }
+
+  /* header backgrounds */
+  .site-header, .masthead, header {
+    background: rgba(247,248,250,0.85) !important;
+  }
+
+  /* code */
+  code {
+    background: rgba(74,127,207,0.06) !important;
+    border-color: rgba(74,127,207,0.12) !important;
+    color: #1A1D24 !important;
+  }
+
+  /* quiet-panel: gradient bg + border */
+  .quiet-panel {
+    background: #FFFFFF !important;
+    border-color: #E4E7ED !important;
+  }
+
+  /* hero-side / hero-note panels */
+  .hero-side, .hero-note {
+    background: #FFFFFF !important;
+    border-color: #E4E7ED !important;
+  }
+
+  /* hero-panel */
+  .hero-panel {
+    background: #FFFFFF !important;
+    border-color: #E4E7ED !important;
+  }
+
+  /* callout */
+  .callout {
+    border-top-color: rgba(74,127,207,0.20) !important;
+  }
+
+  /* formula block */
+  .formula {
+    border-top-color: rgba(74,127,207,0.20) !important;
+  }
+
+  /* diagram-box */
+  .diagram-box {
+    background: #FFFFFF !important;
+    border-color: #E4E7ED !important;
+  }
+
+  /* number-line (z-score explainer) */
+  .number-line {
+    background: #FFFFFF !important;
+    border-color: #D6DAE2 !important;
+  }
+  .number {
+    border-right-color: #E4E7ED !important;
+  }
+  .number.mean {
+    background: rgba(74,127,207,0.05) !important;
+  }
+  .number.good {
+    background: rgba(59,166,107,0.05) !important;
+  }
+
+  /* diagram-shell / canvas-stage */
+  .diagram-shell, .canvas-stage {
+    background: #FFFFFF !important;
+    border-color: #E4E7ED !important;
+  }
+  .canvas-wrap {
+    background: #FFFFFF !important;
+    border-color: #E4E7ED !important;
+  }
+
+  /* summary-rail items */
+  .summary-rail div {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* compare items */
+  .compare > div {
+    border-right-color: #E4E7ED !important;
+  }
+
+  /* deep-grid items */
+  .deep-grid > div {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* status-grid items */
+  .status-grid li {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* narrative items */
+  .narrative {
+    border-bottom-color: #E4E7ED !important;
+  }
+
+  /* definition items */
+  .definition {
+    border-bottom-color: #E4E7ED !important;
+  }
+
+  /* section borders */
+  .section, section {
+    border-top-color: #E4E7ED !important;
+    border-bottom-color: #E4E7ED !important;
+  }
+  .section-head {
+    border-bottom-color: #E4E7ED !important;
+  }
+  .section-top {
+    border-bottom-color: #E4E7ED !important;
+  }
+
+  /* layer-row items */
+  .layer-row {
+    border-bottom-color: #E4E7ED !important;
+  }
+  .layer-row:first-child {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* definition-stack */
+  .definition-stack {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* flow-row */
+  .flow-row {
+    border-bottom-color: #E4E7ED !important;
+  }
+
+  /* legend */
+  .legend {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* stage-card, loss-card, aug-card, split-panel > div */
+  .stage-card, .loss-card, .aug-card, .split-panel > div {
+    background: #FFFFFF !important;
+    border-color: #E4E7ED !important;
+  }
+
+  /* evidence-item */
+  .evidence-item {
+    border-bottom-color: #E4E7ED !important;
+  }
+
+  /* truth-line */
+  .truth-line {
+    border-top-color: #C6CAD4 !important;
+    border-bottom-color: #E4E7ED !important;
+  }
+
+  /* matrix */
+  .matrix {
+    border-top-color: #C6CAD4 !important;
+  }
+  .matrix > div {
+    border-bottom-color: #E4E7ED !important;
+  }
+
+  /* quiet-panel verdict */
+  .quiet-panel .verdict {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* meta-row */
+  .meta-row {
+    border-top-color: #E4E7ED !important;
+  }
+  .meta-row .marker-line {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* section-aside */
+  .section-aside {
+    border-left-color: #E4E7ED !important;
+  }
+
+  /* flow-panel */
+  .flow-panel {
+    border-left-color: #E4E7ED !important;
+  }
+
+  /* table cells */
+  th, td {
+    border-bottom-color: #E4E7ED !important;
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* hr */
+  hr {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* details */
+  details {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* source-note */
+  .source-note {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* brand mark shadow */
+  .mark, .brandmark, .orb {
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.06) !important;
+  }
+
+  /* nav a hover border */
+  .nav a:hover, nav a:hover, .nav-links a:hover {
+    border-color: rgba(0,0,0,0.12) !important;
+  }
+
+  /* mode button */
+  .mode button[aria-pressed="true"],
+  .stage-tabs button[aria-pressed="true"] {
+    border-color: rgba(74,127,207,0.4) !important;
+  }
+
+  /* glossary dt */
+  .glossary dt {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* answer items */
+  .answer {
+    border-bottom-color: #E4E7ED !important;
+  }
+  .answer-grid {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* footer-note */
+  .footer-note { color: #8B919D !important; }
+
+  /* canvas-stage inner */
+  .canvas-stage {
+    background: #F7F8FA !important;
+  }
+
+  /* code inline */
+  code {
+    color: #1A1D24 !important;
+    background: rgba(74,127,207,0.06) !important;
+    border-color: rgba(74,127,207,0.12) !important;
+  }
+
+  /* pre / mono elements */
+  .mono, .monoish, code, .monoish code {
+    color: #1A1D24 !important;
+  }
+
+  .formula code {
+    color: #1A1D24 !important;
+  }
+
+  /* figure-placeholder */
+  .figure-placeholder {
+    background: #FFFFFF !important;
+    border-color: #D6DAE2 !important;
+  }
+
+  /* stage-grid */
+  .stage-grid {
+    border-top-color: #E4E7ED !important;
+  }
+}
+
+
+
+/* Shared light-theme contract: keep technical content on a light semantic surface.
+   This final layer intentionally overrides legacy dark-only component literals. */
+@media (prefers-color-scheme: light) {
+  :root {
+    color-scheme: light;
+    --text-low: #657080;
+    --low: #657080;
+    --technical-surface: #EEF1F5;
+    --technical-ink: #20252D;
+    --technical-line: #C7CDD6;
+  }
+
+  pre,
+  .formula-block,
+  .formula,
+  .code-block,
+  .terminal,
+  [data-theme-surface="technical"] {
+    background: var(--technical-surface) !important;
+    color: var(--technical-ink) !important;
+    border-color: var(--technical-line) !important;
+    box-shadow: none !important;
+  }
+
+  pre *,
+  .formula-block *,
+  .formula *,
+  .code-block *,
+  .terminal *,
+  [data-theme-surface="technical"] * {
+    color: inherit !important;
+  }
+
+  nav.sidebar a {
+    color: #596574 !important;
+  }
+
+  nav.sidebar a.sub {
+    color: #687280 !important;
+  }
+
+  nav.sidebar a:hover,
+  nav.sidebar a:focus-visible {
+    color: var(--text) !important;
+  }
+}
+
+</style>
+
+</head>
+<body>
+  <header class="site-header">
+    <div class="shell">
+      <div class="brand">
+        <div class="mark" style="background:radial-gradient(circle at 38% 38%, #e8fcf0 0 10%, var(--green) 12% 32%, rgba(134,224,173,0.24) 34% 56%, transparent 58%);"></div>
+        <div><strong>RASTA-CAD</strong><span>Phase 20 &middot; V2 Roadmap</span></div>
+      </div>
+      <nav class="nav">
+        <a href="#why">Why V2?</a>
+        <a href="#angiocubes">3D Angiocubes</a>
+        <a href="#vit">3D Swin-T</a>
+        <a href="#mae">Retinal-MAE</a>
+        <a href="#multitask">Multi-Task</a>
+        <a href="#compat">V1 to V2</a>
+      </nav> </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="shell">
+        <div class="signal">Phase 20 &mdash; Future Work</div>
+        <div class="hero-grid">
+          <div>
+            <h1>What Comes Next?</h1>
+            <p class="lead">
+              Version 1 lays the foundation: 2D OCTA en-face images processed through layer-specific
+              encoders with cross-layer attention, clinical fusion, and generated mask guidance.
+              Version 2 extends this to 3D angiocubes -- the full volumetric OCTA data -- with
+              a 3D backbone, self-supervised masked reconstruction, and multi-task learning.
+            </p>
+          </div>
+          <div class="quiet-panel hero-panel">
+            <span class="eyebrow">V1 to V2</span>
+            <p style="color:var(--mid);font-size:0.93rem;margin:0;">
+              V1 is explicitly designed to be V2-compatible. The modular architecture (per-layer
+              encoders -> cross-layer attention -> multimodal fusion -> classification head) can
+              accept 3D encoder outputs without changing the downstream modules.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="content">
+      <div class="shell">
+
+        <h2 id="why">Why V2? What is Missing in V1?</h2>
+        <p>
+          V1 uses 2D en-face OCTA images -- the projection of each retinal layer onto a flat plane.
+          This loses information: the depth distribution of vessels within each layer, the 3D
+          morphology of capillary networks, and volumetric flow patterns. OCTA scanners actually
+          capture 3D angiocubes (x, y, depth) with rich depth-resolved information that the
+          en-face projection discards.
+        </p>
+        <p>
+          V2 aims to recover this lost information by processing the full 3D angiocube directly.
+          This promises:
+        </p>
+        <ul>
+          <li>Richer biomarkers: volumetric vessel density, 3D FAZ morphology, depth-resolved flow deficits</li>
+          <li>Better layer separation: instead of relying on the scanner's固定的 slab segmentation, the model can learn optimal depth partitions</li>
+          <li>Stronger cross-layer interaction: depth-wise attention can model how SVC vessels feed into DVC capillaries in 3D</li>
+        </ul>
+
+        <div class="callout">
+          <strong>For beginners:</strong> Think of it like comparing a photograph (2D) to a CT scan (3D).
+          A photograph shows you the surface. A CT scan shows you the internal structure. V1 uses
+          photographs of each retinal layer. V2 will use the full 3D scan.
+        </div>
+
+        <h2 id="angiocubes">What Are Angiocubes?</h2>
+        <p>
+          An OCTA angiocube is a 3D volumetric scan of the retina, with dimensions approximately
+          [304, 304, 304] voxels (x, y, depth), where each voxel represents the blood flow signal
+          at that 3D location. The depth direction spans from the inner limiting membrane to the
+          choroid, approximately 2-3 mm of tissue.
+        </p>
+        <p>
+          The scanner's software traditionally segments this volume into slabs corresponding to the
+          SVC, DVC, and CC layers, then projects each slab to produce the en-face images V1 uses.
+          V2 will skip this projection and learn directly from the raw or minimally-processed volume.
+        </p>
+
+        <h2 id="vit">Replacing 2D ConvNeXt-Tiny with 3D Swin-T</h2>
+        <p>
+          The backbone upgrade is the core architectural change in V2:
+        </p>
+
+        <table>
+          <tr><th>Component</th><th>V1 (2D)</th><th>V2 (3D)</th></tr>
+          <tr><td>Backbone</td><td>ConvNeXt-Tiny (2D conv)</td><td>3D Swin-T (3D shifted-window transformer)</td></tr>
+          <tr><td>Input</td><td>3 x [1, 224, 224] grayscale images</td><td>1 x [D, 224, 224] angiocube (depth D ~304)</td></tr>
+          <tr><td>Encoders</td><td>3 independent per-layer encoders</td><td>1 shared backbone + layer-specific adapter tokens</td></tr>
+          <tr><td>Layer info</td><td>Layer-identity embeddings in attention</td><td>Learned adapter tokens per depth range</td></tr>
+          <tr><td>Patch size</td><td>4x4</td><td>2x2x2 (spatiotemporal patches)</td></tr>
+        </table>
+
+        <p>
+          The 3D Swin-T processes the angiocube volume directly, outputting a 3D feature map.
+          Layer-specific information is extracted via <strong>adapter tokens</strong>: learnable
+          query vectors that attend to specific depth ranges in the Swin-T output, producing
+          per-layer feature representations that can feed into the existing cross-layer attention
+          module without modification.
+        </p>
+
+        <h2 id="mae">Retinal-MAE: Self-Supervised Pretraining for Angiocubes</h2>
+        <p>
+          V1 uses SimCLR (contrastive learning) with bilateral positives. V2 can use a more powerful
+          self-supervised method: <strong>Masked Autoencoding (MAE)</strong> adapted for retinal
+          angiocubes.
+        </p>
+        <p>
+          In Retinal-MAE:
+        </p>
+        <ul>
+          <li>Randomly mask 75% of 3D patches in the angiocube (using cube-shaped masks to preserve spatial structure)</li>
+          <li>Encode only the visible patches through the 3D Swin-T encoder</li>
+          <li>Decode the full volume with a lightweight 3D decoder</li>
+          <li>Loss: MSE between reconstructed and original voxel intensities in the masked region only</li>
+        </ul>
+        <p>
+          The <strong>layer-masked</strong> variant adds an additional pretraining signal: mask
+          entire depth slabs corresponding to anatomical layers, forcing the model to infer one
+          layer's appearance from the other layers. This teaches cross-layer anatomical knowledge
+          that transfers directly to the downstream classification task.
+        </p>
+
+        <h2 id="multitask">Multi-Task Learning with PCGrad</h2>
+        <p>
+          V2 adds multi-task learning, simultaneously optimizing three objectives:
+        </p>
+        <ul>
+          <li><strong>Disease classification:</strong> The primary task (same as V1)</li>
+          <li><strong>Biomarker regression:</strong> Predicting quantitative OCTA metrics (vessel density, FAZ area, etc.) directly from the 3D volume, supervised by the device-extracted biomarkers</li>
+          <li><strong>Volume reconstruction:</strong> A decoder branch reconstructs the input angiocube as an auxiliary task, providing a strong regularization signal</li>
+        </ul>
+        <p>
+          Multi-task learning with shared representations can improve generalization, but it introduces
+          a problem: the three loss gradients may conflict (one task's optimal update harms another
+          task). V2 addresses this with <strong>PCGrad (Project Conflicting Gradients)</strong>,
+          which projects conflicting gradient components onto the normal plane of the other task's
+          gradient, preventing destructive interference.
+        </p>
+
+        <h2 id="compat">V1 to V2 Compatibility</h2>
+        <p>
+          V1's architecture was designed with V2 in mind. The key insight: the cross-layer attention
+          module (Phase 6), multimodal fusion (Phase 7), and classification head (Phase 9) are
+          agnostic to whether the per-layer tokens come from 2D encoders or 3D adapter tokens.
+          The token dimension is 256 in both cases.
+        </p>
+        <p>
+          This means:
+        </p>
+        <ul>
+          <li>V2 can reuse V1's Phase 5 (tabular encoder), Phase 7 (fusion), Phase 9 (prototype classifier), Phase 10 (losses), Phase 11 (augmentation), Phase 14 (evaluation), and Phase 15-18 (ablation/baselines/stats/contributions) with minimal or no changes.</li>
+          <li>The main V2 work is: new 3D backbone (3D Swin-T), new pretraining (Retinal-MAE), new adapter tokens, new multi-task head (biomarker regression + reconstruction decoder), and PCGrad loss balancing.</li>
+          <li>The V1 ablation results serve as the baseline for V2: the question becomes "does adding 3D information improve over the best 2D multimodal system?" rather than "does any deep learning work at all?"</li>
+        </ul>
+
+        <hr />
+
+        <h2>V2 Roadmap Summary</h2>
+
+        <div class="roadmap-item">
+          <span class="pill pill-v2">V2</span>
+          <h3>Replace 2D ConvNeXt-Tiny with 3D Swin-T</h3>
+          <p>Shared 3D backbone processes the full angiocube. Layer-specific adapter tokens extract per-layer features from the 3D feature map. Output dimension remains 256 per layer for V1 cross-layer attention compatibility.</p>
+        </div>
+
+        <div class="roadmap-item">
+          <span class="pill pill-v2">V2</span>
+          <h3>Retinal-MAE Pretraining</h3>
+          <p>Mask 75% of 3D patches, reconstruct. Layer-masked variant masks entire depth slabs. Transfers anatomical knowledge to downstream classifier. Stronger than SimCLR for volumetric data.</p>
+        </div>
+
+        <div class="roadmap-item">
+          <span class="pill pill-v2">V2</span>
+          <h3>Multi-Task Learning</h3>
+          <p>Classification + biomarker regression + volume reconstruction. PCGrad resolves conflicting gradients. Additional tasks regularize the shared representation and provide additional clinical outputs.</p>
+        </div>
+
+        <div class="roadmap-item">
+          <span class="pill pill-v2">V2</span>
+          <h3>Volumetric Biomarkers</h3>
+          <p>Extract 3D biomarkers from the angiocube: volumetric vessel density (VAD), volumetric vessel length density (VLD), volumetric fractal dimension (VFD), 3D FAZ morphology, ETDRS-zone depth-resolved metrics.</p>
+        </div>
+
+        <hr />
+
+        <h2>Quick Reference: V1 vs V2</h2>
+        <table>
+          <tr><th>Aspect</th><th>V1 (this project)</th><th>V2 (planned)</th></tr>
+          <tr><td>Input data</td><td>2D en-face OCTA (3 layers)</td><td>3D angiocube (full volume)</td></tr>
+          <tr><td>Backbone</td><td>ConvNeXt-Tiny (2D), 3 independent encoders</td><td>3D Swin-T (3D), shared + adapter tokens</td></tr>
+          <tr><td>Pretraining</td><td>SimCLR (contrastive, bilateral positives)</td><td>MAE (masked autoencoding, layer-masked)</td></tr>
+          <tr><td>Tasks</td><td>Single: disease classification</td><td>Multi: classification + regression + reconstruction</td></tr>
+          <tr><td>Gradient handling</td><td>N/A (single task)</td><td>PCGrad for multi-task gradient conflict resolution</td></tr>
+          <tr><td>Biomarkers</td><td>2D from generated pseudo-masks</td><td>3D from volumetric analysis</td></tr>
+          <tr><td>Cross-layer attention</td><td>3 tokens (Sup, Deep, CC)</td><td>Same 3 tokens, now from adapter queries</td></tr>
+          <tr><td>Compatibility</td><td>Baseline for V2</td><td>Reuses V1 tabular/fusion/head modules</td></tr>
+        </table>
+
+        <hr />
+
+        <h2>Glossary for Beginners</h2>
+        <dl class="glossary">
+          <dt>Angiocube</dt>
+          <dd>A 3D volumetric OCTA scan. Instead of flattening the retina into layers (2D), it captures blood flow signals at every 3D coordinate within the scanned volume. Think of it as a 3D movie of blood flow through the retinal microvasculature.</dd>
+          <dt>3D Swin-T</dt>
+          <dd>A 3D version of the Swin Transformer. It processes volumetric data by applying self-attention within shifted 3D windows, capturing both spatial and depth-wise relationships. The "T" stands for Tiny (smallest variant).</dd>
+          <dt>Masked Autoencoding (MAE)</dt>
+          <dd>A self-supervised learning method where a large fraction of input patches (usually 75%) are masked, and the model must reconstruct the original data from the visible patches. This forces the model to learn holistic representations of the data structure.</dd>
+          <dt>Adapter Token</dt>
+          <dd>A learnable query vector that extracts information about a specific aspect of the data from a shared backbone. In V2, adapter tokens for SVC, DVC, and CC attend to their respective depth ranges in the 3D Swin-T output, producing per-layer features without needing separate encoders.</dd>
+          <dt>PCGrad</dt>
+          <dd>Project Conflicting Gradients. A method for multi-task learning that detects when gradients from different tasks point in conflicting directions and projects them to remove the conflicting component. This prevents one task from undoing another task's learning progress.</dd>
+          <dt>ETDRS Grid</dt>
+          <dd>Early Treatment Diabetic Retinopathy Study grid. A standardized partitioning of the macula into concentric rings (center, inner, outer) and quadrants (superior, inferior, nasal, temporal) for localized analysis. In V2, biomarkers are computed per ETDRS zone within the 3D volume.</dd>
+        </dl>
+
+      </div>
+    </section>
+  </main>
+
+</body>
+</html>

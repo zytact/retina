@@ -1,16 +1,29 @@
 ---
 name: Retina Project Explainer
-description: Dark, premium research explainer for the Retina CAD project
+description: Premium research explainer for the Retina CAD project (dark + light themes)
 colors:
   halo-blue: "#7FB2FF"
+  halo-blue-light: "#4A7FCF"
   bg-void: "#030303"
+  bg-paper: "#F7F8FA"
   bg-deep: "#0A0A0A"
+  bg-deep-light: "#EDEEF2"
   surface-low: "#111111"
+  surface-low-light: "#FFFFFF"
   surface-high: "#171717"
+  surface-high-light: "#F0F1F4"
   line-smoke: "#2A2A2A"
+  line-smoke-light: "#D6DAE2"
   text-high: "#F5F7FA"
+  text-high-light: "#17191E"
   text-mid: "#8C919A"
+  text-mid-light: "#555B66"
   text-low: "#666A73"
+  text-low-light: "#657080"
+  technical-surface: "#070707"
+  technical-surface-light: "#EEF1F5"
+  technical-ink-light: "#20252D"
+  technical-line-light: "#C7CDD6"
 typography:
   display:
     fontFamily: "ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif"
@@ -89,7 +102,7 @@ This system explicitly rejects the anti-references in `PRODUCT.md`: salesy SaaS 
 Boxes are not the default grammar. Cards are a fallback, not a design language. When information can be separated by spacing, typography, rules, or sequence, do that first.
 
 **Key Characteristics:**
-- Black-led palette with one cold halo accent
+- Black-led palette with one cold halo accent (dark); clean white-led palette (light)
 - Sans-serif typography with surgical spacing and tight hierarchy
 - Tonal depth before visible decoration
 - Sparse composition, long breathing room, few containers
@@ -97,12 +110,14 @@ Boxes are not the default grammar. Cards are a fallback, not a design language. 
 
 ## Colors
 
-The palette is nearly monochrome. Its job is to stage clarity, not decorate the page.
+The palette is nearly monochrome. Its job is to stage clarity, not decorate the page. Two themes are supported: dark (default) and light. Both are detected automatically via `prefers-color-scheme` and can be toggled manually.
 
-### Primary
+### Dark Theme
+
+#### Primary
 - **Cold Halo Blue** (`#7FB2FF`): Reserved for the rare moments that need signal, active states, orbital glows, selected markers, and one focal interaction per viewport.
 
-### Neutral
+#### Neutral
 - **Void Black** (`#030303`): The dominant page field. Use it for the outer canvas and hero backdrop.
 - **Deep Black** (`#0A0A0A`): Secondary field for soft sectional separation when pure black needs relief.
 - **Low Surface Graphite** (`#111111`): Primary surface color for rare structural panels and anchored sections.
@@ -113,6 +128,54 @@ The palette is nearly monochrome. Its job is to stage clarity, not decorate the 
 - **Low Ink** (`#666A73`): De-emphasized annotations only. Never use this for long body copy.
 
 **The One Halo Rule.** `#7FB2FF` is never a second background. It is a signal accent on 10% or less of any screen. Its rarity is the point.
+
+### Light Theme
+
+The light theme adapts the same design principles to a clean white field. The north star shifts to "Clean Clinical Document" -- like reading the same research briefing in print rather than on a projection screen. The mood stays premium, calm, and precise but on an off-white field with dark ink.
+
+#### Primary
+- **Cold Halo Blue** (`#4A7FCF`): Same role as dark theme. Slightly darker to maintain WCAG AA contrast (3.68:1 large text, 3:1 UI components) on the light background.
+
+#### Neutral
+- **Paper Field** (`#F7F8FA`): Dominant page background. Clean off-white, easier on the eyes than pure white.
+- **Paper Deep** (`#EDEEF2`): Secondary background for soft sectional separation.
+- **White Surface** (`#FFFFFF`): Primary surface for panels, cards, and anchored sections.
+- **Elevated Surface** (`#F0F1F4`): Elevated surfaces and layered controls.
+- **Light Line** (`#D6DAE2`): Hairline borders, dividers, and structural edges.
+- **Light Line Soft** (`#E4E7ED`): Subtle borders and dividers.
+- **Light Line Strong** (`#C6CAD4`): Emphasized structural edges.
+- **Dark Ink** (`#17191E`): Headings, primary body copy, and critical labels.
+- **Mid Ink** (`#555B66`): Secondary copy, metadata, and helper text.
+- **Supporting Ink** (`#657080`): Secondary labels and annotations. It meets AA contrast on the paper field. Do not use it to make navigation disappear.
+
+#### Technical Surfaces
+- **Technical Surface** (`#EEF1F5`): Code, equations, contingency tables, and other dense technical specimens. This is a cool gray surface, visibly separate from the page without becoming a dark-mode island.
+- **Technical Ink** (`#20252D`): All text inside a technical surface.
+- **Technical Line** (`#C7CDD6`): Rules and table edges inside a technical surface.
+
+Technical content must use these semantic tokens. Do not hard-code a black or near-black background for a technical component and rely on inherited theme colors.
+
+#### Shadows
+Shadows are retained but dialed down in opacity to suit the lighter canvas:
+- **Ambient Low** (`0 8px 24px rgba(0, 0, 0, 0.05)`)
+- **Ambient Mid** (`0 18px 48px rgba(0, 0, 0, 0.06)`)
+- **Surface Edge** (`0 0 0 1px rgba(0, 0, 0, 0.06)`)
+
+#### The One Halo Rule (unchanged)
+`#4A7FCF` is never a second background. It is a signal accent on 10% or less of any screen. Its rarity is the point.
+
+### Theme Detection
+
+Theme is detected automatically via the `prefers-color-scheme` CSS media query. No manual toggle needed -- the page responds purely to the OS/browser preference.
+
+The `:root` block also sets `color-scheme: dark light` so the browser knows both themes are supported.
+
+Implementation pattern (add to every new doc page):
+- Add `color-scheme: dark light;` to `:root`.
+- Define semantic custom properties for every surface, including `--technical-surface`, `--technical-ink`, and `--technical-line`. Never theme a component by hard-coding dark literals.
+- Add one final `@media (prefers-color-scheme: light)` block before `</style>` that overrides every custom property, including the technical-surface tokens. The final position lets it correct legacy component rules.
+- In light mode, contents navigation uses dedicated readable tones: `#596574` for top-level links and `#687280` for nested links. `--text-low` is `#657080` and is for supporting content, not navigation.
+- Keep code, formulas, tables, and dense technical specimens on `--technical-surface`; their descendants inherit `--technical-ink` and structural rules use `--technical-line`.
 
 ## Typography
 
@@ -178,12 +241,15 @@ Depth comes from tonal layering, blur-free softness, and restrained ambient shad
 ## Do's and Don'ts
 
 ### Do:
-- **Do** keep the page field in the `#030303` to `#111111` range and let whitespace do the work.
-- **Do** use `#F5F7FA` for primary copy and keep secondary copy at `#8C919A` or brighter on black.
-- **Do** reserve `#7FB2FF` for one focal interaction, one selected state, or one ambient halo per viewport.
-- **Do** keep long-form explanatory copy within 65–72ch and sentence case.
+- **Do** keep the page field in the `#030303` to `#111111` range (dark) or `#F7F8FA` to `#FFFFFF` range (light) and let whitespace do the work.
+- **Do** maintain WCAG AA contrast in both themes: `#F5F7FA` on dark surfaces, `#17191E` on light surfaces for primary copy.
+- **Do** reserve `#7FB2FF` (dark) or `#4A7FCF` (light) for one focal interaction, one selected state, or one ambient halo per viewport.
+- **Do** keep long-form explanatory copy within 65-72ch and sentence case.
 - **Do** separate implemented evidence from roadmap with hierarchy, pacing, and grouping before adding any extra color.
 - **Do** prefer rhythm, rules, diagram flow, and type hierarchy before reaching for another box.
+- **Do** include the automatic theme detection block in every doc page: the `@media (prefers-color-scheme: light)` CSS block overriding `:root` CSS custom properties.
+- **Do** keep formulas, code, and dense technical tables on the semantic technical surface in both themes. In light mode, they are cool gray with dark ink, never a black panel.
+- **Do** give contents navigation its own readable light-theme tones instead of using de-emphasized annotation color.
 
 ### Don't:
 - **Don't** make this feel like a salesy SaaS landing page.
@@ -194,6 +260,8 @@ Depth comes from tonal layering, blur-free softness, and restrained ambient shad
 - **Don't** trap every fact in its own boxed module; that kills pacing and makes the explainer feel congested.
 - **Don't** use serif hero type, repeating grid overlays, rainbow cohort color systems, or metric-card walls as the page's main grammar.
 - **Don't** pair a visible border with a giant decorative shadow or blur-heavy glass treatment.
+- **Don't** hard-code dark technical backgrounds or pale inherited text inside a component. Theme through semantic tokens so both modes remain coherent.
+- **Don't** use the low-ink token for a contents index in light mode.
 
 ## Antipatterns
 - Repeated equal-weight cards for every section.

@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Phase 18 — Novel Research Contributions</title>
+  <style>
+    :root {
+      --bg: #030303;
+      --bg-deep: #090909;
+      --surface: #111111;
+      --surface-2: #171717;
+      --line: rgba(255,255,255,0.1);
+      --line-soft: rgba(255,255,255,0.06);
+      --text: #f5f7fa;
+      --mid: #a4acb7;
+      --low: #6f7782;
+      --halo: #7fb2ff;
+      --halo-soft: rgba(127,178,255,0.14);
+      --green: #86e0ad;
+      --amber: #ffd27d;
+      --violet: #c4afff;
+      --red: #ff9b9b;
+      --max: 1220px;
+      color-scheme: dark light;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.72;
+      overflow-x: hidden;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 82% 0%, rgba(127,178,255,0.12), transparent 24rem),
+        radial-gradient(circle at 10% 26%, rgba(196,175,255,0.08), transparent 28rem),
+        linear-gradient(180deg, #060606 0%, #030303 35%, #090909 100%);
+      z-index: -2;
+    }
+    a { color: inherit; }
+    .shell { width: min(calc(100% - 40px), var(--max)); margin-inline: auto; }
+    .site-header {
+      position: sticky; top: 0; z-index: 20;
+      backdrop-filter: blur(16px);
+      background: rgba(3,3,3,0.78);
+      border-bottom: 1px solid var(--line-soft);
+    }
+    .site-header .shell {
+      display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 14px 0;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .mark {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: radial-gradient(circle at 38% 38%, #eff6ff 0 10%, var(--halo) 12% 32%, rgba(127,178,255,0.24) 34% 56%, transparent 58%);
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.1), 0 0 32px rgba(127,178,255,0.18);
+      flex: 0 0 auto;
+    }
+    .brand strong, .brand span { display: block; }
+    .brand strong { font-size: 0.95rem; font-weight: 620; }
+    .brand span { font-size: 0.84rem; color: var(--mid); }
+    .nav { display: flex; flex-wrap: wrap; gap: 18px; }
+    .nav a {
+      text-decoration: none; color: var(--mid); font-size: 0.92rem;
+      border-bottom: 1px solid transparent; padding-bottom: 4px;
+    }
+    .nav a:hover { color: var(--text); border-color: rgba(255,255,255,0.18); }
+    main { padding-bottom: 100px; }
+    .hero { padding: clamp(70px, 10vw, 128px) 0 60px; }
+    .hero-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(290px, 0.9fr);
+      gap: clamp(34px, 7vw, 92px);
+      align-items: end;
+    }
+    .signal {
+      display: inline-flex; align-items: center; gap: 10px;
+      color: var(--mid); font-size: 0.92rem; margin-bottom: 24px;
+    }
+    .signal::before {
+      content: ""; width: 9px; height: 9px; border-radius: 50%;
+      background: var(--halo); box-shadow: 0 0 18px rgba(127,178,255,0.42);
+    }
+    h1, h2, h3, h4 { text-wrap: balance; }
+    h1 {
+      margin: 0;
+      font-size: clamp(3.15rem, 7vw, 5.8rem);
+      line-height: 0.95; letter-spacing: -0.035em; font-weight: 540; max-width: 12ch;
+    }
+    .lead {
+      margin: 24px 0 0; color: var(--mid); max-width: 68ch;
+      font-size: clamp(1.03rem, 1.6vw, 1.16rem);
+    }
+    .quiet-panel {
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+      border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 24px;
+    }
+    .hero-panel {
+      display: grid; gap: 20px;
+      box-shadow: 0 0 0 1px rgba(127,178,255,0.05) inset;
+      border-color: rgba(127,178,255,0.16);
+    }
+    .eyebrow {
+      color: var(--halo); text-transform: uppercase;
+      letter-spacing: 0.08em; font-size: 0.75rem; font-weight: 620;
+    }
+    .content { padding: 40px 0; }
+    .content h2 {
+      font-size: 2.1rem; font-weight: 540; letter-spacing: -0.025em;
+      margin: 48px 0 16px;
+    }
+    .content h3 {
+      font-size: 1.35rem; font-weight: 540; margin: 32px 0 12px;
+      color: var(--halo);
+    }
+    .content h4 {
+      font-size: 1.1rem; font-weight: 540; margin: 24px 0 8px;
+    }
+    .content p, .content li { color: var(--mid); max-width: 72ch; }
+    .content p { margin: 12px 0; }
+    .content ul, .content ol { padding-left: 22px; }
+    .content li { margin: 6px 0; }
+    .content strong { color: var(--text); }
+    code {
+      background: rgba(255,255,255,0.06); border-radius: 6px; padding: 2px 8px;
+      font-size: 0.88em; font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    }
+    .callout {
+      background: rgba(127,178,255,0.08);
+      border-left: 3px solid var(--halo);
+      border-radius: 0 12px 12px 0;
+      padding: 16px 20px;
+      margin: 20px 0;
+    }
+    .callout p { margin: 4px 0; }
+    .callout strong { color: var(--halo); }
+    table {
+      width: 100%; border-collapse: collapse;
+      background: var(--surface); border-radius: 12px;
+      margin: 20px 0; font-size: 0.92rem;
+    }
+    th, td {
+      text-align: left; padding: 12px 16px;
+      border-bottom: 1px solid var(--line-soft);
+    }
+    th { color: var(--low); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 620; }
+    td { color: var(--mid); }
+    tr:last-child td { border-bottom: none; }
+    hr { border: none; border-top: 1px solid var(--line-soft); margin: 48px 0; }
+    .glossary dt { font-weight: 620; color: var(--text); margin-top: 16px; }
+    .glossary dd { margin: 4px 0 0; color: var(--mid); max-width: 64ch; }
+    .contribution { margin: 28px 0; padding: 24px; background: var(--surface); border-radius: 16px; border: 1px solid var(--line-soft); }
+    .contribution h3 { margin: 0 0 8px; color: var(--green); }
+    .contribution h4 { margin: 12px 0 4px; font-size: 0.95rem; }
+    .contribution p { margin: 6px 0; }
+    .tag { display: inline-block; background: rgba(127,178,255,0.12); color: var(--halo); font-size: 0.72rem; padding: 2px 10px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.06em; }
+    @media (max-width: 800px) {
+      .hero-grid { grid-template-columns: 1fr; }
+      h1 { max-width: 100%; }
+    }
+
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #F7F8FA;
+    --bg-2: #EDEEF2;
+    --bg-deep: #EDEEF2;
+    --deep: #EDEEF2;
+    --void: #F7F8FA;
+    --surface: #FFFFFF;
+    --surface-2: #F0F1F4;
+    --surface-high: #F0F1F4;
+    --line: #D6DAE2;
+    --line-soft: #E4E7ED;
+    --line-strong: #C6CAD4;
+    --text: #17191E;
+    --mid: #555B66;
+    --low: #8B919D;
+    --text-mid: #555B66;
+    --text-low: #8B919D;
+    --halo: #4A7FCF;
+    --halo-soft: rgba(74,127,207,0.10);
+    --amber: #C49A44;
+    --amber-soft: rgba(196,154,68,0.10);
+    --green: #3BA66B;
+    --red: #C44A4A;
+    --violet: #7F67C8;
+    --mint: #3BA66B;
+    --coral: #C44A4A;
+    --cyan: #3B8DBF;
+    --danger: #C44A4A;
+    --success: #3BA66B;
+    --planned: #C49A44;
+    --shadow-lg: 0 22px 60px rgba(0,0,0,0.06);
+    --shadow-sm: 0 10px 30px rgba(0,0,0,0.04);
+    --radius: 18px;
+    --radius-sm: 12px;
+  }
+  :root { color-scheme: light; }
+
+  /* body ambient gradient */
+  body::before { background: none !important; }
+
+  /* header backgrounds */
+  .site-header, .masthead, header {
+    background: rgba(247,248,250,0.85) !important;
+  }
+
+  /* code */
+  code {
+    background: rgba(74,127,207,0.06) !important;
+    border-color: rgba(74,127,207,0.12) !important;
+    color: #1A1D24 !important;
+  }
+
+  /* quiet-panel: gradient bg + border */
+  .quiet-panel {
+    background: #FFFFFF !important;
+    border-color: #E4E7ED !important;
+  }
+
+  /* hero-side / hero-note panels */
+  .hero-side, .hero-note {
+    background: #FFFFFF !important;
+    border-color: #E4E7ED !important;
+  }
+
+  /* hero-panel */
+  .hero-panel {
+    background: #FFFFFF !important;
+    border-color: #E4E7ED !important;
+  }
+
+  /* callout */
+  .callout {
+    border-top-color: rgba(74,127,207,0.20) !important;
+  }
+
+  /* formula block */
+  .formula {
+    border-top-color: rgba(74,127,207,0.20) !important;
+  }
+
+  /* diagram-box */
+  .diagram-box {
+    background: #FFFFFF !important;
+    border-color: #E4E7ED !important;
+  }
+
+  /* number-line (z-score explainer) */
+  .number-line {
+    background: #FFFFFF !important;
+    border-color: #D6DAE2 !important;
+  }
+  .number {
+    border-right-color: #E4E7ED !important;
+  }
+  .number.mean {
+    background: rgba(74,127,207,0.05) !important;
+  }
+  .number.good {
+    background: rgba(59,166,107,0.05) !important;
+  }
+
+  /* diagram-shell / canvas-stage */
+  .diagram-shell, .canvas-stage {
+    background: #FFFFFF !important;
+    border-color: #E4E7ED !important;
+  }
+  .canvas-wrap {
+    background: #FFFFFF !important;
+    border-color: #E4E7ED !important;
+  }
+
+  /* summary-rail items */
+  .summary-rail div {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* compare items */
+  .compare > div {
+    border-right-color: #E4E7ED !important;
+  }
+
+  /* deep-grid items */
+  .deep-grid > div {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* status-grid items */
+  .status-grid li {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* narrative items */
+  .narrative {
+    border-bottom-color: #E4E7ED !important;
+  }
+
+  /* definition items */
+  .definition {
+    border-bottom-color: #E4E7ED !important;
+  }
+
+  /* section borders */
+  .section, section {
+    border-top-color: #E4E7ED !important;
+    border-bottom-color: #E4E7ED !important;
+  }
+  .section-head {
+    border-bottom-color: #E4E7ED !important;
+  }
+  .section-top {
+    border-bottom-color: #E4E7ED !important;
+  }
+
+  /* layer-row items */
+  .layer-row {
+    border-bottom-color: #E4E7ED !important;
+  }
+  .layer-row:first-child {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* definition-stack */
+  .definition-stack {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* flow-row */
+  .flow-row {
+    border-bottom-color: #E4E7ED !important;
+  }
+
+  /* legend */
+  .legend {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* stage-card, loss-card, aug-card, split-panel > div */
+  .stage-card, .loss-card, .aug-card, .split-panel > div {
+    background: #FFFFFF !important;
+    border-color: #E4E7ED !important;
+  }
+
+  /* evidence-item */
+  .evidence-item {
+    border-bottom-color: #E4E7ED !important;
+  }
+
+  /* truth-line */
+  .truth-line {
+    border-top-color: #C6CAD4 !important;
+    border-bottom-color: #E4E7ED !important;
+  }
+
+  /* matrix */
+  .matrix {
+    border-top-color: #C6CAD4 !important;
+  }
+  .matrix > div {
+    border-bottom-color: #E4E7ED !important;
+  }
+
+  /* quiet-panel verdict */
+  .quiet-panel .verdict {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* meta-row */
+  .meta-row {
+    border-top-color: #E4E7ED !important;
+  }
+  .meta-row .marker-line {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* section-aside */
+  .section-aside {
+    border-left-color: #E4E7ED !important;
+  }
+
+  /* flow-panel */
+  .flow-panel {
+    border-left-color: #E4E7ED !important;
+  }
+
+  /* table cells */
+  th, td {
+    border-bottom-color: #E4E7ED !important;
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* hr */
+  hr {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* details */
+  details {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* source-note */
+  .source-note {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* brand mark shadow */
+  .mark, .brandmark, .orb {
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.06) !important;
+  }
+
+  /* nav a hover border */
+  .nav a:hover, nav a:hover, .nav-links a:hover {
+    border-color: rgba(0,0,0,0.12) !important;
+  }
+
+  /* mode button */
+  .mode button[aria-pressed="true"],
+  .stage-tabs button[aria-pressed="true"] {
+    border-color: rgba(74,127,207,0.4) !important;
+  }
+
+  /* glossary dt */
+  .glossary dt {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* answer items */
+  .answer {
+    border-bottom-color: #E4E7ED !important;
+  }
+  .answer-grid {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* footer-note */
+  .footer-note { color: #8B919D !important; }
+
+  /* canvas-stage inner */
+  .canvas-stage {
+    background: #F7F8FA !important;
+  }
+
+  /* code inline */
+  code {
+    color: #1A1D24 !important;
+    background: rgba(74,127,207,0.06) !important;
+    border-color: rgba(74,127,207,0.12) !important;
+  }
+
+  /* pre / mono elements */
+  .mono, .monoish, code, .monoish code {
+    color: #1A1D24 !important;
+  }
+
+  .formula code {
+    color: #1A1D24 !important;
+  }
+
+  /* figure-placeholder */
+  .figure-placeholder {
+    background: #FFFFFF !important;
+    border-color: #D6DAE2 !important;
+  }
+
+  /* stage-grid */
+  .stage-grid {
+    border-top-color: #E4E7ED !important;
+  }
+}
+
+
+
+/* Shared light-theme contract: keep technical content on a light semantic surface.
+   This final layer intentionally overrides legacy dark-only component literals. */
+@media (prefers-color-scheme: light) {
+  :root {
+    color-scheme: light;
+    --text-low: #657080;
+    --low: #657080;
+    --technical-surface: #EEF1F5;
+    --technical-ink: #20252D;
+    --technical-line: #C7CDD6;
+  }
+
+  pre,
+  .formula-block,
+  .formula,
+  .code-block,
+  .terminal,
+  [data-theme-surface="technical"] {
+    background: var(--technical-surface) !important;
+    color: var(--technical-ink) !important;
+    border-color: var(--technical-line) !important;
+    box-shadow: none !important;
+  }
+
+  pre *,
+  .formula-block *,
+  .formula *,
+  .code-block *,
+  .terminal *,
+  [data-theme-surface="technical"] * {
+    color: inherit !important;
+  }
+
+  nav.sidebar a {
+    color: #596574 !important;
+  }
+
+  nav.sidebar a.sub {
+    color: #687280 !important;
+  }
+
+  nav.sidebar a:hover,
+  nav.sidebar a:focus-visible {
+    color: var(--text) !important;
+  }
+}
+
+</style>
+
+</head>
+<body>
+  <header class="site-header">
+    <div class="shell">
+      <div class="brand">
+        <div class="mark"></div>
+        <div><strong>RASTA-CAD</strong><span>Phase 18 &middot; Novel Research Contributions</span></div>
+      </div>
+      <nav class="nav">
+        <a href="#why">Why This Matters</a>
+        <a href="#c1">Contribution 1</a>
+        <a href="#c2">Contribution 2</a>
+        <a href="#c3">Contribution 3</a>
+        <a href="#c4">Contribution 4</a>
+        <a href="#c5">Contribution 5</a>
+        <a href="#c6">Contribution 6</a>
+        <a href="#c7">Contribution 7</a>
+        <a href="#writing">Writing Tips</a>
+      </nav> </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="shell">
+        <div class="signal">Phase 18 &mdash; Publication</div>
+        <div class="hero-grid">
+          <div>
+            <h1>What Did We Invent?</h1>
+            <p class="lead">
+              A research paper is only as strong as its novel contributions. Phase 18 identifies and
+              articulates the seven specific methodological innovations that make this work
+              publishable. Each contribution is framed as a clear, falsifiable claim: here is what
+              we did, why it is new, and what evidence supports it.
+            </p>
+          </div>
+          <div class="quiet-panel hero-panel">
+            <span class="eyebrow">Reviewer Question</span>
+            <p style="color:var(--mid);font-size:0.93rem;margin:0;">
+              "What is the novel contribution of this work?" If you cannot answer in one sentence
+              per contribution, the paper lacks a clear contribution statement.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="content">
+      <div class="shell">
+
+        <h2 id="why">Why We Need to Explicitly Define Contributions</h2>
+        <p>
+          Every research paper needs a "Contributions" section that tells reviewers exactly what is new.
+          A common mistake is to describe what the system <em>does</em> ("we built a multimodal classifier
+          for OCTA images") without explaining what is <em>novel</em> about it. Phase 18 pre-writes
+          these contribution statements so they can be directly incorporated into the paper's
+          Introduction and Discussion sections.
+        </p>
+
+        <div class="callout">
+          <strong>For beginners:</strong> A "contribution" is something that was not known or not possible
+          before your work. Building a standard ResNet on a new dataset is <em>not</em> a contribution
+          (you just applied an existing method). But inventing a new way to use bilateral eyes for
+          self-supervised learning <em>is</em> a contribution. Phase 18 helps you distinguish between
+          "work" and "contribution."
+        </div>
+
+        <hr />
+
+        <div class="contribution">
+          <span class="tag">Contribution 1</span>
+          <h3>Bilateral Natural Positives for OCTA-SimCLR</h3>
+          <h4>What it is</h4>
+          <p>
+            A self-supervised contrastive pretraining strategy that uses the two eyes of the same patient
+            (OD and OS) as natural positive pairs. For patients with only one eye, standard augmented
+            views are used as fallback.
+          </p>
+          <h4>Why it is novel</h4>
+          <p>
+            Prior SimCLR applications in medical imaging rely on data augmentation to create positive
+            pairs. This is the first work to exploit the bilateral structure of ophthalmic data as a
+            free source of medically meaningful positive pairs. The two eyes of the same patient share
+            the same systemic disease state, making the positive-pair signal stronger and more specific
+            than augmented views of a single image.
+          </p>
+          <h4>Evidence</h4>
+          <p>
+            Ablation Phase 15: removing SimCLR pretraining reduces macro-AUC by X (measured in experiment).
+            Analysis of positive-pair composition shows that bilateral pairs contribute ~60% of total
+            positive pairs in the dataset.
+          </p>
+        </div>
+
+        <div class="contribution">
+          <span class="tag">Contribution 2</span>
+          <h3>Layer-Identity Tokens in Cross-Layer Attention</h3>
+          <h4>What it is</h4>
+          <p>
+            Learnable identity embeddings attached to each retinal layer's feature token before
+            multi-head self-attention. The three tokens (Sup, Deep, CC) each have a unique,
+            trainable vector added to their features so the attention mechanism can distinguish
+            which layer each token represents.
+          </p>
+          <h4>Why it is novel</h4>
+          <p>
+            Without identity tokens, self-attention treats the three tokens as an unordered set --
+            swapping Sup and Deep produces the same attention scores because the attention mechanism
+            has no concept of "token 0 is always SVC." Layer-identity embeddings fix this and,
+            through the learned attention weights, provide an interpretable measure of which retinal
+            layer dominates the classification decision for each cohort.
+          </p>
+          <h4>Evidence</h4>
+          <p>
+            Ablation Phase 15: removing identity embeddings reduces macro-AUC by X. Attention
+            weight analysis (Phase 13) shows distinct layer-dominance patterns across cohorts,
+            confirming the tokens carry layer-specific information.
+          </p>
+        </div>
+
+        <div class="contribution">
+          <span class="tag">Contribution 3</span>
+          <h3>Learnable Mask-Token Imputation for Clinical Data</h3>
+          <h4>What it is</h4>
+          <p>
+            Instead of filling missing clinical values with the mean or median, each feature has a
+            learnable scalar token that represents "not measured." The model learns during training
+            what value to substitute when a feature is absent.
+          </p>
+          <h4>Why it is novel</h4>
+          <p>
+            Mean/median imputation assumes missing values are "average" -- but missingness in clinical
+            data is often informative. Sick patients may be less likely to have certain tests completed.
+            A learned mask token can represent "this value was not measured, and that fact itself
+            may correlate with disease status." This is a simple but effective idea that is rarely
+            applied in medical imaging pipelines.
+          </p>
+          <h4>Evidence</h4>
+          <p>
+            Compared to mean imputation, learned mask tokens improve performance on samples with
+            missing clinical data (measured in ablation). The learned mask token values, which can
+            be inspected, show systematic offsets from the population mean for several features.
+          </p>
+        </div>
+
+        <div class="contribution">
+          <span class="tag">Contribution 4</span>
+          <h3>Prototype-Augmented Classification for Rare Cohorts</h3>
+          <h4>What it is</h4>
+          <p>
+            A hybrid classification head that combines a standard linear classifier with a
+            non-parametric prototype-based classifier. During training, class prototypes are maintained
+            as exponential moving averages of class-conditional penultimate-layer embeddings.
+            At inference, the final logit is the sum of the linear logit and the negative Euclidean
+            distance to each class prototype, weighted by a learned scalar.
+          </p>
+          <h4>Why it is novel</h4>
+          <p>
+            Rare cohorts (like MRCC, the smallest in RASTA) have few training examples, making linear
+            classifiers prone to overfitting. Prototype-based classification provides a non-parametric
+            signal that generalizes better for small classes because it directly measures similarity
+            to known examples. The hybrid approach gets the best of both worlds: parametric capacity
+            for well-represented classes and non-parametric robustness for rare ones.
+          </p>
+          <h4>Evidence</h4>
+          <p>
+            Ablation Phase 15: removing the prototype head reduces per-class recall for the smallest
+            cohort (MRCC) more than for the largest (RETINORM). Prototype weights learned during
+            training are higher for rarer classes, confirming the adaptive behavior.
+          </p>
+        </div>
+
+        <div class="contribution">
+          <span class="tag">Contribution 5</span>
+          <h3>Layer-Dominance Analysis as a Clinical Explainability Tool</h3>
+          <h4>What it is</h4>
+          <p>
+            A systematic method for attributing classification decisions to specific retinal layers
+            by extracting attention weights from the cross-layer attention module and computing
+            per-sample and per-cohort layer-dominance scores.
+          </p>
+          <h4>Why it is novel</h4>
+          <p>
+            Standard explainability methods (Grad-CAM, SHAP) explain <em>where</em> in an image the
+            model is looking. Layer-dominance analysis explains <em>which retinal depth</em> is most
+            important -- a clinically meaningful distinction. An ophthalmologist cares not just about
+            "where in the image" but "which vascular layer." This bridges the gap between deep
+            learning explanations and clinical reasoning.
+          </p>
+          <h4>Evidence</h4>
+          <p>
+            Layer-dominance scores show distinct patterns across cohorts (e.g., MRCC relies more on
+            SVC, FAMILIPO relies more on CC). These patterns are consistent with known pathophysiology
+            and are supported by per-layer Grad-CAM overlays.
+          </p>
+        </div>
+
+        <div class="contribution">
+          <span class="tag">Contribution 6</span>
+          <h3>Uncertainty-Aware Disease Classification</h3>
+          <h4>What it is</h4>
+          <p>
+            Integration of Monte Carlo Dropout for epistemic uncertainty estimation, post-hoc temperature
+            scaling for calibrated probabilities, and a clinical triage mechanism that flags uncertain
+            predictions for manual review.
+          </p>
+          <h4>Why it is novel</h4>
+          <p>
+            Most medical imaging classifiers produce point predictions without communicating confidence.
+            A screening tool that says "75% probability of CAD" without conveying uncertainty may lead
+            to inappropriate clinical action. Our system explicitly computes prediction entropy and
+            flags uncertain cases (entropy beyond a threshold) for expert review. This is a practical
+            contribution for clinical deployment, where "I don't know" is often the most valuable
+            answer a model can give.
+          </p>
+          <h4>Evidence</h4>
+          <p>
+            Coverage analysis (Phase 14) shows that the top-30% most confident predictions have
+            substantially higher accuracy than the bottom 30%. Calibration curves (ECE) demonstrate
+            that predicted probabilities match empirical frequencies after temperature scaling.
+          </p>
+        </div>
+
+        <div class="contribution">
+          <span class="tag">Contribution 7</span>
+          <h3>Automated Weak OCTA Segmentation for Mask-Guided Classification</h3>
+          <h4>What it is</h4>
+          <p>
+            A fully automated pipeline that generates vessel, FAZ, and CC flow-deficit pseudo-masks
+            from OCTA images without any manual annotations. Classical image-processing methods
+            (Frangi vesselness, adaptive thresholding) produce initial masks, which are then refined
+            by a frozen U-Net++ segmentation student trained on the pseudo-labels. The refined masks
+            are consumed by a mask encoder in the disease classifier, and quantitative biomarkers
+            extracted from them are appended to the clinical feature vector.
+          </p>
+          <h4>Why it is novel</h4>
+          <p>
+            Prior work either relies on manual segmentation (expensive, not scalable) or uses
+            segmentation only as a preprocessing step without integrating masks into the classification
+            architecture. Our approach is fully automated, produces interpretable intermediate
+            representations (masks + biomarkers), and demonstrates that mask-guided classification
+            outperforms image-only baselines.
+          </p>
+          <h4>Evidence</h4>
+          <p>
+            Ablation Phase 15: removing the mask branch reduces macro-AUC. The classical-improved
+            masks pass QC at ~99.4%, and the U-Net++ student further stabilizes mask quality.
+            Biomarker stability comparisons (student vs. classical) show reduced variance with
+            student refinement.
+          </p>
+        </div>
+
+        <hr />
+
+        <h2 id="writing">How to Use These Contributions in Your Paper</h2>
+        <p>
+          Each contribution above is written as a complete paragraph that can be adapted for different
+          sections of the paper:
+        </p>
+        <ul>
+          <li><strong>Abstract:</strong> Mention the top 3 contributions (1-2 sentences each).</li>
+          <li><strong>Introduction:</strong> State the gap in existing work and preview how your contributions address it.</li>
+          <li><strong>Methods:</strong> Describe each contribution in detail with technical specifications.</li>
+          <li><strong>Discussion:</strong> Revisit each contribution in light of the results. Did the evidence support the claim? Were there limitations?</li>
+        </ul>
+        <p>
+          A useful framing device: for each contribution, state <strong>"Prior work did X. We do Y.
+          The improvement is Z."</strong> This three-part structure makes the novelty immediately
+          clear to reviewers.
+        </p>
+
+        <hr />
+
+        <h2>Glossary for Beginners</h2>
+        <dl class="glossary">
+          <dt>Novel Contribution</dt>
+          <dd>Something new that your work adds to the scientific literature. Not just "we applied method X to dataset Y" (that is a replication, not a contribution), but "we invented method Z that solves a previously unsolved problem."</dd>
+          <dt>Self-Supervised Learning</dt>
+          <dd>A training method where the model learns useful representations from unlabeled data by solving a pretext task (e.g., "are these two images from the same patient?"), then transfers those representations to the downstream task.</dd>
+          <dt>Prototype-Based Classification</dt>
+          <dd>A classification method where predictions are based on similarity to stored examples ("prototypes") of each class, rather than learning a decision boundary. The prediction for a new sample is determined by which class prototype it is closest to.</dd>
+          <dt>Epistemic Uncertainty</dt>
+          <dd>Uncertainty due to lack of knowledge or data -- the "I haven't seen enough examples like this" kind of uncertainty. MC-Dropout estimates epistemic uncertainty by measuring how much the prediction varies across different forward passes with dropout activated.</dd>
+          <dt>Pseudo-Mask</dt>
+          <dd>A segmentation mask generated by an automated algorithm rather than manually annotated by a human expert. Pseudo-masks are noisier than ground truth but can be produced at scale without costly annotation effort.</dd>
+        </dl>
+
+      </div>
+    </section>
+  </main>
+
+</body>
+</html>

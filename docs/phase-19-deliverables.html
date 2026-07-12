@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Phase 19 — Deliverables</title>
+  <style>
+    :root {
+      --bg: #030303;
+      --bg-deep: #090909;
+      --surface: #111111;
+      --surface-2: #171717;
+      --line: rgba(255,255,255,0.1);
+      --line-soft: rgba(255,255,255,0.06);
+      --text: #f5f7fa;
+      --mid: #a4acb7;
+      --low: #6f7782;
+      --halo: #7fb2ff;
+      --halo-soft: rgba(127,178,255,0.14);
+      --green: #86e0ad;
+      --amber: #ffd27d;
+      --violet: #c4afff;
+      --red: #ff9b9b;
+      --max: 1220px;
+      color-scheme: dark light;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.72;
+      overflow-x: hidden;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 82% 0%, rgba(127,178,255,0.12), transparent 24rem),
+        radial-gradient(circle at 10% 26%, rgba(196,175,255,0.08), transparent 28rem),
+        linear-gradient(180deg, #060606 0%, #030303 35%, #090909 100%);
+      z-index: -2;
+    }
+    a { color: inherit; }
+    .shell { width: min(calc(100% - 40px), var(--max)); margin-inline: auto; }
+    .site-header {
+      position: sticky; top: 0; z-index: 20;
+      backdrop-filter: blur(16px);
+      background: rgba(3,3,3,0.78);
+      border-bottom: 1px solid var(--line-soft);
+    }
+    .site-header .shell {
+      display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 14px 0;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .mark {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: radial-gradient(circle at 38% 38%, #eff6ff 0 10%, var(--halo) 12% 32%, rgba(127,178,255,0.24) 34% 56%, transparent 58%);
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.1), 0 0 32px rgba(127,178,255,0.18);
+      flex: 0 0 auto;
+    }
+    .brand strong, .brand span { display: block; }
+    .brand strong { font-size: 0.95rem; font-weight: 620; }
+    .brand span { font-size: 0.84rem; color: var(--mid); }
+    .nav { display: flex; flex-wrap: wrap; gap: 18px; }
+    .nav a {
+      text-decoration: none; color: var(--mid); font-size: 0.92rem;
+      border-bottom: 1px solid transparent; padding-bottom: 4px;
+    }
+    .nav a:hover { color: var(--text); border-color: rgba(255,255,255,0.18); }
+    main { padding-bottom: 100px; }
+    .hero { padding: clamp(70px, 10vw, 128px) 0 60px; }
+    .hero-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(290px, 0.9fr);
+      gap: clamp(34px, 7vw, 92px);
+      align-items: end;
+    }
+    .signal {
+      display: inline-flex; align-items: center; gap: 10px;
+      color: var(--mid); font-size: 0.92rem; margin-bottom: 24px;
+    }
+    .signal::before {
+      content: ""; width: 9px; height: 9px; border-radius: 50%;
+      background: var(--halo); box-shadow: 0 0 18px rgba(127,178,255,0.42);
+    }
+    h1, h2, h3, h4 { text-wrap: balance; }
+    h1 {
+      margin: 0;
+      font-size: clamp(3.15rem, 7vw, 5.8rem);
+      line-height: 0.95; letter-spacing: -0.035em; font-weight: 540; max-width: 12ch;
+    }
+    .lead {
+      margin: 24px 0 0; color: var(--mid); max-width: 68ch;
+      font-size: clamp(1.03rem, 1.6vw, 1.16rem);
+    }
+    .quiet-panel {
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+      border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 24px;
+    }
+    .hero-panel {
+      display: grid; gap: 20px;
+      box-shadow: 0 0 0 1px rgba(127,178,255,0.05) inset;
+      border-color: rgba(127,178,255,0.16);
+    }
+    .eyebrow {
+      color: var(--halo); text-transform: uppercase;
+      letter-spacing: 0.08em; font-size: 0.75rem; font-weight: 620;
+    }
+    .content { padding: 40px 0; }
+    .content h2 {
+      font-size: 2.1rem; font-weight: 540; letter-spacing: -0.025em;
+      margin: 48px 0 16px;
+    }
+    .content h3 {
+      font-size: 1.35rem; font-weight: 540; margin: 32px 0 12px;
+      color: var(--halo);
+    }
+    .content h4 {
+      font-size: 1.1rem; font-weight: 540; margin: 24px 0 8px;
+    }
+    .content p, .content li { color: var(--mid); max-width: 72ch; }
+    .content p { margin: 12px 0; }
+    .content ul, .content ol { padding-left: 22px; }
+    .content li { margin: 6px 0; }
+    .content strong { color: var(--text); }
+    code {
+      background: rgba(255,255,255,0.06); border-radius: 6px; padding: 2px 8px;
+      font-size: 0.88em; font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    }
+    .callout {
+      background: rgba(127,178,255,0.08);
+      border-left: 3px solid var(--halo);
+      border-radius: 0 12px 12px 0;
+      padding: 16px 20px;
+      margin: 20px 0;
+    }
+    .callout p { margin: 4px 0; }
+    .callout strong { color: var(--halo); }
+    table {
+      width: 100%; border-collapse: collapse;
+      background: var(--surface); border-radius: 12px;
+      margin: 20px 0; font-size: 0.92rem;
+    }
+    th, td {
+      text-align: left; padding: 12px 16px;
+      border-bottom: 1px solid var(--line-soft);
+    }
+    th { color: var(--low); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 620; }
+    td { color: var(--mid); }
+    tr:last-child td { border-bottom: none; }
+    hr { border: none; border-top: 1px solid var(--line-soft); margin: 48px 0; }
+    .glossary dt { font-weight: 620; color: var(--text); margin-top: 16px; }
+    .glossary dd { margin: 4px 0 0; color: var(--mid); max-width: 64ch; }
+    .deliverable { margin: 20px 0; padding: 20px; background: var(--surface); border-radius: 16px; border: 1px solid var(--line-soft); }
+    .deliverable h3 { margin: 0 0 8px; color: var(--amber); }
+    .deliverable p { margin: 6px 0; }
+    .deliverable ul { margin: 6px 0; padding-left: 20px; }
+    .deliverable li { color: var(--mid); }
+    @media (max-width: 800px) {
+      .hero-grid { grid-template-columns: 1fr; }
+      h1 { max-width: 100%; }
+    }
+
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #F7F8FA;
+    --bg-2: #EDEEF2;
+    --bg-deep: #EDEEF2;
+    --deep: #EDEEF2;
+    --void: #F7F8FA;
+    --surface: #FFFFFF;
+    --surface-2: #F0F1F4;
+    --surface-high: #F0F1F4;
+    --line: #D6DAE2;
+    --line-soft: #E4E7ED;
+    --line-strong: #C6CAD4;
+    --text: #17191E;
+    --mid: #555B66;
+    --low: #8B919D;
+    --text-mid: #555B66;
+    --text-low: #8B919D;
+    --halo: #4A7FCF;
+    --halo-soft: rgba(74,127,207,0.10);
+    --amber: #C49A44;
+    --amber-soft: rgba(196,154,68,0.10);
+    --green: #3BA66B;
+    --red: #C44A4A;
+    --violet: #7F67C8;
+    --mint: #3BA66B;
+    --coral: #C44A4A;
+    --cyan: #3B8DBF;
+    --danger: #C44A4A;
+    --success: #3BA66B;
+    --planned: #C49A44;
+    --shadow-lg: 0 22px 60px rgba(0,0,0,0.06);
+    --shadow-sm: 0 10px 30px rgba(0,0,0,0.04);
+    --radius: 18px;
+    --radius-sm: 12px;
+  }
+  :root { color-scheme: light; }
+
+  /* body ambient gradient */
+  body::before { background: none !important; }
+
+  /* header backgrounds */
+  .site-header, .masthead, header {
+    background: rgba(247,248,250,0.85) !important;
+  }
+
+  /* code */
+  code {
+    background: rgba(74,127,207,0.06) !important;
+    border-color: rgba(74,127,207,0.12) !important;
+    color: #1A1D24 !important;
+  }
+
+  /* quiet-panel: gradient bg + border */
+  .quiet-panel {
+    background: #FFFFFF !important;
+    border-color: #E4E7ED !important;
+  }
+
+  /* hero-side / hero-note panels */
+  .hero-side, .hero-note {
+    background: #FFFFFF !important;
+    border-color: #E4E7ED !important;
+  }
+
+  /* hero-panel */
+  .hero-panel {
+    background: #FFFFFF !important;
+    border-color: #E4E7ED !important;
+  }
+
+  /* callout */
+  .callout {
+    border-top-color: rgba(74,127,207,0.20) !important;
+  }
+
+  /* formula block */
+  .formula {
+    border-top-color: rgba(74,127,207,0.20) !important;
+  }
+
+  /* diagram-box */
+  .diagram-box {
+    background: #FFFFFF !important;
+    border-color: #E4E7ED !important;
+  }
+
+  /* number-line (z-score explainer) */
+  .number-line {
+    background: #FFFFFF !important;
+    border-color: #D6DAE2 !important;
+  }
+  .number {
+    border-right-color: #E4E7ED !important;
+  }
+  .number.mean {
+    background: rgba(74,127,207,0.05) !important;
+  }
+  .number.good {
+    background: rgba(59,166,107,0.05) !important;
+  }
+
+  /* diagram-shell / canvas-stage */
+  .diagram-shell, .canvas-stage {
+    background: #FFFFFF !important;
+    border-color: #E4E7ED !important;
+  }
+  .canvas-wrap {
+    background: #FFFFFF !important;
+    border-color: #E4E7ED !important;
+  }
+
+  /* summary-rail items */
+  .summary-rail div {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* compare items */
+  .compare > div {
+    border-right-color: #E4E7ED !important;
+  }
+
+  /* deep-grid items */
+  .deep-grid > div {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* status-grid items */
+  .status-grid li {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* narrative items */
+  .narrative {
+    border-bottom-color: #E4E7ED !important;
+  }
+
+  /* definition items */
+  .definition {
+    border-bottom-color: #E4E7ED !important;
+  }
+
+  /* section borders */
+  .section, section {
+    border-top-color: #E4E7ED !important;
+    border-bottom-color: #E4E7ED !important;
+  }
+  .section-head {
+    border-bottom-color: #E4E7ED !important;
+  }
+  .section-top {
+    border-bottom-color: #E4E7ED !important;
+  }
+
+  /* layer-row items */
+  .layer-row {
+    border-bottom-color: #E4E7ED !important;
+  }
+  .layer-row:first-child {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* definition-stack */
+  .definition-stack {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* flow-row */
+  .flow-row {
+    border-bottom-color: #E4E7ED !important;
+  }
+
+  /* legend */
+  .legend {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* stage-card, loss-card, aug-card, split-panel > div */
+  .stage-card, .loss-card, .aug-card, .split-panel > div {
+    background: #FFFFFF !important;
+    border-color: #E4E7ED !important;
+  }
+
+  /* evidence-item */
+  .evidence-item {
+    border-bottom-color: #E4E7ED !important;
+  }
+
+  /* truth-line */
+  .truth-line {
+    border-top-color: #C6CAD4 !important;
+    border-bottom-color: #E4E7ED !important;
+  }
+
+  /* matrix */
+  .matrix {
+    border-top-color: #C6CAD4 !important;
+  }
+  .matrix > div {
+    border-bottom-color: #E4E7ED !important;
+  }
+
+  /* quiet-panel verdict */
+  .quiet-panel .verdict {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* meta-row */
+  .meta-row {
+    border-top-color: #E4E7ED !important;
+  }
+  .meta-row .marker-line {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* section-aside */
+  .section-aside {
+    border-left-color: #E4E7ED !important;
+  }
+
+  /* flow-panel */
+  .flow-panel {
+    border-left-color: #E4E7ED !important;
+  }
+
+  /* table cells */
+  th, td {
+    border-bottom-color: #E4E7ED !important;
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* hr */
+  hr {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* details */
+  details {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* source-note */
+  .source-note {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* brand mark shadow */
+  .mark, .brandmark, .orb {
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.06) !important;
+  }
+
+  /* nav a hover border */
+  .nav a:hover, nav a:hover, .nav-links a:hover {
+    border-color: rgba(0,0,0,0.12) !important;
+  }
+
+  /* mode button */
+  .mode button[aria-pressed="true"],
+  .stage-tabs button[aria-pressed="true"] {
+    border-color: rgba(74,127,207,0.4) !important;
+  }
+
+  /* glossary dt */
+  .glossary dt {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* answer items */
+  .answer {
+    border-bottom-color: #E4E7ED !important;
+  }
+  .answer-grid {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* footer-note */
+  .footer-note { color: #8B919D !important; }
+
+  /* canvas-stage inner */
+  .canvas-stage {
+    background: #F7F8FA !important;
+  }
+
+  /* code inline */
+  code {
+    color: #1A1D24 !important;
+    background: rgba(74,127,207,0.06) !important;
+    border-color: rgba(74,127,207,0.12) !important;
+  }
+
+  /* pre / mono elements */
+  .mono, .monoish, code, .monoish code {
+    color: #1A1D24 !important;
+  }
+
+  .formula code {
+    color: #1A1D24 !important;
+  }
+
+  /* figure-placeholder */
+  .figure-placeholder {
+    background: #FFFFFF !important;
+    border-color: #D6DAE2 !important;
+  }
+
+  /* stage-grid */
+  .stage-grid {
+    border-top-color: #E4E7ED !important;
+  }
+}
+
+
+
+/* Shared light-theme contract: keep technical content on a light semantic surface.
+   This final layer intentionally overrides legacy dark-only component literals. */
+@media (prefers-color-scheme: light) {
+  :root {
+    color-scheme: light;
+    --text-low: #657080;
+    --low: #657080;
+    --technical-surface: #EEF1F5;
+    --technical-ink: #20252D;
+    --technical-line: #C7CDD6;
+  }
+
+  pre,
+  .formula-block,
+  .formula,
+  .code-block,
+  .terminal,
+  [data-theme-surface="technical"] {
+    background: var(--technical-surface) !important;
+    color: var(--technical-ink) !important;
+    border-color: var(--technical-line) !important;
+    box-shadow: none !important;
+  }
+
+  pre *,
+  .formula-block *,
+  .formula *,
+  .code-block *,
+  .terminal *,
+  [data-theme-surface="technical"] * {
+    color: inherit !important;
+  }
+
+  nav.sidebar a {
+    color: #596574 !important;
+  }
+
+  nav.sidebar a.sub {
+    color: #687280 !important;
+  }
+
+  nav.sidebar a:hover,
+  nav.sidebar a:focus-visible {
+    color: var(--text) !important;
+  }
+}
+
+</style>
+
+</head>
+<body>
+  <header class="site-header">
+    <div class="shell">
+      <div class="brand">
+        <div class="mark"></div>
+        <div><strong>RASTA-CAD</strong><span>Phase 19 &middot; Deliverables</span></div>
+      </div>
+      <nav class="nav">
+        <a href="#overview">Overview</a>
+        <a href="#code">Code Deliverables</a>
+        <a href="#artifacts">Run Artifacts</a>
+        <a href="#paper">Paper Components</a>
+        <a href="#reproducibility">Reproducibility</a>
+      </nav> </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="shell">
+        <div class="signal">Phase 19 &mdash; Shipping</div>
+        <div class="hero-grid">
+          <div>
+            <h1>What Do We Actually Produce?</h1>
+            <p class="lead">
+              A research project is not just ideas and experiments -- it is a set of concrete deliverables:
+              code, trained models, result tables, visualizations, and a manuscript. Phase 19 defines
+              exactly what outputs the system produces, organized into code deliverables, run artifacts,
+              and paper components.
+            </p>
+          </div>
+          <div class="quiet-panel hero-panel">
+            <span class="eyebrow">The Goal</span>
+            <p style="color:var(--mid);font-size:0.93rem;margin:0;">
+              A researcher reading our paper should be able to reproduce every result, inspect
+              every artifact, and understand every design decision -- all from what we deliver.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="content">
+      <div class="shell">
+
+        <h2 id="overview">What Phase 19 Is and Is Not</h2>
+        <p>
+          Phase 19 is not a new implementation step. It is an inventory of everything the project
+          produces, organized so you can check completeness before submission. Think of it as a
+          packing list for a journal submission: you do not want to discover at review time that
+          you forgot to save the ablation results or did not log a key hyperparameter.
+        </p>
+
+        <div class="callout">
+          <strong>For beginners:</strong> If you have ever turned in a school project only to realize
+          you forgot to include a required file, you understand the purpose of this phase. It is the
+          "did we pack everything?" check before the paper is submitted.
+        </div>
+
+        <h2 id="code">Code Deliverables</h2>
+
+        <div class="deliverable">
+          <h3>1. Dataset Loader</h3>
+          <p>
+            A complete PyTorch Dataset class that handles:
+          </p>
+          <ul>
+            <li>Loading OCTA images from disk with layer-specific preprocessing</li>
+            <li>Clinical feature loading with learned mask-token imputation</li>
+            <li>Phase 8 generated mask integration (vessel, FAZ, flow-deficit masks)</li>
+            <li>Patient-level stratified cross-validation fold assignment</li>
+            <li>Bilateral eye handling (OD/OS as independent samples, same patient same fold)</li>
+            <li>Data integrity checks (missing files, mismatched dimensions, corrupt images)</li>
+          </ul>
+        </div>
+
+        <div class="deliverable">
+          <h3>2. Training Pipeline</h3>
+          <p>
+            The full staged training schedule:
+          </p>
+          <ul>
+            <li>Phase 3: OCTA-SimCLR pretraining with bilateral positives, per-layer encoders</li>
+            <li>Phase 8C/D: U-Net++ segmentation student training on classical pseudo-labels</li>
+            <li>Phase 12: three-stage disease classifier training (frozen backbones -> fine-tune)</li>
+            <li>Automatic checkpointing, logging, resume from last checkpoint, early stopping</li>
+          </ul>
+        </div>
+
+        <div class="deliverable">
+          <h3>3. Model Implementation</h3>
+          <p>
+            All PyTorch modules, each with a clear forward/backward contract:
+          </p>
+          <ul>
+            <li>SupEncoder, DeepEncoder, CCEncoder (ConvNeXt-Tiny, 1-channel)</li>
+            <li>Phase4ProjectionHead (768 -> 512 -> 256)</li>
+            <li>Phase5TabularEncoder (clinical + biomarker vector -> 256)</li>
+            <li>Phase6CrossLayerAttention (3 tokens + identity embeddings -> 256 pooled)</li>
+            <li>Phase6LayerAwareOCTAEncoder (composes encoders + attention)</li>
+            <li>Phase7MaskEncoder (5-channel mask input -> 128-d)</li>
+            <li>Phase7CrossAttentionFusion (OCTA + tabular + mask -> 512-d)</li>
+            <li>Phase9PrototypeClassifier (512 -> 256 -> 128 -> N_classes + prototype logits)</li>
+            <li>Phase5ClinicalMaskTokenImputer (learned missing value tokens)</li>
+            <li>Phase8Generators (classical pseudo-mask generation, U-Net++ student)</li>
+          </ul>
+        </div>
+
+        <div class="deliverable">
+          <h3>4. Validation Pipeline</h3>
+          <ul>
+            <li>5-fold cross-validation loop with patient-grouped outer/inner splits</li>
+            <li>Metric accumulation: macro-AUC, macro-F1, balanced accuracy, per-class metrics</li>
+            <li>95% stratified patient-cluster bootstrap confidence intervals (1000 replicates)</li>
+            <li>Post-hoc temperature scaling on inner validation fold</li>
+            <li>MC-Dropout uncertainty: 30 forward passes, entropy, epistemic variance</li>
+          </ul>
+        </div>
+
+        <div class="deliverable">
+          <h3>5. Explainability Module</h3>
+          <ul>
+            <li>Grad-CAM per layer (Sup, Deep, CC) with predicted-class and true-label targets</li>
+            <li>Attention rollout: per-sample layer-dominance scores from cross-layer attention</li>
+            <li>SHAP or occlusion-based tabular attribution for clinical features</li>
+            <li>Integrated analysis: Grad-CAM vs. attention consistency summaries</li>
+            <li>Overlay heatmaps saved as PNGs + raw .npy arrays for later analysis</li>
+          </ul>
+        </div>
+
+        <div class="deliverable">
+          <h3>6. Experiment Manager (Lightweight)</h3>
+          <ul>
+            <li>Notebook-contained configuration dictionaries/cells</li>
+            <li>All hyperparameters logged to CSV/JSON at each phase</li>
+            <li>Reproducibility config with fixed random seeds (Python, NumPy, PyTorch, CUDA)</li>
+            <li>Deterministic PyTorch operations where available</li>
+          </ul>
+        </div>
+
+        <h2 id="artifacts">Run Artifacts (Saved to <code>outputs/</code>)</h2>
+
+        <table>
+          <tr><th>Phase</th><th>Key Artifacts</th></tr>
+          <tr><td>Phase 1</td><td>Sample counts, class distribution, missingness heatmap, demographic tables, confounder analysis, leakage check</td></tr>
+          <tr><td>Phase 2</td><td>QC-passed manifest, fold assignments with zero-leakage verification, clinical preprocessor JSON, layer statistics, Dataset object</td></tr>
+          <tr><td>Phase 3</td><td>SimCLR pretraining histories per fold/layer, backbone checkpoints (.pt), positive-pair summaries</td></tr>
+          <tr><td>Phase 4</td><td>Backbone availability audit, projection head definitions and smoke test</td></tr>
+          <tr><td>Phase 5</td><td>Tabular encoder definitions, biomarker column specs, schema JSON files</td></tr>
+          <tr><td>Phase 6</td><td>Cross-layer attention definitions, layer-dominance extraction utilities, smoke test</td></tr>
+          <tr><td>Phase 7</td><td>Fusion module definitions, mask encoder, smoke test</td></tr>
+          <tr><td>Phase 8</td><td>Classical pseudo-masks (PNG), improved masks, U-Net++ student checkpoints, QC reports, montage sheets, biomarker CSVs, mask-source decision summary</td></tr>
+          <tr><td>Phase 9</td><td>Prototype classifier definitions, compatibility fusion wrapper, materialized U-Net++ masks, dataset builders</td></tr>
+          <tr><td>Phase 10</td><td>Loss function definitions, class-weight audits, loss-plan CSV</td></tr>
+          <tr><td>Phase 11</td><td>Augmentation pipeline definitions, synchronized transforms, smoke test</td></tr>
+          <tr><td>Phase 12</td><td>Stage 1 reuse report, Stage 2/3 histories by fold, checkpoints per stage, outer-test predictions, cross-validation summary</td></tr>
+          <tr><td>Phase 13</td><td>Grad-CAM overlays, attention dominance tables, SHAP summaries, integrated analysis, class-balanced contact sheets</td></tr>
+          <tr><td>Phase 14</td><td>Eye-level and patient-level metrics with CIs, bootstrap distributions, reliability diagrams, MC-dropout predictions, confusion matrices</td></tr>
+          <tr><td>Phase 15</td><td>Ablation result tables (each row = one ablated configuration, metrics with CIs)</td></tr>
+          <tr><td>Phase 16</td><td>Baseline result tables (each row = one baseline model, metrics with CIs)</td></tr>
+          <tr><td>Phase 17</td><td>Statistical test results (Mann-Whitney, ANOVA, Kruskal-Wallis), fairness subgroup analyses, multivariate regression results</td></tr>
+        </table>
+
+        <h2 id="paper">Paper Components</h2>
+        <p>
+          The manuscript itself is not generated by the pipeline, but the following materials are
+          produced to support writing:
+        </p>
+        <ul>
+          <li><strong>Results tables:</strong> All metrics (primary + secondary) for the full model,
+          all ablations, and all baselines, with bootstrap CIs, in CSV format ready to copy into
+          LaTeX tables.</li>
+          <li><strong>Figures:</strong> Confusion matrices, ROC curves, reliability diagrams, Grad-CAM
+          overlays, attention dominance bar charts, SHAP beeswarm plots, missingness heatmap,
+          biomarker boxplots, montage sheets -- all saved as publication-quality PNG/SVG.</li>
+          <li><strong>Methodology section (draft):</strong> The Phase 18 contributions document provides
+          draft paragraphs for the Methods and Discussion sections, written in academic style.</li>
+        </ul>
+
+        <div class="callout">
+          <strong>Publication tip:</strong> Start writing the Methods section early, while the implementation
+          is fresh. The Phase docs (1-19) each contain the content you need for the corresponding
+          subsection of your paper. Phase 18 (Contributions) maps directly to the Contributions paragraph
+          in your Introduction and the Discussion of novelty.
+        </div>
+
+        <h2 id="reproducibility">Reproducibility Checklist</h2>
+        <p>
+          Before submission, verify:
+        </p>
+        <ul>
+          <li>All random seeds are fixed and logged (Python, NumPy, PyTorch, CUDA).</li>
+          <li>Cross-validation fold assignments are serialized and can be reloaded exactly.</li>
+          <li>Every hyperparameter used in every experiment is recorded in a CSV/JSON log.</li>
+          <li>The <code>main.ipynb</code> notebook is self-contained (no external .py files).</li>
+          <li>All output artifacts (CSVs, PNGs, JSONs, .pt checkpoints) have clear directory structure under <code>outputs/</code>.</li>
+          <li>Phase 14 metrics can be recomputed from Phase 12 outer-fold predictions alone (no need to retrain).</li>
+          <li>Ablation and baseline experiments are documented with their exact configuration deltas from the full model.</li>
+          <li>Hardware and software environment (GPU, CUDA version, PyTorch version, package versions) are recorded.</li>
+        </ul>
+
+        <hr />
+
+        <h2>Glossary for Beginners</h2>
+        <dl class="glossary">
+          <dt>Artifact</dt>
+          <dd>Any file produced by the pipeline: a CSV table, a PNG image, a JSON config, a PyTorch checkpoint (.pt), a text log. These are the raw outputs of each phase.</dd>
+          <dt>Checkpoint</dt>
+          <dd>A saved snapshot of a model's weights (and optionally optimizer state, epoch number, etc.) that allows training to be paused and resumed, or the model to be loaded for inference later.</dd>
+          <dt>Reproducibility</dt>
+          <dd>The ability for an independent researcher to obtain the same results by following the same methods. In practice, this means providing all code, data paths, hyperparameters, random seeds, and environment specifications.</dd>
+          <dt>Bootstrap Confidence Interval</dt>
+          <dd>A method for estimating the uncertainty of a metric by repeatedly resampling the data (with replacement) and recomputing the metric each time. The 2.5th and 97.5th percentiles of the bootstrap distribution form the 95% CI.</dd>
+        </dl>
+
+      </div>
+    </section>
+  </main>
+
+</body>
+</html>

@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Phase 1 — Dataset Analysis</title>
+  <style>
+    :root {
+      --bg: #030303;
+      --bg-deep: #090909;
+      --surface: #111111;
+      --surface-2: #171717;
+      --line: rgba(255,255,255,0.1);
+      --line-soft: rgba(255,255,255,0.06);
+      --text: #f5f7fa;
+      --mid: #a4acb7;
+      --low: #6f7782;
+      --halo: #7fb2ff;
+      --halo-soft: rgba(127,178,255,0.14);
+      --green: #86e0ad;
+      --amber: #ffd27d;
+      --violet: #c4afff;
+      --red: #ff9b9b;
+      --max: 1220px;
+      color-scheme: dark light;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.72;
+      overflow-x: hidden;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 82% 0%, rgba(127,178,255,0.12), transparent 24rem),
+        radial-gradient(circle at 10% 26%, rgba(196,175,255,0.08), transparent 28rem),
+        linear-gradient(180deg, #060606 0%, #030303 35%, #090909 100%);
+      z-index: -2;
+    }
+    a { color: inherit; }
+    .shell { width: min(calc(100% - 40px), var(--max)); margin-inline: auto; }
+    .site-header {
+      position: sticky; top: 0; z-index: 20;
+      backdrop-filter: blur(16px);
+      background: rgba(3,3,3,0.78);
+      border-bottom: 1px solid var(--line-soft);
+    }
+    .site-header .shell {
+      display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 14px 0;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .mark {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: radial-gradient(circle at 38% 38%, #eff6ff 0 10%, var(--halo) 12% 32%, rgba(127,178,255,0.24) 34% 56%, transparent 58%);
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.1), 0 0 32px rgba(127,178,255,0.18);
+      flex: 0 0 auto;
+    }
+    .brand strong, .brand span { display: block; }
+    .brand strong { font-size: 0.95rem; font-weight: 620; }
+    .brand span { font-size: 0.84rem; color: var(--mid); }
+    .nav { display: flex; flex-wrap: wrap; gap: 18px; }
+    .nav a {
+      text-decoration: none; color: var(--mid); font-size: 0.92rem;
+      border-bottom: 1px solid transparent; padding-bottom: 4px;
+    }
+    .nav a:hover { color: var(--text); border-color: rgba(255,255,255,0.18); }
+    main { padding-bottom: 100px; }
+    .hero { padding: clamp(70px, 10vw, 128px) 0 60px; }
+    .hero-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(290px, 0.9fr);
+      gap: clamp(34px, 7vw, 92px);
+      align-items: end;
+    }
+    .signal {
+      display: inline-flex; align-items: center; gap: 10px;
+      color: var(--mid); font-size: 0.92rem; margin-bottom: 24px;
+    }
+    .signal::before {
+      content: ""; width: 9px; height: 9px; border-radius: 50%;
+      background: var(--halo); box-shadow: 0 0 18px rgba(127,178,255,0.42);
+    }
+    h1, h2, h3, h4 { text-wrap: balance; }
+    h1 {
+      margin: 0;
+      font-size: clamp(3.15rem, 7vw, 5.8rem);
+      line-height: 0.95; letter-spacing: -0.035em; font-weight: 540; max-width: 10ch;
+    }
+    .lead {
+      margin: 24px 0 0; color: var(--mid); max-width: 68ch;
+      font-size: clamp(1.03rem, 1.6vw, 1.16rem);
+    }
+    .quiet-panel {
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+      border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 24px;
+    }
+    .hero-panel {
+      display: grid; gap: 20px;
+      box-shadow: 0 0 0 1px rgba(127,178,255,0.05) inset;
+      border-color: rgba(127,178,255,0.16);
+    }
+    .eyebrow {
+      color: var(--halo); text-transform: uppercase;
+      letter-spacing: 0.08em; font-size: 0.75rem; font-weight: 620;
+    }
+    .stat-row { display: flex; flex-wrap: wrap; gap: 12px 24px; }
+    .stat { line-height: 1.3; }
+    .stat-num {
+      display: block; font-size: 1.7rem; font-weight: 540; letter-spacing: -0.02em;
+    }
+    .stat-label { font-size: 0.88rem; color: var(--low); }
+    .content { padding: 40px 0; }
+    .content h2 {
+      font-size: 2.1rem; font-weight: 540; letter-spacing: -0.025em;
+      margin: 48px 0 16px;
+    }
+    .content h3 {
+      font-size: 1.35rem; font-weight: 540; margin: 32px 0 12px;
+      color: var(--halo);
+    }
+    .content h4 {
+      font-size: 1.1rem; font-weight: 540; margin: 24px 0 8px;
+    }
+    .content p, .content li { color: var(--mid); max-width: 72ch; }
+    .content p { margin: 12px 0; }
+    .content ul, .content ol { padding-left: 22px; }
+    .content li { margin: 6px 0; }
+    .content strong { color: var(--text); }
+    code {
+      background: rgba(255,255,255,0.06); border-radius: 6px; padding: 2px 8px;
+      font-size: 0.88em; font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    }
+    .callout {
+      background: rgba(127,178,255,0.08);
+      border-left: 3px solid var(--halo);
+      border-radius: 0 12px 12px 0;
+      padding: 16px 20px;
+      margin: 20px 0;
+    }
+    .callout p { margin: 4px 0; }
+    .callout strong { color: var(--halo); }
+    table {
+      width: 100%; border-collapse: collapse;
+      background: var(--surface); border-radius: 12px;
+      margin: 20px 0; font-size: 0.92rem;
+    }
+    th, td {
+      text-align: left; padding: 12px 16px;
+      border-bottom: 1px solid var(--line-soft);
+    }
+    th { color: var(--low); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 620; }
+    td { color: var(--mid); }
+    tr:last-child td { border-bottom: none; }
+    hr { border: none; border-top: 1px solid var(--line-soft); margin: 48px 0; }
+    .glossary dt { font-weight: 620; color: var(--text); margin-top: 16px; }
+    .glossary dd { margin: 4px 0 0; color: var(--mid); max-width: 64ch; }
+    .figure-placeholder {
+      background: var(--surface); border: 1px dashed var(--line);
+      border-radius: 16px; padding: 40px; text-align: center;
+      color: var(--low); margin: 20px 0;
+    }
+    @media (max-width: 800px) {
+      .hero-grid { grid-template-columns: 1fr; }
+      h1 { max-width: 100%; }
+    }
+
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #F7F8FA;
+    --bg-2: #EDEEF2;
+    --bg-deep: #EDEEF2;
+    --deep: #EDEEF2;
+    --void: #F7F8FA;
+    --surface: #FFFFFF;
+    --surface-2: #F0F1F4;
+    --surface-high: #F0F1F4;
+    --line: #D6DAE2;
+    --line-soft: #E4E7ED;
+    --line-strong: #C6CAD4;
+    --text: #17191E;
+    --mid: #555B66;
+    --low: #8B919D;
+    --text-mid: #555B66;
+    --text-low: #8B919D;
+    --halo: #4A7FCF;
+    --halo-soft: rgba(74,127,207,0.10);
+    --amber: #C49A44;
+    --amber-soft: rgba(196,154,68,0.10);
+    --green: #3BA66B;
+    --red: #C44A4A;
+    --violet: #7F67C8;
+    --mint: #3BA66B;
+    --coral: #C44A4A;
+    --cyan: #3B8DBF;
+    --danger: #C44A4A;
+    --success: #3BA66B;
+    --planned: #C49A44;
+    --shadow-lg: 0 22px 60px rgba(0,0,0,0.06);
+    --shadow-sm: 0 10px 30px rgba(0,0,0,0.04);
+    --radius: 18px;
+    --radius-sm: 12px;
+  }
+  :root { color-scheme: light; }
+
+  /* body ambient gradient */
+  body::before { background: none !important; }
+
+  /* header backgrounds */
+  .site-header, .masthead, header {
+    background: rgba(247,248,250,0.85) !important;
+  }
+
+  /* code */
+  code {
+    background: rgba(74,127,207,0.06) !important;
+    border-color: rgba(74,127,207,0.12) !important;
+    color: #1A1D24 !important;
+  }
+
+  /* quiet-panel: gradient bg + border */
+  .quiet-panel {
+    background: #FFFFFF !important;
+    border-color: #E4E7ED !important;
+  }
+
+  /* hero-side / hero-note panels */
+  .hero-side, .hero-note {
+    background: #FFFFFF !important;
+    border-color: #E4E7ED !important;
+  }
+
+  /* hero-panel */
+  .hero-panel {
+    background: #FFFFFF !important;
+    border-color: #E4E7ED !important;
+  }
+
+  /* callout */
+  .callout {
+    border-top-color: rgba(74,127,207,0.20) !important;
+  }
+
+  /* formula block */
+  .formula {
+    border-top-color: rgba(74,127,207,0.20) !important;
+  }
+
+  /* diagram-box */
+  .diagram-box {
+    background: #FFFFFF !important;
+    border-color: #E4E7ED !important;
+  }
+
+  /* number-line (z-score explainer) */
+  .number-line {
+    background: #FFFFFF !important;
+    border-color: #D6DAE2 !important;
+  }
+  .number {
+    border-right-color: #E4E7ED !important;
+  }
+  .number.mean {
+    background: rgba(74,127,207,0.05) !important;
+  }
+  .number.good {
+    background: rgba(59,166,107,0.05) !important;
+  }
+
+  /* diagram-shell / canvas-stage */
+  .diagram-shell, .canvas-stage {
+    background: #FFFFFF !important;
+    border-color: #E4E7ED !important;
+  }
+  .canvas-wrap {
+    background: #FFFFFF !important;
+    border-color: #E4E7ED !important;
+  }
+
+  /* summary-rail items */
+  .summary-rail div {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* compare items */
+  .compare > div {
+    border-right-color: #E4E7ED !important;
+  }
+
+  /* deep-grid items */
+  .deep-grid > div {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* status-grid items */
+  .status-grid li {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* narrative items */
+  .narrative {
+    border-bottom-color: #E4E7ED !important;
+  }
+
+  /* definition items */
+  .definition {
+    border-bottom-color: #E4E7ED !important;
+  }
+
+  /* section borders */
+  .section, section {
+    border-top-color: #E4E7ED !important;
+    border-bottom-color: #E4E7ED !important;
+  }
+  .section-head {
+    border-bottom-color: #E4E7ED !important;
+  }
+  .section-top {
+    border-bottom-color: #E4E7ED !important;
+  }
+
+  /* layer-row items */
+  .layer-row {
+    border-bottom-color: #E4E7ED !important;
+  }
+  .layer-row:first-child {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* definition-stack */
+  .definition-stack {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* flow-row */
+  .flow-row {
+    border-bottom-color: #E4E7ED !important;
+  }
+
+  /* legend */
+  .legend {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* stage-card, loss-card, aug-card, split-panel > div */
+  .stage-card, .loss-card, .aug-card, .split-panel > div {
+    background: #FFFFFF !important;
+    border-color: #E4E7ED !important;
+  }
+
+  /* evidence-item */
+  .evidence-item {
+    border-bottom-color: #E4E7ED !important;
+  }
+
+  /* truth-line */
+  .truth-line {
+    border-top-color: #C6CAD4 !important;
+    border-bottom-color: #E4E7ED !important;
+  }
+
+  /* matrix */
+  .matrix {
+    border-top-color: #C6CAD4 !important;
+  }
+  .matrix > div {
+    border-bottom-color: #E4E7ED !important;
+  }
+
+  /* quiet-panel verdict */
+  .quiet-panel .verdict {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* meta-row */
+  .meta-row {
+    border-top-color: #E4E7ED !important;
+  }
+  .meta-row .marker-line {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* section-aside */
+  .section-aside {
+    border-left-color: #E4E7ED !important;
+  }
+
+  /* flow-panel */
+  .flow-panel {
+    border-left-color: #E4E7ED !important;
+  }
+
+  /* table cells */
+  th, td {
+    border-bottom-color: #E4E7ED !important;
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* hr */
+  hr {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* details */
+  details {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* source-note */
+  .source-note {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* brand mark shadow */
+  .mark, .brandmark, .orb {
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.06) !important;
+  }
+
+  /* nav a hover border */
+  .nav a:hover, nav a:hover, .nav-links a:hover {
+    border-color: rgba(0,0,0,0.12) !important;
+  }
+
+  /* mode button */
+  .mode button[aria-pressed="true"],
+  .stage-tabs button[aria-pressed="true"] {
+    border-color: rgba(74,127,207,0.4) !important;
+  }
+
+  /* glossary dt */
+  .glossary dt {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* answer items */
+  .answer {
+    border-bottom-color: #E4E7ED !important;
+  }
+  .answer-grid {
+    border-top-color: #E4E7ED !important;
+  }
+
+  /* footer-note */
+  .footer-note { color: #8B919D !important; }
+
+  /* canvas-stage inner */
+  .canvas-stage {
+    background: #F7F8FA !important;
+  }
+
+  /* code inline */
+  code {
+    color: #1A1D24 !important;
+    background: rgba(74,127,207,0.06) !important;
+    border-color: rgba(74,127,207,0.12) !important;
+  }
+
+  /* pre / mono elements */
+  .mono, .monoish, code, .monoish code {
+    color: #1A1D24 !important;
+  }
+
+  .formula code {
+    color: #1A1D24 !important;
+  }
+
+  /* figure-placeholder */
+  .figure-placeholder {
+    background: #FFFFFF !important;
+    border-color: #D6DAE2 !important;
+  }
+
+  /* stage-grid */
+  .stage-grid {
+    border-top-color: #E4E7ED !important;
+  }
+}
+
+
+
+/* Shared light-theme contract: keep technical content on a light semantic surface.
+   This final layer intentionally overrides legacy dark-only component literals. */
+@media (prefers-color-scheme: light) {
+  :root {
+    color-scheme: light;
+    --text-low: #657080;
+    --low: #657080;
+    --technical-surface: #EEF1F5;
+    --technical-ink: #20252D;
+    --technical-line: #C7CDD6;
+  }
+
+  pre,
+  .formula-block,
+  .formula,
+  .code-block,
+  .terminal,
+  [data-theme-surface="technical"] {
+    background: var(--technical-surface) !important;
+    color: var(--technical-ink) !important;
+    border-color: var(--technical-line) !important;
+    box-shadow: none !important;
+  }
+
+  pre *,
+  .formula-block *,
+  .formula *,
+  .code-block *,
+  .terminal *,
+  [data-theme-surface="technical"] * {
+    color: inherit !important;
+  }
+
+  nav.sidebar a {
+    color: #596574 !important;
+  }
+
+  nav.sidebar a.sub {
+    color: #687280 !important;
+  }
+
+  nav.sidebar a:hover,
+  nav.sidebar a:focus-visible {
+    color: var(--text) !important;
+  }
+}
+
+</style>
+
+</head>
+<body>
+  <header class="site-header">
+    <div class="shell">
+      <div class="brand">
+        <div class="mark"></div>
+        <div><strong>RASTA-CAD</strong><span>Phase 1 &middot; Dataset Analysis</span></div>
+      </div>
+      <nav class="nav">
+        <a href="#motivation">Motivation</a>
+        <a href="#what-we-check">What We Check</a>
+        <a href="#class-distribution">Class Distribution</a>
+        <a href="#clinical-data">Clinical Data</a>
+        <a href="#image-quality">Image Quality</a>
+        <a href="#confounders">Confounders</a>
+        <a href="#leakage">Leakage</a>
+        <a href="#key-findings">Key Findings</a>
+      </nav> </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="shell">
+        <div class="signal">Phase 1 &mdash; Foundation</div>
+        <div class="hero-grid">
+          <div>
+            <h1>Know Your Data</h1>
+            <p class="lead">
+              Before we build any models, we must thoroughly understand the dataset we are working with.
+              Phase 1 is the systematic audit of the RASTA dataset: who is in it, what measurements exist,
+              what is missing, and what traps could invalidate our conclusions later.
+            </p>
+          </div>
+          <div class="quiet-panel hero-panel">
+            <span class="eyebrow">Why This Matters</span>
+            <p style="color:var(--mid);font-size:0.93rem;margin:0;">
+              Every modeling mistake we can catch here saves weeks of wasted training later.
+              Class imbalance, missing data patterns, confounders, and data leakage are the
+              most common reasons machine learning papers fail to reproduce.
+            </p>
+            <div class="stat-row">
+              <div class="stat"><span class="stat-num">4</span><span class="stat-label">Cohorts</span></div>
+              <div class="stat"><span class="stat-num">476</span><span class="stat-label">Eyes</span></div>
+              <div class="stat"><span class="stat-num">~20</span><span class="stat-label">Clinical Fields</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="content">
+      <div class="shell">
+
+        <h2 id="motivation">Why Do We Need a Dataset Analysis Phase?</h2>
+        <p>
+          Imagine a doctor who has never seen your patient before, and you hand them a chart with numbers
+          scrawled in the margins and a few pages torn out. That is what it feels like to train a deep
+          learning model on a dataset you have not audited. Phase 1 is the step where we open every
+          folder, check every file, and build a complete picture of the data landscape before we write
+          a single line of training code.
+        </p>
+        <p>
+          More concretely, Phase 1 answers questions like: How many patients do we actually have?
+          Are all four cohorts roughly equally represented, or is one group tiny? Are both eyes
+          available for every patient? Which clinical measurements were recorded for everyone, and
+          which are patchy? Could age differences between cohorts masquerade as disease signals?
+          Could the same patient appear in more than one cohort by accident? These are not
+          hypotheticals -- they routinely derail medical AI studies.
+        </p>
+
+        <div class="callout">
+          <strong>Beginners:</strong> Think of Phase 1 as the "look before you leap" step. It is not glamorous,
+          but it is the single highest-ROI activity in the entire project. Every plot you generate here
+          will be cited in the paper's "Dataset" section.
+        </div>
+
+        <h2 id="what-we-check">What Exactly Do We Check? (Research Protocol)</h2>
+        <p>
+          The analysis breaks down into several distinct investigations, each targeting a specific
+          risk to model validity:
+        </p>
+
+        <h3>1. Sample Inventory</h3>
+        <p>
+          We scan the RASTA directory tree and count everything: total patients, total eyes (remember:
+          one patient can contribute one or two eyes), eyes per cohort, and the ratio of unilateral
+          (one eye) to bilateral (both eyes) patients. This gives us the raw N for every analysis we
+          will later report.
+        </p>
+
+        <h3>2. Class Distribution and Imbalance</h3>
+        <p>
+          Disease cohorts in medical datasets are rarely equal. One group might be twice the size of
+          another. We compute the exact count per cohort and the imbalance ratio (largest / smallest).
+          Why does this matter? Because if we train a classifier on a 90/10 split without adjustment,
+          it can achieve 90% accuracy by guessing the majority class every time -- yet be completely
+          useless clinically. The imbalance ratio informs our choice of class weights, sampling
+          strategy, and evaluation metrics later in Phase 10 and Phase 14.
+        </p>
+
+        <h3>3. Bilateral Eye Availability</h3>
+        <p>
+          Some patients have both eyes scanned (OD = right, OS = left); others have only one. This
+          matters for two reasons. First, two eyes from the same patient are not independent -- they
+          share genetics, systemic health, and lifestyle. If we treat them as independent samples,
+          we artificially inflate our effective sample size. Second, our SimCLR pretraining strategy
+          in Phase 3 uses OD/OS pairs as natural positive pairs. Knowing who has both eyes tells us
+          how many of those pairs we can construct.
+        </p>
+
+        <h3>4. Clinical Feature Missingness</h3>
+        <p>
+          Clinical data is almost never complete. Age might be recorded for everyone; BMI might be
+          missing for 20% of patients; smoking history might be inconsistently collected across cohorts.
+          We build a missingness heatmap -- a grid showing which values are present (green) or absent
+          (red) for each patient-feature combination. We also compute missingness per cohort, because
+          systematic missingness (e.g., "cohort A never recorded BMI") can introduce bias that a model
+          might exploit spuriously.
+        </p>
+
+        <h3>5. Demographic Distributions</h3>
+        <p>
+          For each cohort, we plot age, sex, and BMI distributions. If one cohort is significantly
+          older on average, any model that relies on age-related vascular changes might appear to
+          distinguish cohorts when it is really just detecting age. This is called a <strong>confound</strong>.
+          We flag these for later mitigation.
+        </p>
+
+        <h3>6. Image Resolution and Quality</h3>
+        <p>
+          Not every OCTA scan is usable. Some may have different resolutions, watermark artifacts,
+          motion blur, or low signal-to-noise ratio. We audit image dimensions, bit depth, and
+          run a lightweight quality check to flag scans that should be excluded before training.
+          This prevents garbage-in-garbage-out.
+        </p>
+
+        <h3>7. Layer Availability</h3>
+        <p>
+          Our architecture uses three retinal layers: Superficial Vascular Complex (SVC), Deep
+          Vascular Complex (DVC), and Choriocapillaris (CC). We verify that all three layers exist
+          for every eye. If one layer is missing for some patients, we need a strategy (imputation,
+          exclusion, or a missing-layer token).
+        </p>
+
+        <h3>8. Confounder Analysis</h3>
+        <p>
+          We explicitly test for associations between cohort membership and demographics. Age-disease
+          correlation, sex imbalance, and BMI differences are computed and reported. Any significant
+          association is a confound that must be discussed in the paper and potentially adjusted for
+          in the model.
+        </p>
+
+        <h3>9. Data Leakage Risk Assessment</h3>
+        <p>
+          The most embarrassing error in medical AI: accidentally having the same patient in both
+          training and test sets. We verify that no patient ID appears in more than one cohort
+          directory and, later in Phase 2, that all eyes from a given patient end up in the same
+          cross-validation fold. A single leaked patient can inflate AUC by 0.1 or more.
+        </p>
+
+        <h3>10. Biomarker Boxplots</h3>
+        <p>
+          The clinical spreadsheet contains quantitative OCTA biomarkers (vessel densities, perfusion
+          densities, FAZ areas) from the commercial OCTA device software. We generate per-cohort
+          boxplots for these biomarkers. They give us an early signal: if cohorts already separate
+          on simple biomarker measurements, that tells us the signal is present in the data.
+          If they completely overlap, the classification problem is harder.
+        </p>
+
+        <div class="callout">
+          <strong>Important:</strong> Phase 1 biomarkers come from the commercial device software, not from
+          our later generated masks (Phase 8). They serve as a reference baseline. We keep them
+          separate in all analyses.
+        </div>
+
+        <h2 id="key-findings">Expected Key Findings (Based on RASTA)</h2>
+        <p>
+          From the RASTA dataset structure and clinical spreadsheet, we can anticipate some findings:
+        </p>
+
+        <table>
+          <tr><th>Finding</th><th>Why It Matters</th></tr>
+          <tr><td>~260 patients, ~476 eyes</td><td>Moderate-size medical dataset; deep learning is feasible but requires careful regularization</td></tr>
+          <tr><td>RETINORM is the largest cohort</td><td>Control/normal group expected to be largest; imbalance requires weighted loss or augmentation</td></tr>
+          <tr><td>MRCC is the smallest cohort</td><td>CAD-related cohort; few patients mean we need prototype augmentation (Phase 9) and bootstrap CIs (Phase 14)</td></tr>
+          <tr><td>~60% bilateral, ~40% unilateral</td><td>Good number of OD/OS pairs for SimCLR pretraining; remaining unilateral samples use standard augmented views</td></tr>
+          <tr><td>Partial clinical missingness (especially smoking, BMI)</td><td>Motivates our learnable mask-token imputation strategy (Phase 5) instead of mean imputation</td></tr>
+          <tr><td>Age varies across cohorts (MRCC patients tend to be older)</td><td>Potential confound; we will report this in the paper and check if model relies on age</td></tr>
+          <tr><td>All three layers available for most eyes</td><td>Our three-encoder architecture is feasible without special missing-layer handling</td></tr>
+          <tr><td>No patient appears in multiple cohorts</td><td>Clean label separation; no leakage between cohort directories</td></tr>
+        </table>
+
+        <h2 id="research-paper">How This Fits in a Research Paper</h2>
+        <p>
+          In a publication, Phase 1 findings appear in the "Dataset" subsection of "Materials and Methods."
+          You would present a <strong>Table 1</strong> with demographic summaries per cohort (age mean/SD,
+          sex count, BMI mean/SD), a <strong>Supplementary Figure 1</strong> showing the missingness heatmap,
+          and a <strong>Supplementary Table 1</strong> with class counts and imbalance ratios. The confounder
+          analysis appears in the "Statistical Analysis" section or as a supplementary note.
+        </p>
+        <p>
+          Crucially, by doing Phase 1 thoroughly and reporting it transparently, you demonstrate
+          that you understand your data's limitations -- a sign of methodological rigor that reviewers
+          value highly.
+        </p>
+
+        <hr />
+
+        <h2>Quick Reference: Phase 1 Outputs</h2>
+        <table>
+          <tr><th>Artifact</th><th>Description</th></tr>
+          <tr><td>Sample count summary</td><td>Patients, eyes, per-cohort counts</td></tr>
+          <tr><td>Class distribution plot</td><td>Bar chart of cohort sizes with imbalance ratio</td></tr>
+          <tr><td>Bilateral eye summary</td><td>Number of OD-only, OS-only, and OD+OS patients</td></tr>
+          <tr><td>Missingness heatmap</td><td>Patient x clinical feature grid showing presence/absence</td></tr>
+          <tr><td>Demographic comparison table</td><td>Age, sex, BMI per cohort with statistical tests</td></tr>
+          <tr><td>Image resolution audit</td><td>Dimensions and bit depths for all scans</td></tr>
+          <tr><td>Layer availability audit</td><td>Are all three layers present for all eyes?</td></tr>
+          <tr><td>Confounder report</td><td>Significant age/sex/BMI differences between cohorts</td></tr>
+          <tr><td>Leakage check report</td><td>Confirms no patient appears in multiple cohorts</td></tr>
+          <tr><td>Biomarker boxplots</td><td>Per-cohort distributions of device-derived OCTA biomarkers</td></tr>
+        </table>
+
+        <hr />
+
+        <h2>Glossary for Beginners</h2>
+        <dl class="glossary">
+          <dt>OD / OS</dt>
+          <dd>Medical abbreviations for right eye (OD = oculus dexter) and left eye (OS = oculus sinister).</dd>
+          <dt>Cohort</dt>
+          <dd>A group of patients sharing a common characteristic. Here, the four cohorts are defined by disease/risk status: RETINORM (control), ORNET (sleep apnea), FAMILIPO (familial hypercholesterolemia), MRCC (cardiac surgery / CAD).</dd>
+          <dt>Class Imbalance</dt>
+          <dd>When one category (class) has many more samples than another. Common in medical datasets because some diseases are rarer than others.</dd>
+          <dt>Confound</dt>
+          <dd>A variable that is correlated with both the input features and the target label, creating a spurious association. For example, if older patients are more likely to have CAD, the model might learn "age" instead of learning retinal patterns of disease.</dd>
+          <dt>Data Leakage</dt>
+          <dd>When information from outside the training set influences the model, typically because the same patient appears in both training and test sets. This makes performance look artificially good.</dd>
+          <dt>Missingness</dt>
+          <dd>The pattern of absent values in a dataset. Some values are missing completely at random (MCAR), some are missing for systematic reasons (e.g., a specific clinic did not record BMI).</dd>
+        </dl>
+
+      </div>
+    </section>
+  </main>
+
+</body>
+</html>
