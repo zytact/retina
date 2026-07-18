@@ -1,5 +1,33 @@
 # PROGRESS.md
 
+## 2026-07-17
+
+### Proposed methodology and novelty review draft
+- Added `docs/proposed-methodology-and-novelty-review.html`, a manuscript-oriented draft covering the proposed eight-cohort methodology, mathematical formulation, evaluation plan, claim boundaries, and selected references.
+- Conducted a scholarly prior-art search across PubMed, PubMed Central, publisher pages, arXiv, Research Square, and comparable scholarly indexes.
+- Documented that the broad implementation is not safely claimable as a first because related work already covers the same RASTA dataset, multimodal OCTA plus clinical CAD prediction, three-layer OCTA fusion, bilateral retinal contrastive positives, weak segmentation/biomarkers, prototypes, and uncertainty methods.
+- Clarified that the current folder-derived target is cohort identity, not a clinically validated binary CAD endpoint, and that CAD claims require an independently adjudicated endpoint.
+
+## 2026-07-16
+
+### Phase 1/2 summarize and fast reload
+- Hardened the Phase 1/2 summarize/fast-reload cell so a fresh kernel can proceed directly to Phase 3 using existing Phase 2 fold/statistics artifacts. Phase 1 manifests and Phase 2 clinical-preprocessor summaries are loaded when present but no longer block Phase 3, and the cell never regenerates Phase 1/2 outputs.
+
+## 2026-07-13
+
+### Eight-class expansion through Phase 3
+- Expanded the active cohort schema from four to eight folders: `1_RETINORM`, `2_ORNET`, `3_FAMILIPO`, `4_MRCC`, `5_GIANTS`, `6_AWARD`, `7_EVIRED`, and `8_ORNET_TEMOINS`.
+- Added stable zero-based labels 0-7 in folder-number order and strict Phase 1 validation that all eight expected cohort folders exist.
+- Updated Phase 1-3 notebook paths to fresh output directories so historical four-class outputs are not deleted, overwritten, or accidentally resumed:
+  - `outputs/phase1_dataset_analysis_8class/`
+  - `outputs/phase2_preprocessing_8class/`
+  - `outputs/phase3_octa_simclr_8class_120epochs/`
+- Updated Phase 1 scanning/auditing, Phase 2 preprocessing/folds, Phase 1/2 fast reload, Phase 3 training, and the Phase 1-3 summary to use the expanded-run artifact tree.
+- Increased Phase 3 OCTA-SimCLR training from 100 to 120 epochs.
+- Preserved historical notebook displays and all on-disk artifacts; new runs write only to the expanded-run output directories.
+- Documented that this expansion currently stops at Phase 3. Phase 4+ must be integrated separately before downstream reruns.
+- The notebook was not run in this local review environment.
+
 ## 2026-06-19
 
 ### Completed
@@ -398,3 +426,24 @@
 - Technical content such as formulas, code, and contingency tables now resolves to a cool light technical surface with dark ink and rules in light mode, preventing isolated black panels.
 - Raised the light supporting-text tone and assigned contents navigation dedicated higher-contrast top-level and nested-link tones.
 - Recorded the reusable semantic-token requirement in `.impeccable/design.json`, `DESIGN.md`, and `PRODUCT.md` so future documents inherit the same behavior.
+
+## 2026-07-13
+
+### Project keypoints PDF
+- Added the concise Retina RASTA project note at `docs/retina-rasta-project-keypoints.md`.
+- Generated the revised `output/pdf/retina-rasta-project-keypoints.pdf` with the framing, dataset, architecture, evaluation, MRCC example, evidence limits, glossary, and fused-decision calculation.
+- Updated the PDF surface to the existing light print palette from `DESIGN.md`, keeping the page structure and content stable.
+- Kept the explicit architecture diagram on page 3 with the visual, tabular, mask, fusion, prototype, and calibration path labeled.
+- Added one representative Phase 8 segmentation-mask montage page for 3CHCA66_OD without removing the existing content.
+## 2026-07-18
+
+### Eight-class segmentation architecture comparison notebook
+
+- Added `segmentation_comparison_8class.ipynb` as a separate, unexecuted comparison notebook while leaving `main.ipynb` unchanged.
+- Copied the Phase 1-3 source cells exactly from `main.ipynb`, preserving the existing expanded eight-class artifact paths and 120-epoch fold-specific OCTA-SimCLR workflow.
+- Isolated all Phase 4-14 comparison artifacts under `outputs/segmentation_comparison_8class/` with separate directories for U-Net++, U-Net, Attention U-Net, DeepLabV3+, SegFormer-B0, and IMN.
+- Added a six-model segmentation registry, shared deterministic Sup/Deep and CC task contracts, validation-selected per-channel mask thresholds, resumable fold training, architecture-specific mask and biomarker materialization, and strict mask-source provenance.
+- Reused the established image encoders, projection heads, tabular encoder, cross-layer attention, mask encoder, compatibility fusion, prototype classifier, loss, augmentation, staged classifier training, explainability, and Phase 14 evaluation code through architecture-aware runners.
+- Added aggregate segmentation metrics, multimodal evaluation collection, and prespecified patient-level comparisons of each alternative against U-Net++.
+- Enabled the comparison-level segmentation training, mask materialization, classifier training, MC-dropout, and Phase 14 evaluation path. The shared Phase 12/14 single-model auto-run flags remain disabled so the comparison orchestrator runs each architecture exactly once.
+- Validated notebook JSON, exact Phase 1-3 source equality, clean unexecuted state, and Python compilation of all code cells. The local shell lacked an installed PyTorch runtime for forward execution, so no dataset, checkpoint, or GPU smoke run was attempted here.
