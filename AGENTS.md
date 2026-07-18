@@ -8,6 +8,8 @@ This local checkout is a code/documentation review environment, not the training
 
 Do not create any other python files or any other notebook files intended to run.
 
+Instead of the [main.ipynb](main.ipynb) file, the main notebook is now [segmentation_comparison_8class.ipynb](segmentation_comparison_8class.ipynb)
+
 The original [PLAN.md](PLAN.md) is no longer to be used, other than as a reference. The new [PLAN_segmentation_comparison.md](PLAN_segmentation_comparison.md) is to be now used and the purpose is to redo the training with 8 classes and also use 5 more segmentation models making a total of 6 separate multimodal fusions.
 
 As usual, [PROGRESS.md](PROGRESS.md) is for you track your changes.
