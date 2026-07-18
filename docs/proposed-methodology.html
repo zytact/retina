@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Proposed Methodology for Multimodal Analysis of the RASTA SS-OCTA Dataset</title>
+  <script>
+    window.MathJax = {
+      tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']] },
+      startup: { pageReady: () => MathJax.startup.defaultPageReady().then(() => { document.documentElement.dataset.mathReady = 'true'; }) }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+  <style>
+    :root { --ink:#111; --muted:#4b5563; --line:#aeb4bc; --accent:#244b73; --soft:#eef3f7; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:#e6e8eb; color:var(--ink); font-family:"Liberation Serif","Times New Roman",serif; font-size:11pt; line-height:1.46; }
+    article { width:210mm; margin:18px auto; padding:20mm 20mm 18mm; background:#fff; box-shadow:0 2px 12px #0002; }
+    h1 { margin:0 0 12pt; font-size:22pt; line-height:1.16; text-align:center; font-weight:700; }
+    h2 { margin:20pt 0 7pt; padding-bottom:3pt; border-bottom:.6pt solid var(--line); font-size:14pt; line-height:1.2; }
+    h3 { margin:13pt 0 4pt; font-size:11.5pt; line-height:1.25; }
+    p { margin:0 0 7pt; text-align:justify; hyphens:auto; orphans:3; widows:3; }
+    ul,ol { margin:4pt 0 8pt 18pt; padding:0; }
+    li { margin:2.5pt 0; text-align:justify; }
+    table { width:100%; border-collapse:collapse; margin:8pt 0 11pt; font-size:9.2pt; page-break-inside:avoid; }
+    th,td { border:.5pt solid #808892; padding:4.5pt 5pt; vertical-align:top; }
+    th { background:var(--soft); text-align:left; font-weight:700; }
+    .authors,.affiliation,.date { text-align:center; }
+    .authors { font-weight:700; margin-top:4pt; }
+    .affiliation,.date { color:var(--muted); font-size:10pt; }
+    .notice { margin:16pt 0 13pt; padding:8pt 10pt; border:.7pt solid #74879a; background:#f5f8fa; font-size:9.5pt; }
+    .abstract { margin:14pt 0 12pt; padding:10pt 12pt; border-top:1pt solid var(--ink); border-bottom:1pt solid var(--ink); }
+    .abstract h2 { margin:0 0 6pt; padding:0; border:0; font-size:11pt; text-align:center; }
+    .keywords { font-size:9.5pt; }
+    .keywords strong { font-variant:small-caps; }
+    .pipeline { display:grid; grid-template-columns:1fr 12pt 1.25fr 12pt 1fr 12pt 1.3fr 12pt 1.1fr; align-items:center; gap:3pt; margin:11pt 0 12pt; page-break-inside:avoid; }
+    .pipeline div { min-height:38pt; display:flex; align-items:center; justify-content:center; padding:4pt; border:.6pt solid #536b82; background:#f4f7fa; text-align:center; font-size:8.2pt; line-height:1.2; }
+    .pipeline b { text-align:center; color:var(--accent); }
+    .equation { margin:7pt 12pt 9pt; padding:6pt 8pt; background:#f7f7f7; border-top:.5pt solid #aaa; border-bottom:.5pt solid #aaa; text-align:center; font-family:"DejaVu Serif",serif; font-size:9.7pt; page-break-inside:avoid; }
+    .equation mjx-container, .equation mjx-math, .equation mjx-mi, .equation mjx-mn, .equation mjx-mo, .equation mjx-mtext { font-weight:400 !important; }
+    .caption { margin:-5pt 0 10pt; font-size:8.8pt; text-align:left; }
+    .caption strong { font-weight:700; }
+    .definition { border-top:.5pt solid var(--line); border-bottom:.5pt solid var(--line); padding:7pt 0 1pt; margin:8pt 0 10pt; }
+    .references { font-size:8.6pt; line-height:1.3; }
+    .references li { margin-bottom:4pt; }
+    .small { font-size:9pt; color:#333; }
+    .pagebreak { break-before:page; }
+    a { color:inherit; text-decoration:none; }
+    @page { size:A4; margin:17mm 18mm 18mm; @bottom-center { content:"Page " counter(page) " of " counter(pages); font:9pt "Liberation Serif"; color:#555; } }
+    @media print {
+      body { background:#fff; }
+      article { width:auto; margin:0; padding:0; box-shadow:none; }
+      h2,h3 { break-after:avoid; }
+      table,.equation,.pipeline { break-inside:avoid; }
+      a { color:#111; }
+    }
+  </style>
+</head>
+<body>
+<article>
+  <h1>Proposed Methodology</h1>
+
+  <h2>1. Study Design and Data</h2>
+  <h3>1.1 Design</h3>
+  <p>This retrospective, multi-cohort computational modeling study used the RASTA dataset. Model development followed a nested, patient-grouped evaluation design. The fixed outer folds provided held-out estimates; an inner patient-grouped split within each outer-training set supported early stopping, hyperparameter selection, and temperature calibration. Reporting followed applicable elements of the Transparent Reporting of a Multivariable Prediction Model for Individual Prognosis or Diagnosis for Artificial Intelligence (TRIPOD+AI) and Checklist for Artificial Intelligence in Medical Imaging (CLAIM) guidance.</p>
+
+  <h3>1.2 Cohorts and outcome encoding</h3>
+  <p>The study includes the four original dataset folders with stable zero-based labels in folder-number order.</p>
+  <table>
+    <thead><tr><th>Label</th><th>Dataset folder</th><th>Analytical role</th></tr></thead>
+    <tbody>
+      <tr><td>0</td><td>1_RETINORM</td><td>Source-cohort class</td></tr>
+      <tr><td>1</td><td>2_ORNET</td><td>Source-cohort class</td></tr>
+      <tr><td>2</td><td>3_FAMILIPO</td><td>Source-cohort class</td></tr>
+      <tr><td>3</td><td>4_MRCC</td><td>Source-cohort class; coronary revascularization-associated cohort</td></tr>
+    </tbody>
+  </table>
+  <p>The primary outcome was folder-derived cohort identity. Because cohort and study membership coincide, performance was interpreted as cohort discrimination and not as proof of CAD detection, cardiovascular screening utility, or general clinical generalizability.</p>
+
+  <h3>1.3 Unit of observation and notation</h3>
+  <p>Let <em>i</em> index patients, <em>e</em> index eyes (OD or OS), and <em>l</em> index OCTA layers (SVC, DVC, or CC). An eye-level record contained three registered layer images, patient-level clinical variables, missingness indicators, and the cohort label. Eyes were used as training samples, but both eyes from a patient remained in the same partition. Final predictions, confidence intervals, and hypothesis tests used the patient as the independent unit.</p>
+
+  <h3>1.4 Eligibility and quality control</h3>
+  <p>Records required a resolvable patient identifier and at least the image inputs needed by the evaluated model. Images were screened for unreadable files, invalid dimensions, zero variance, all-black content, low dynamic range, and predefined quality failures. Exclusions and their reasons were recorded before modeling and summarized by cohort and eye. Missing modalities were not silently replaced. A model-specific complete-case rule or an explicit missing-modality indicator was declared for each experiment.</p>
+
+  <h3>1.5 Clinical variables</h3>
+  <p>Candidate clinical variables were drawn from the accompanying publication table and data manifest. Variable definitions, units, allowable ranges, coding, and missingness were documented before outcome modeling. Variables that deterministically defined the endpoint were excluded from predictors. Continuous variables were standardized; binary variables preserved their encoded state; ordinal variables used learned embeddings. All parameters and category vocabularies were fitted on the outer-training data only.</p>
+
+  <h2>2. Computational Framework</h2>
+  <div class="pipeline" aria-label="Proposed analytical pipeline">
+    <div>Three OCTA layers</div><b>→</b><div>Fold-local contrastive pretraining</div><b>→</b><div>Layer-aware attention</div><b>→</b><div>Clinical, biomarker, and mask fusion</div><b>→</b><div>Calibrated patient-level output</div>
+  </div>
+  <p class="caption"><strong>Figure 1.</strong> High-level flow of the proposed framework. Every learned component and preprocessing estimate is fitted without access to the corresponding outer-test patients.</p>
+
+  <h3>2.1 OCTA preprocessing</h3>
+  <p>Each grayscale image was clipped using its second and ninety-eighth intensity percentiles, rescaled to [0,1], enhanced with contrast-limited adaptive histogram equalization, and resized to 224 × 224 pixels by bicubic interpolation. Fold- and layer-specific means and standard deviations were computed using only outer-training patients and applied to inner-validation and outer-test images.</p>
+  <div class="equation">\[x^{(p)}=\operatorname{clip}\!\left(\frac{x-q_2(x)}{q_{98}(x)-q_2(x)+\epsilon},0,1\right),\qquad \hat{x}^{\ell}=\frac{x^{(p),\ell}-\mu_{\ell,f}}{\sigma_{\ell,f}+\epsilon}.\]</div>
+  <p>Geometric augmentation was synchronized across the three layers from the same eye to preserve spatial correspondence. Photometric augmentation varied by layer but remained conservative enough to preserve capillary morphology. Validation and test inputs were not augmented.</p>
+
+  <h3>2.2 Missing clinical data</h3>
+  <p>For clinical feature <em>j</em>, an observation indicator accompanied the standardized value. A learned feature-specific token replaced missing values inside the model. During training, 10% of observed entries were masked at random to improve robustness. Missingness rates were reported by cohort. Complete-case analysis and conventional training-fold median/mode imputation remain planned sensitivity ablations.</p>
+  <div class="equation">\[\tilde c_{ij}=r_{ij}\frac{c_{ij}-\mu_{j,f}}{\sigma_{j,f}+\epsilon}+(1-r_{ij})a_j.\]</div>
+
+  <h3>2.3 Layer-specific contrastive pretraining</h3>
+  <p>Independent one-channel ConvNeXt-Tiny encoders were pretrained for SVC, DVC, and CC within each outer-training fold. For patients with two eyes, the same layer from OD and OS formed a natural positive pair. For unilateral records, two independently augmented views of the same image formed the pair. Direct comparison of the bilateral strategy with conventional same-image SimCLR remains a planned ablation because contralateral eyes may differ in pathology and artifact burden.</p>
+  <p>For augmented views v<sub>i</sub> and v<sub>j</sub>, layer-specific encoder f<sub>θl</sub>, projection head g<sub>φl</sub>, and L2-normalized projection z, the representation and pairwise similarity are defined as follows:</p>
+  <div class="equation">\[z_i=\frac{g_{\phi_\ell}(f_{\theta_\ell}(v_i))}{\lVert g_{\phi_\ell}(f_{\theta_\ell}(v_i))\rVert_2},\qquad s_{ik}=z_i^{\mathsf T}z_k.\]</div>
+  <p>For a minibatch containing B positive pairs and 2B views, the directional normalized temperature-scaled cross-entropy loss and its symmetric batch average are</p>
+  <div class="equation">\[\ell_{i,j}=-\log\frac{\exp(s_{ij}/\tau)}{\sum_{k=1}^{2B}\mathbb 1_{[k\ne i]}\exp(s_{ik}/\tau)},\qquad \mathcal L_{\mathrm{NTX}}=\frac{1}{2B}\sum_{(i,j)}\ell_{i,j}.\]</div>
+  <p>Each encoder was followed by a two-layer projection head and optimized with the normalized temperature-scaled cross-entropy objective. The four-class run used 100 epochs, temperature 0.07, SGD with momentum 0.9, weight decay 10<sup>-4</sup>, initial learning rate 0.03 with cosine decay, effective batch size 256, and gradient clipping at 1.0. Preflight diagnostics checked finite gradients, parameter updates, embedding variance, and separation from the random-loss baseline. Projection heads were discarded after pretraining.</p>
+
+  <h3>2.4 Layer-specific feature extraction</h3>
+  <p>Each pretrained backbone produces a 7 × 7 × 768 feature map. Global average pooling followed by a layer-specific projection and layer normalization yields a 256-dimensional token. Final convolutional maps are retained for Grad-CAM. The three backbones remain independent so that depth-specific appearance is not forced into a single shared representation.</p>
+  <div class="equation">\[u^\ell=\operatorname{GAP}(U^\ell),\qquad f^\ell=\operatorname{LN}\!\left(W_2^\ell\operatorname{GELU}(W_1^\ell u^\ell+b_1^\ell)+b_2^\ell\right)\in\mathbb R^{256}.\]</div>
+
+  <h3>2.5 Identity-aware cross-layer attention</h3>
+  <p>Learned identity embeddings are added to the SVC, DVC, and CC tokens before an eight-head self-attention block. Each head has dimension 32; the feed-forward width is 1024 and dropout is 0.1. Residual connections and pre-normalization are used. The three output tokens are mean-pooled to obtain the 256-dimensional OCTA representation.</p>
+  <div class="equation">\[T=\begin{bmatrix}f^S+e^S\\f^D+e^D\\f^C+e^C\end{bmatrix},\qquad A_h=\operatorname{softmax}\!\left(\frac{Q_hK_h^{\mathsf T}}{\sqrt{d_h}}\right),\qquad f_{\mathrm{octa}}=\frac{1}{3}\sum_{\ell\in\{S,D,C\}}H_\ell.\]</div>
+  <div class="equation">\[Q_h=\operatorname{LN}(T)W_h^Q,\quad K_h=\operatorname{LN}(T)W_h^K,\quad V_h=\operatorname{LN}(T)W_h^V,\quad O=\operatorname{Concat}_{h=1}^{8}(A_hV_h)W^O.\]</div>
+  <div class="equation">\[T'=T+\operatorname{Dropout}(O),\qquad H=T'+\operatorname{Dropout}\!\left(W_2\operatorname{GELU}(W_1\operatorname{LN}(T'))\right).\]</div>
+
+  <h3>2.6 Generated masks and vascular biomarkers</h3>
+  <p>Classical image-processing procedures produced SVC and DVC vessel masks, SVC and DVC foveal avascular zone (FAZ) masks, and a CC flow-deficit mask. These masks were pseudo-labels rather than human annotations. Quantitative thresholds and visual montages were used for quality control. A U-Net++ student was trained against QC-passed pseudo-labels within the permitted training data and then frozen before downstream classification. The operational downstream inputs were the frozen student outputs.</p>
+  <p>For pixel probability p<sub>q</sub>, binary pseudo-label y<sub>q</sub>, and pixel domain Ω, the segmentation losses are</p>
+  <div class="equation">\[\operatorname{Dice}=\frac{2\sum_{q\in\Omega}p_qy_q+\epsilon}{\sum_{q\in\Omega}p_q+\sum_{q\in\Omega}y_q+\epsilon},\qquad \mathcal L_{\mathrm{Dice}}=1-\operatorname{Dice}.\]</div>
+  <div class="equation">\[\operatorname{TI}=\frac{TP}{TP+\alpha_{tv}FP+\beta_{tv}FN+\epsilon},\qquad \mathcal L_{\mathrm{Tversky}}=1-\operatorname{TI},\qquad \beta_{tv}=0.7.\]</div>
+  <div class="equation">\[\mathcal L_{\mathrm{FocalSeg}}=-\frac{1}{|\Omega|}\sum_{q\in\Omega}\left[y_q(1-p_q)^\gamma\log p_q+(1-y_q)p_q^\gamma\log(1-p_q)\right],\qquad \gamma=2.\]</div>
+  <div class="equation">\[\mathcal L_{\mathrm{student}}=\alpha_s\mathcal L_{\mathrm{Tversky}}+(1-\alpha_s)\mathcal L_{\mathrm{FocalSeg}}+\lambda_d\mathcal L_{\mathrm{Dice}}.\]</div>
+  <p>Derived biomarkers included vessel density, vessel length density, FAZ area, FAZ circularity, normalized FAZ displacement, CC flow-deficit percentage, connected-component count, and mean and median deficit area. Physical areas used the available pixel-scale metadata. Implausible or failed measurements were flagged rather than coerced to zero. The five masks were stacked as a five-channel 224 × 224 input and encoded into a 128-dimensional mask representation.</p>
+  <div class="equation">\[\operatorname{VD}=\frac{\sum_{q\in\Omega}M_q}{|\Omega|},\quad \operatorname{VLD}=\frac{\sum_{q\in\Omega}S(M)_q}{|\Omega|},\quad A_{FAZ}=a_{px}|F|,\quad C_{FAZ}=\frac{4\pi A_{FAZ}}{P_{FAZ}^2+\epsilon}.\]</div>
+  <div class="equation">\[d_{FAZ}=\frac{\lVert\bar p_F-p_{center}\rVert_2}{\sqrt{H^2+W^2}},\qquad \operatorname{FD\%}=100\frac{\sum_{q\in\Omega}D_q}{|\Omega|}.\]</div>
+  <div class="equation">\[M_{all}=\operatorname{Stack}(M_S,M_D,F_S,F_D,D_C)\in\mathbb R^{5\times224\times224},\qquad f_{mask}=E_m(M_{all})\in\mathbb R^{128}.\]</div>
+
+  <h3>2.7 Tabular encoder and multimodal fusion</h3>
+  <p>The clinical vector and normalized generated biomarkers were concatenated and processed by a two-layer multilayer perceptron with GELU activations, layer normalization, and dropout, producing a 256-dimensional tabular representation. The tabular vector conditioned the OCTA representation through a learned projection and residual addition. This conditioned vector was then concatenated with the 128-dimensional mask representation and projected to a 512-dimensional fused representation. Each modality was included once to preserve interpretability of the planned ablations.</p>
+  <div class="equation">\[q=[\tilde c;b],\quad h_1=\operatorname{Drop}_{0.3}\!\left(\operatorname{GELU}(W_1\operatorname{LN}(q)+b_1)\right),\quad f_{tab}=\operatorname{Drop}_{0.2}\!\left(\operatorname{LN}(\operatorname{GELU}(W_2h_1+b_2))\right)\in\mathbb R^{256}.\]</div>
+  <div class="equation">\[f_{cond}=\operatorname{LN}(f_{octa}+W_tf_{tab}+b_t),\qquad h=\operatorname{LN}\!\left(\operatorname{GELU}(W_f[f_{cond};f_{mask}]+b_f)\right)\in\mathbb R^{512}.\]</div>
+
+  <h3>2.8 Prototype-augmented classifier</h3>
+  <p>A two-layer classification head produced a 128-dimensional penultimate embedding and four parametric logits. During training, an exponential-moving-average prototype was maintained for every class from the embeddings observed for that class. Negative squared Euclidean distances to prototypes formed auxiliary logits, scaled by a positive learned coefficient and combined with the parametric logits. Prototype state was estimated from training data only and reset independently for every outer fold.</p>
+  <div class="equation">\[z=\operatorname{Drop}_{0.3}\!\left(\operatorname{GELU}(W_2\operatorname{Drop}_{0.3}(\operatorname{GELU}(W_1h+b_1))+b_2)\right),\qquad s=W_3z+b_3.\]</div>
+  <div class="equation">\[\bar z_k^{(t)}=\frac{1}{|B_k|}\sum_{i\in B_k}z_i,\qquad P_k^{(t)}=\rho P_k^{(t-1)}+(1-\rho)\bar z_k^{(t)}.\]</div>
+  <div class="equation">\[r_k=-\frac{\lVert z-P_k\rVert_2^2}{\tau_p},\quad \tau_p=0.1,\qquad o_k=s_k+\operatorname{softplus}(a)r_k,\qquad p_k=\frac{\exp(o_k)}{\sum_{j=1}^{4}\exp(o_j)}.\]</div>
+
+  <h3>2.9 Classification objective and imbalance</h3>
+  <p>The default objective was inverse-frequency-weighted cross-entropy with label smoothing ε = 0.1. Class weights were computed from outer-training patients and normalized to mean one. Focal cross-entropy with γ = 2 remains a planned ablation for training folds with an imbalance ratio exceeding 10:1. Patient-balanced sampling was used so that patients with two eyes did not receive twice the sampling weight of unilateral patients.</p>
+  <div class="equation">\[\tilde y_{ik}=(1-\varepsilon)\mathbb 1[y_i=k]+\frac{\varepsilon}{K},\quad K=4,\qquad w_k=\frac{1/n_k}{\sum_j1/n_j}\,K.\]</div>
+  <div class="equation">\[\mathcal L_{cls}=-\frac{1}{B}\sum_{i=1}^{B}\sum_{k=1}^{K}w_k\tilde y_{ik}\log(p_{ik}+\epsilon).\]</div>
+  <div class="equation">\[\mathcal L_{focal}=-\frac{1}{B}\sum_{i=1}^{B}\sum_{k=1}^{K}\tilde y_{ik}(1-p_{ik})^\gamma\log(p_{ik}+\epsilon),\qquad \gamma=2.\]</div>
+
+  <h3>2.10 Training schedule</h3>
+  <table>
+    <thead><tr><th>Stage</th><th>Trainable components</th><th>Optimization</th></tr></thead>
+    <tbody>
+      <tr><td>1. Representation adaptation</td><td>Three independent layer encoders and projection heads</td><td>Fold-local SimCLR, 100 epochs; SGD; cosine schedule</td></tr>
+      <tr><td>2. Fusion warm-up</td><td>Projection, attention, tabular, mask, fusion, prototype, and classifier modules; image backbones frozen</td><td>15 epochs; learning rate 3 × 10<sup>-4</sup></td></tr>
+      <tr><td>3. End-to-end fine-tuning</td><td>All classifier components; segmentation student remains frozen</td><td>AdamW; backbone 3 × 10<sup>-5</sup>; downstream 3 × 10<sup>-4</sup>; weight decay 10<sup>-2</sup>; 5 warm-up epochs; cosine annealing; maximum 100 epochs</td></tr>
+    </tbody>
+  </table>
+  <p>Early stopping used inner-validation macro-F1 with patience 15. Gradient norms, learning rates, training losses, validation metrics, and random seeds were recorded. Checkpoints were selected without reference to outer-test performance.</p>
+
+  <h2>3. Evaluation and Statistical Analysis</h2>
+  <h3>3.1 Nested patient-grouped evaluation</h3>
+  <p>Five fixed patient-grouped folds served as outer test partitions. Within each outer-training set, an 80/20 patient-grouped split, stratified when feasible, was used for model selection and calibration. No outer-test patient contributed to image statistics, clinical preprocessing, contrastive pretraining, pseudo-label model selection, feature selection, early stopping, prototype construction, or temperature fitting.</p>
+  <p>Eye-level probabilities were averaged within patient before primary evaluation. Comparison with logit averaging and quality-weighted averaging remains a planned aggregation ablation.</p>
+  <div class="equation">\[\bar p_{ik}=\frac{1}{|E_i|}\sum_{e\in E_i}p_{iek},\qquad \hat y_i=\arg\max_k\bar p_{ik}.\]</div>
+
+  <h3>3.2 Outcomes and metrics</h3>
+  <p>The primary metric was patient-level macro-F1 pooled from out-of-fold predictions. Secondary discrimination metrics were balanced accuracy, weighted F1, macro one-vs-rest ROC-AUC, macro PR-AUC, top-2 accuracy, and per-class sensitivity, specificity, precision, F1, and support. Normalized and count confusion matrices were reported. Macro metrics were emphasized because class frequencies were unequal and performance in smaller cohorts needed to remain visible.</p>
+  <div class="equation">\[\operatorname{Sensitivity}_k=\frac{TP_k}{TP_k+FN_k},\quad \operatorname{Specificity}_k=\frac{TN_k}{TN_k+FP_k},\quad \operatorname{Precision}_k=\frac{TP_k}{TP_k+FP_k}.\]</div>
+  <div class="equation">\[F1_k=\frac{2\operatorname{Precision}_k\operatorname{Sensitivity}_k}{\operatorname{Precision}_k+\operatorname{Sensitivity}_k},\qquad \operatorname{MacroF1}=\frac{1}{K}\sum_{k=1}^{K}F1_k.\]</div>
+  <div class="equation">\[\operatorname{BalancedAccuracy}=\frac{1}{K}\sum_{k=1}^{K}\operatorname{Sensitivity}_k,\qquad \operatorname{WeightedF1}=\sum_{k=1}^{K}\frac{n_k}{N}F1_k.\]</div>
+  <p>Calibration was summarized using multiclass negative log-likelihood, Brier score, expected calibration error with prespecified bins, classwise calibration plots, and reliability diagrams. Metrics were reported before and after calibration.</p>
+  <div class="equation">\[\operatorname{Brier}=\frac{1}{N}\sum_{i=1}^{N}\sum_{k=1}^{K}(\bar p_{ik}-\mathbb 1[y_i=k])^2,\qquad \operatorname{ECE}=\sum_{g=1}^{G}\frac{|B_g|}{N}|\operatorname{acc}(B_g)-\operatorname{conf}(B_g)|.\]</div>
+
+  <h3>3.3 Calibration and uncertainty</h3>
+  <p>A single positive temperature was fitted to inner-validation logits by minimizing negative log-likelihood and then applied unchanged to the associated outer-test logits. Epistemic uncertainty was approximated using 30 Monte Carlo dropout passes. Predictive entropy and class-probability variance were recorded. The uncertainty threshold for referral was selected on inner-validation data. Outer-test reporting included accuracy by entropy stratum, risk-coverage curves, coverage at prespecified risk levels, and the association between uncertainty and error.</p>
+  <div class="equation">\[T^*=\arg\min_{T>0}\left[-\sum_i\log\operatorname{softmax}(o_i/T)_{y_i}\right].\]</div>
+  <div class="equation">\[\bar p_k=\frac{1}{M}\sum_{m=1}^{M}p_k^{(m)},\qquad \widehat{\operatorname{Var}}(p_k)=\frac{1}{M-1}\sum_{m=1}^{M}(p_k^{(m)}-\bar p_k)^2,\qquad M=30.\]</div>
+  <div class="equation">\[H(\bar p)=-\sum_{k=1}^{K}\bar p_k\log(\bar p_k+\epsilon),\qquad \operatorname{Coverage}(\eta)=\frac{1}{N}\sum_i\mathbb 1[H(\bar p_i)\le\eta].\]</div>
+
+  <h3>3.4 Confidence intervals and comparisons</h3>
+  <p>Ninety-five percent confidence intervals were estimated from 1,000 stratified patient-level bootstrap resamples of the pooled out-of-fold predictions. Model comparisons used paired resampling on identical patients. DeLong tests were used for paired AUC comparisons where assumptions were satisfied, and McNemar tests compared paired classification errors. Confirmatory comparisons were prespecified and adjusted for multiplicity using Holm correction. Effect sizes and confidence intervals accompanied p-values.</p>
+  <div class="equation">\[CI_{95\%}=\left[Q_{0.025}(\{\hat\theta^{*(b)}\}),Q_{0.975}(\{\hat\theta^{*(b)}\})\right],\qquad b=1,\ldots,1000.\]</div>
+  <div class="equation">\[\chi^2_{\mathrm{McNemar}}=\frac{(|n_{01}-n_{10}|-1)^2}{n_{01}+n_{10}}.\]</div>
+
+  <h3>3.5 Planned baselines and ablations</h3>
+  <table>
+    <thead><tr><th>Question</th><th>Planned comparison</th></tr></thead>
+    <tbody>
+      <tr><td>Value of multimodal learning</td><td>Clinical-only logistic regression, random forest, and XGBoost; image-only model; image plus clinical; image plus masks; complete model</td></tr>
+      <tr><td>Value of retinal depth</td><td>SVC-only, DVC-only, CC-only, three layers stacked as channels, independent encoders with direct concatenation, and identity-aware attention</td></tr>
+      <tr><td>Value of pretraining</td><td>No contrastive pretraining, standard same-image SimCLR, and bilateral-positive SimCLR</td></tr>
+      <tr><td>Value of generated structure</td><td>No biomarkers; no masks; classical pseudo-masks; frozen U-Net++ masks</td></tr>
+      <tr><td>Value of class prototypes</td><td>Parametric classifier alone versus prototype-augmented classifier</td></tr>
+      <tr><td>Value of uncertainty processing</td><td>Uncalibrated versus temperature-scaled; deterministic versus MC-dropout inference</td></tr>
+      <tr><td>Published-style image baseline</td><td>EfficientNetV2-B3 trained and evaluated under the same patient-grouped partitions</td></tr>
+    </tbody>
+  </table>
+
+  <h3>3.6 Confounding, leakage, and robustness analyses</h3>
+  <ul>
+    <li>Clinical-only cohort classification was measured. Strong performance was treated as evidence of selection effects requiring cautious interpretation.</li>
+    <li>Image-only analyses were repeated after age and sex matching or inverse-probability weighting where overlap and sample size permitted.</li>
+    <li>The predictiveness of image-quality measures, missingness patterns, and available acquisition metadata was assessed.</li>
+    <li>Unilateral patients, bilateral patients, and individual eyes were compared; agreement between eyes was calculated, and patient-clustered inference was used throughout.</li>
+    <li>Performance was evaluated by sex, age group, diabetes status, eye laterality, image-quality stratum, and cohort size, subject to minimum subgroup counts.</li>
+    <li>Analyses were repeated after excluding failed or borderline pseudo-mask cases and after replacing learned missing tokens with conventional imputation.</li>
+    <li>Fold-level heterogeneity was inspected so that a pooled score did not conceal a severe failure in one outer fold or one cohort.</li>
+  </ul>
+
+  <h3>3.7 Explainability analysis</h3>
+  <p>Grad-CAM was generated from the final convolutional feature maps for each layer. Cross-layer attention matrices were summarized as incoming attention by retinal depth. SHAP was applied to the tabular branch using a training-derived background set. Explanations were reviewed for anatomical plausibility, border artifacts, acquisition markings, and cohort-specific shortcuts. These analyses were descriptive and were not interpreted as causal evidence. Interpretation was accepted only when consistent with error analysis and will be revisited after the planned matched ablations.</p>
+  <div class="equation">\[\alpha_r^c=\frac{1}{Z}\sum_{u,v}\frac{\partial o_c}{\partial A_{uv}^r},\qquad L_{\mathrm{GradCAM}}^c=\operatorname{ReLU}\!\left(\sum_r\alpha_r^cA^r\right).\]</div>
+  <div class="equation">\[d_k=\frac{1}{3}\sum_{q=1}^{3}A_{qk},\qquad k\in\{\mathrm{SVC},\mathrm{DVC},\mathrm{CC}\}.\]</div>
+
+  <h2>4. Reproducibility and Data Governance</h2>
+  <p>Every experiment stored the software environment, configuration, seed, fold identifiers, preprocessing parameters, class weights, selected epoch, calibration temperature, and checkpoint hash. Data manifests and derived outputs preserved patient identifiers only in controlled, non-public form; reports used aggregate counts and de-identified examples.</p>
+  <p>Intermediate and final artifacts were organized by phase and outer fold. Each model result was reconstructable from a frozen configuration and immutable input manifest. Failed runs were retained in the audit trail. Code used for final analysis was versioned before test-fold aggregation, and all reported metrics were regenerated from saved out-of-fold patient predictions.</p>
+
+</article>
+</body>
+</html>
