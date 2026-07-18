@@ -68,7 +68,7 @@ Clinical metadata fields:
 - Dyslipidemia (binary)
 - Additional available fields
 
-Current Phase 1/2 notebook artifacts use the available clinical spreadsheet columns and eye-aligned publication-table biomarkers where present. The current target remains the disease cohort derived from folders, not a newly derived binary CAD endpoint.
+Current Phase 1/2 notebook artifacts use the available clinical spreadsheet columns and eye-aligned publication-table biomarkers where present. The current target remains the disease cohort derived from folders, not a newly derived binary CAD endpoint. The active expansion now includes eight folder-derived cohorts for Phases 1-3. Downstream Phase 4+ integration must be updated separately before those stages are rerun.
 
 Label:
 
@@ -76,14 +76,20 @@ Disease cohort folder (multi-class). Version 1 remains disease-cohort classifica
 
 ## Version 1 label semantics
 
-The primary supervised target is the RASTA folder-derived cohort label, not a direct binary CAD endpoint:
+The primary supervised target is the RASTA folder-derived cohort label, not a direct binary CAD endpoint. The eight-class folder schema now used through Phase 3 is:
 
-- `RETINORM` — control/normal cohort from the AwARD study
-- `ORNET` — obstructive sleep apnea retinal vascular network cohort
-- `FAMILIPO` — familial hypercholesterolemia cohort, cardiovascular-risk/atherosclerosis related
-- `MRCC` — coronary revascularization cardiac surgery cohort, the clearest CAD-related group
+- `1_RETINORM` - label 0, control/normal cohort from the AwARD study
+- `2_ORNET` - label 1, obstructive sleep apnea retinal vascular network cohort
+- `3_FAMILIPO` - label 2, familial hypercholesterolemia cohort, cardiovascular-risk/atherosclerosis related
+- `4_MRCC` - label 3, coronary revascularization cardiac surgery cohort, the clearest CAD-related group
+- `5_GIANTS` - label 4
+- `6_AWARD` - label 5
+- `7_EVIRED` - label 6
+- `8_ORNET_TEMOINS` - label 7
 
-The clinical spreadsheet contains cardiovascular covariates and risk/comorbidity fields such as hypertension, diabetes mellitus, stroke, vascular disease, dyslipidemia, smoking, and CHA2DS2-VASc, plus OCTA biomarkers. These are model inputs or analysis covariates in Version 1, not the folder-derived class labels. CAD is represented indirectly, especially through MRCC and the broader `Vascular disease` covariate. Any future binary CAD or cardiovascular-risk model must define a separate clinically validated endpoint and should not be treated as equivalent to the current four-class cohort classifier.
+The clinical meaning of the four newly supplied cohorts must not be inferred beyond their guide-provided folder names until authoritative definitions are documented.
+
+The clinical spreadsheet contains cardiovascular covariates and risk/comorbidity fields such as hypertension, diabetes mellitus, stroke, vascular disease, dyslipidemia, smoking, and CHA2DS2-VASc, plus OCTA biomarkers. These are model inputs or analysis covariates in Version 1, not the folder-derived class labels. CAD is represented indirectly, especially through MRCC and the broader `Vascular disease` covariate. Any future binary CAD or cardiovascular-risk model must define a separate clinically validated endpoint and should not be treated as equivalent to the current eight-class cohort classifier.
 
 Generated internally; the RASTA dataset is assumed to provide **no manual segmentation masks**:
 
@@ -241,7 +247,7 @@ Do NOT use: color inversion, aggressive distortion, cutout, or random erasing. T
 
 ## Pretraining schedule
 
-- Epochs: 100
+- Epochs: 120 for the expanded eight-class Phase 3 run. Previous 100-epoch four-class artifacts remain historical and must not be overwritten or resumed into the expanded run.
 - Optimizer: SGD with momentum=0.9, weight_decay=1e-4
 - Historical/current successful run setting: LR=0.03 with cosine decay. This superseded the original LR=0.1 attempt because the first GPU pass showed unstable/`inf` gradients and no parameter update at LR=0.1.
 - Historical/current successful run setting: batch size 256 effective, using physical batch size 128 plus gradient accumulation if memory limited
@@ -839,8 +845,8 @@ The segmentation student is upstream of the classifier and remains frozen during
 
 **Stage 1: OCTA-SimCLR pretraining** (unlabeled)
 
-- Epochs: 100
-- Use the already-completed Phase 3 artifacts when available; do not rerun Phase 3 solely because this plan was clarified later.
+- Epochs: 120 for the expanded eight-class run
+- Use only matching expanded-run Phase 3 artifacts when available. Do not reuse the historical four-class checkpoints for the eight-class run.
 - Historical/current successful run settings: LR=0.03 cosine decay, AMP disabled after failed preflight, gradient clipping max norm 1.0
 - All three encoders independently
 
