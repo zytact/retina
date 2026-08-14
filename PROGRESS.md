@@ -1,5 +1,34 @@
 # PROGRESS.md
 
+## 2026-08-14
+
+### Explainability enabled for all six architectures
+- Set `SEGCOMP_RUN_EXPLAINABILITY = True` so `segcomp_run_requested_stages()` runs Phase 13 for every architecture rather than skipping it.
+- Set `PHASE13_RUN_EXPLAINABILITY = False` to match the existing `PHASE12_RUN_TRAINING` and `PHASE14_RUN_*` convention. It was the one single-model auto-run gate left on, so a top-to-bottom run would have executed the full Phase 13 cross-validation for the active architecture and then repeated it for all six through the orchestrator.
+
+### Phase 8 deep-supervision control fix
+- Fixed an uncontrolled variable in `segmentation_comparison_8class.ipynb` Phase 8: the student trainer requested `deep_supervision=True`, which `build_phase8_segmentation_model` forwards only to U-Net++, so the reference architecture trained with an auxiliary-loss advantage the other five did not have.
+- Deep supervision is now disabled for every architecture, matching section 8.3 of `PLAN_segmentation_comparsion.md`.
+- Also disabled it in `Phase9FrozenUNetPPMaskGenerator`, which rebuilt both students with `deep_supervision=True` for inference. Left unchanged, its U-Net++ graph would no longer match the retrained checkpoints and the strict load-report check would raise.
+- Fixed per-model isolation of Phase 13 outputs. `PHASE13_GRADCAM_DIR`, `PHASE13_ATTENTION_DIR`, `PHASE13_TABULAR_DIR`, and `PHASE13_INTEGRATED_DIR` were derived from `PHASE13_OUTPUT_DIR` at definition time and never rebound, so `segcomp_explain_all_models()` would have written all six architectures' explainability artifacts into the U-Net++ directory, each overwriting the previous at identical `fold_N` paths. `segcomp_activate_model` now rebinds all four.
+- Made the Phase 8 training logs and the Phase 9/11/12 mask-source errors report the active architecture instead of a fixed U-Net++ label.
+- Fixed the headline comparison table. `segcomp_evaluate_all_models` read `result['eye']['metrics']` and `result['patient']['metrics']`, but `phase14_evaluate_predictions` returns a flat dict whose `metrics` value is a DataFrame with a `level` column, so `phase14_all_model_primary_metrics.csv` would have been written with model/level columns and no metrics. It now expands that DataFrame per model and fails loudly if a model returns no summary.
+- Wired `segcomp_collect_segmentation_metrics()` and `segcomp_compare_models_to_unetpp()` into `segcomp_run_requested_stages()`. Both were defined but never called, so `comparison/phase8_all_model_test_metrics.csv` and the paired `all_models_vs_unetpp.csv` tests were never produced by an enabled run.
+- Made `phase9_merge_unetpp_manifest_for_fold` require complete manifest coverage. Its left merge left NaN mask paths for any eye a partial materialization run missed; `phase8_load_mask_from_row` turns those into all-zero masks and the downstream `mask_source` guards used `.dropna()`, so an architecture could have been scored on blank masks without any error.
+- Existing U-Net++ Phase 8 comparison runs under `outputs/segmentation_comparison_8class/unetpp/phase8_segmentation/` were trained under the old setting. Move or delete that directory on the training machine before rerunning, because `PHASE8_STUDENT_AUTO_RESUME` would otherwise resume those checkpoints.
+
+### Phase 8+ fast-reload cell
+- Added **FAST RELOAD / SUMMARY - Everything Phase 8 and later needs** to `segmentation_comparison_8class.ipynb`, immediately before Phase 8C, so a kernel restart plus one cell is enough to run Phase 8 onward on the training machine.
+- It resolves prerequisite cells by content, not index, and executes the Phase 1/2 disk reload, Phase 3 definitions, the comparison configuration, and Phases 4-8 with only their heavy actions patched off (`RUN_PHASE3_PRETRAINING`, `RUN_PHASE3_PREFLIGHT_DIAGNOSTICS`, `PHASE4/6/7_RUN_SMOKE_TEST`, `PHASE8_RUN_GENERATION`). Every patched flag is restored to its authored value afterwards, so the cells run next behave exactly as written and no flag has to be re-enabled by hand.
+- Artifact writes are stubbed for the duration of each executed cell only, since the Phase 5 and Phase 8 cells write at import. A cell that defines its own `save_json` keeps it.
+- It reloads `phase2_folds_with_phase8` from `phase8_manifest_with_masks_biomarkers.csv`, which otherwise exists only when `PHASE8_RUN_GENERATION` runs, verifies a required-name list and fails with the missing names, calls `segcomp_activate_model('unetpp')` so no path global is left pointing at another architecture, and prints the active model plus the current flag table.
+
+## 2026-08-13
+
+### Phase 3 summary to Phase 4 reload fix
+- Updated the Phase 3 summarization cell in `segmentation_comparison_8class.ipynb` to restore the lightweight runtime state required by Phase 4.
+- Restored PyTorch/torchvision imports, Phase 3 scope/output/fold constants, checkpoint path helpers, and the ConvNeXt-Tiny backbone definition without loading checkpoints or launching training.
+
 ## 2026-07-17
 
 ### Proposed methodology and novelty review draft
