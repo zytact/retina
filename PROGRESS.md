@@ -1,5 +1,12 @@
 # PROGRESS.md
 
+## 2026-08-22
+
+### Phase 8+ fast-reload cell clarified as run-first
+- Replaced and then repositioned the **FAST RELOAD** cell in `segmentation_comparison_8class.ipynb`: it now sits directly ABOVE the Phase 8 generation cell (between Phase 7 and Phase 8), so a fresh kernel session is run-first-this-cell, then continue top-to-bottom through the whole of Phase 8 (generation runs because `PHASE8_RUN_GENERATION` is `True` as authored) and every later phase. Mechanics unchanged: same twelve content-resolved prerequisite needles (the Phase 8 definitions cell is executed from notebook source even though it sits below the reload), same six patched-and-restored heavy flags, manifest reload, required-name gate, `segcomp_activate_model('unetpp')`.
+- Verified statically: needle resolution under the new order, flag patch/restore round-trip (`PHASE8_RUN_GENERATION` restores to `True`), all `_RL_REQUIRED` names plus `PHASE8_OUTPUT_DIR` and `SEGCOMP_ACTIVE_MODEL_ID` defined by prerequisites in order, and `RastaPhase2Dataset` defined before the Phase 8 cell that subclasses it. An earlier independent subagent audit confirmed stub hygiene of the `save_json`/`to_csv` patching with no real issues; no other cell references the reload cell by position.
+- With this placement, running strictly top-to-bottom on a fresh kernel also works: cells 0-31 define everything up through Phase 7, the reload re-affirms prerequisites quickly with heavy work off, then Phase 8 onward runs as authored.
+
 ## 2026-08-14
 
 ### Explainability enabled for all six architectures
