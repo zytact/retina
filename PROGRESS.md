@@ -483,3 +483,10 @@
 - Added aggregate segmentation metrics, multimodal evaluation collection, and prespecified patient-level comparisons of each alternative against U-Net++.
 - Enabled the comparison-level segmentation training, mask materialization, classifier training, MC-dropout, and Phase 14 evaluation path. The shared Phase 12/14 single-model auto-run flags remain disabled so the comparison orchestrator runs each architecture exactly once.
 - Validated notebook JSON, exact Phase 1-3 source equality, clean unexecuted state, and Python compilation of all code cells. The local shell lacked an installed PyTorch runtime for forward execution, so no dataset, checkpoint, or GPU smoke run was attempted here.
+## 2026-08-26
+
+### Phase 8D channel-threshold evaluation fix
+
+- Fixed Phase 8D test evaluation in `segmentation_comparison_8class.ipynb` so validation-selected per-channel threshold lists are preserved in metric records instead of being cast to a scalar.
+- This prevents completed or resumed segmentation runs from failing with `TypeError: float() argument must be a string or a real number, not 'list'` during outer-test evaluation.
+- Suppressed the known `torch.load(weights_only=False)` future warning in the completed-checkpoint resume branch, matching the notebook's other trusted-checkpoint loads.
