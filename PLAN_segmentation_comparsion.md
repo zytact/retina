@@ -53,7 +53,7 @@ Pseudo-label agreement is not equivalent to anatomical accuracy. The dataset is 
 - Use only matching expanded-run Phase 3 OCTA-SimCLR artifacts.
 - Keep all historical four-class and existing U-Net++ artifacts intact.
 - Write every comparison artifact to new architecture-specific output directories.
-- Implement the comparison in `segmentation_comparison_8class.ipynb` and leave `main.ipynb` unchanged.
+- Implement the comparison in `segmentation_clasification_8class.ipynb` and leave `main.ipynb` unchanged.
 - Copy the Phase 1-3 source cells exactly from `main.ipynb`, including their existing expanded eight-class output paths and Phase 3 reuse behavior.
 - Adapt only Phase 4 onward for the segmentation comparison and its isolated output tree.
 - Do not create a separate Python module.

@@ -490,3 +490,7 @@
 - Fixed Phase 8D test evaluation in `segmentation_comparison_8class.ipynb` so validation-selected per-channel threshold lists are preserved in metric records instead of being cast to a scalar.
 - This prevents completed or resumed segmentation runs from failing with `TypeError: float() argument must be a string or a real number, not 'list'` during outer-test evaluation.
 - Suppressed the known `torch.load(weights_only=False)` future warning in the completed-checkpoint resume branch, matching the notebook's other trusted-checkpoint loads.
+
+### Phase 4 fast reload cell
+- Added **FAST RELOAD / SUMMARY - Up to Phase 4** immediately before Phase 5 in `segmentation_clasification_8class.ipynb`. After a kernel restart it re-executes the Phase 1/2 reload, Phase 3 definition cells, the comparison configuration, and Phase 4 with SimCLR pretraining, preflight diagnostics, and the Phase 4 smoke test switched off, then restores the authored flag values, checks required definitions, and warns about any missing Phase 3 backbones.
+- Renamed the main notebook to `segmentation_clasification_8class.ipynb` to match the copy on the training machine, and updated the hardcoded filename in both fast-reload cells plus the references in `AGENTS.md` and `PLAN_segmentation_comparsion.md`. Older progress entries keep the previous name.
