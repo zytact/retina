@@ -494,3 +494,6 @@
 ### Phase 4 fast reload cell
 - Added **FAST RELOAD / SUMMARY - Up to Phase 4** immediately before Phase 5 in `segmentation_clasification_8class.ipynb`. After a kernel restart it re-executes the Phase 1/2 reload, Phase 3 definition cells, the comparison configuration, and Phase 4 with SimCLR pretraining, preflight diagnostics, and the Phase 4 smoke test switched off, then restores the authored flag values, checks required definitions, and warns about any missing Phase 3 backbones.
 - Renamed the main notebook to `segmentation_clasification_8class.ipynb` to match the copy on the training machine, and updated the hardcoded filename in both fast-reload cells plus the references in `AGENTS.md` and `PLAN_segmentation_comparsion.md`. Older progress entries keep the previous name.
+
+### Phase 11 fast reload cell
+- Added **FAST RELOAD / SUMMARY - Up to Phase 11** immediately before Phase 12. It runs the Up to Phase 7 reload, then the Phase 8C, 8D, 9 and 11 definition cells with `SEGCOMP_RUN_SEGMENTATION` and `PHASE8_RUN_STUDENT_TRAINING` switched off and `save_json`/`to_csv` writes suppressed, then restores the authored flag values and activates `unetpp`. Fixes the `NameError: ensure_dir` when Phase 12 runs on a fresh kernel.
